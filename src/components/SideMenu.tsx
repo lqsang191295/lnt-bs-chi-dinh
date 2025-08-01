@@ -11,6 +11,8 @@ import SelectContent from "./SelectContent";
 import MenuContent from "./MenuContent";
 import CardAlert from "./CardAlert";
 import OptionsMenu from "./OptionsMenu";
+import { Button } from "@mui/material";
+import { useRouter } from "next/navigation";
 
 const drawerWidth = 320;
 
@@ -25,7 +27,7 @@ const Drawer = styled(MuiDrawer)({
   },
 });
 
-export default function SideMenu() {
+const Logged = () => {
   return (
     <Drawer variant="permanent">
       <Box
@@ -76,4 +78,53 @@ export default function SideMenu() {
       </Stack>
     </Drawer>
   );
+};
+
+export default function SideMenu() {
+  const router = useRouter();
+  const [user] = React.useState(false);
+
+  if (!user) {
+    return (
+      <Drawer variant="permanent">
+        <Box
+          sx={{
+            display: "flex",
+            mt: "calc(var(--template-frame-height, 0px) + 4px)",
+            p: 1.5,
+          }}>
+          <SelectContent />
+        </Box>
+        <Divider />
+        <Box
+          sx={{
+            overflow: "auto",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}>
+          <MenuContent />
+          <CardAlert />
+        </Box>
+        <Stack
+          direction="row"
+          sx={{
+            p: 2,
+            gap: 1,
+            alignItems: "center",
+            borderTop: "1px solid",
+            borderColor: "divider",
+          }}>
+          <Button
+            onClick={() => {
+              router.push("/login");
+            }}>
+            Login
+          </Button>
+        </Stack>
+      </Drawer>
+    );
+  }
+
+  return <Logged />;
 }
