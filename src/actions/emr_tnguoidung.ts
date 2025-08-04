@@ -27,23 +27,23 @@ export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: str
         { paraName: "ctrangthai", paraValue: DenNgay },
       ],
     });
-//     @puser nvarchar(100),
-// 	   @popt nvarchar(100),
-//     @cid bigint,
-//     @ctaikhoan nvarchar(256),
-//     @choten nvarchar(1000),
-//     @cngaysinh nvarchar(100),
-//     @cmadonvi int,
-//     @cmanhomnguoidung int,
-//     @cdiachi nvarchar(2000),
-//     @cdienthoai nvarchar(100),
-//     @ccchn nvarchar(100),
-//     @cemail nvarchar(100),
-//     @cchucdanh nvarchar(100),
-//     @cghichu nvarchar(3000),
-//     @cmatkhau nvarchar(3000),
-//     @cxacthuc2lop nvarchar(100),
-//     @ctrangthai int 
+    //     @puser nvarchar(100),
+    // 	   @popt nvarchar(100),
+    //     @cid bigint,
+    //     @ctaikhoan nvarchar(256),
+    //     @choten nvarchar(1000),
+    //     @cngaysinh nvarchar(100),
+    //     @cmadonvi int,
+    //     @cmanhomnguoidung int,
+    //     @cdiachi nvarchar(2000),
+    //     @cdienthoai nvarchar(100),
+    //     @ccchn nvarchar(100),
+    //     @cemail nvarchar(100),
+    //     @cchucdanh nvarchar(100),
+    //     @cghichu nvarchar(3000),
+    //     @cmatkhau nvarchar(3000),
+    //     @cxacthuc2lop nvarchar(100),
+    //     @ctrangthai int 
     if (response.status === "error") {
       return [];
     }
@@ -51,5 +51,25 @@ export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: str
     return response.message;
   } catch {
     return [];
+  }
+};
+
+/**
+ * Hàm đăng nhập người dùng
+ * @param username Tên đăng nhập
+ * @param password Mật khẩu
+ * @returns Kết quả đăng nhập
+ */
+export const login = async (username: string, password: string) => {
+  try {
+    const response = await post(`/api/Auth/login`, {
+      Username: username,
+      Password: password,
+    }); 
+    
+
+    return  response.token ? { status: "success", token: response.token } : { status: "error", message: response.message }  ;
+  } catch (error) {
+    return { status: "error", message: "Đăng nhập thất bại. Vui lòng thử lại." }; 
   }
 };

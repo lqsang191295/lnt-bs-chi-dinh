@@ -9,9 +9,11 @@ import AppBarTop from "@/components/AppBarTop";
 import { useEffect } from "react";
 import { getMenuItems } from "@/actions/menu"; 
 import { useMenuStore } from "@/store/menu";
+import { useUserStore } from "@/store/user";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { usePathname } from "next/navigation";
+import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT  
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +41,7 @@ export default function RootLayout({
     pathname.startsWith(path)
   );
   const { setData } = useMenuStore();
-
+  const {setUserData} = useUserStore(); 
   useEffect(() => {
     InitData();
   }, []);
@@ -49,11 +51,20 @@ export default function RootLayout({
       const menu = await getMenuItems();
       console.log("Menu items fetched:", menu);
       setData(menu);
+
+      const claims = getClaimsFromToken();
+      if (claims) {
+        setUserData(claims);
+        // Log or handle the claims as needed 
+        console.log("User claims:", claims);
+        // You can set user claims in a global state or context if needed
+      } else {
+        console.warn("No valid claims found in token");
+      } 
     } catch (error) {
       console.error("Error initializing data:", error);
     }
   };
-
   if (useNoLayout) {
     return (
       <html lang="en">

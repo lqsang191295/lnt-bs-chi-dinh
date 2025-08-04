@@ -14,14 +14,11 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
-import { useRouter } from "next/navigation"; 
-import { login } from "@/actions/emr_tnguoidung";
 import {
   GoogleIcon,
   FacebookIcon,
   SitemarkIcon,
-} from "@/components/CustomIcons"; 
-import Cookies from "js-cookie";
+} from "@/components/CustomIcons";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -64,44 +61,59 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
     }),
   },
 }));
-// Hàm mã hóa SHA256 trả về hex string
-async function sha256(message: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-  const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 export default function SignIn(props: { disableCustomTheme?: boolean }) {
-  const [username, setUsername] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
-  const router = useRouter();
-  
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError("");
-    setLoading(true);
-    try { 
-        const hashedPassword = await sha256(password);
-        const res = await login(username, hashedPassword);
-        console.log("hashpass:", hashedPassword);
-        if (res && res.status === "success") {
-        // Lưu token nếu cần
+  const [emailError, setEmailError] = React.useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
+  const [passwordError, setPasswordError] = React.useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
+  const [open, setOpen] = React.useState(false);
 
-        Cookies.set("authToken", res.token, {expires: 7}); // Lưu token trong cookie với thời gian hết hạn 1 giờ
-        console.log("Login successful, token:", res.token);
-        router.push("/");
-        } else {
-        setError("Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu.");
-        }
-    } catch {
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    if (emailError || passwordError) {
+      event.preventDefault();
+      return;
     }
-    setLoading(false);
+    const data = new FormData(event.currentTarget);
+    console.log({
+      email: data.get("email"),
+      password: data.get("password"),
+    });
+  };
+
+  const validateInputs = () => {
+    const email = document.getElementById("email") as HTMLInputElement;
+    const password = document.getElementById("password") as HTMLInputElement;
+
+    let isValid = true;
+
+    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+      setEmailError(true);
+      setEmailErrorMessage("Please enter a valid email address.");
+      isValid = false;
+    } else {
+      setEmailError(false);
+      setEmailErrorMessage("");
+    }
+
+    if (!password.value || password.value.length < 6) {
+      setPasswordError(true);
+      setPasswordErrorMessage("Password must be at least 6 characters long.");
+      isValid = false;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage("");
+    }
+
+    return isValid;
   };
 
   return (
@@ -112,7 +124,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
           component="h1"
           variant="h4"
           sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}>
-          Đăng nhập
+          Sign in
         </Typography>
         <Box
           component="form"
@@ -125,76 +137,84 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             gap: 2,
           }}>
           <FormControl>
-            <FormLabel htmlFor="username">Tên đăng nhập</FormLabel>
+            <FormLabel htmlFor="email">Email</FormLabel>
             <TextField
-              id="username"
-              name="username"
-              placeholder="Tên đăng nhập"
-              autoComplete="username"
+              error={emailError}
+              helperText={emailErrorMessage}
+              id="email"
+              type="email"
+              name="email"
+              placeholder="your@email.com"
+              autoComplete="email"
               autoFocus
               required
               fullWidth
               variant="outlined"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
+              color={emailError ? "error" : "primary"}
             />
           </FormControl>
           <FormControl>
-            <FormLabel htmlFor="password">Mật khẩu</FormLabel>
+            <FormLabel htmlFor="password">Password</FormLabel>
             <TextField
+              error={passwordError}
+              helperText={passwordErrorMessage}
               name="password"
               placeholder="••••••"
               type="password"
               id="password"
               autoComplete="current-password"
+              autoFocus
               required
               fullWidth
               variant="outlined"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
+              color={passwordError ? "error" : "primary"}
             />
           </FormControl>
           <FormControlLabel
             control={<Checkbox value="remember" color="primary" />}
-            label="Ghi nhớ đăng nhập"
+            label="Remember me"
           />
-          {error && (
-            <Typography color="error" mt={1}>
-              {error}
-            </Typography>
-          )}
           <Button
             type="submit"
             fullWidth
             variant="contained"
-            disabled={loading}
-            sx={{ fontWeight: "bold" }}>
-            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            onClick={validateInputs}>
+            Sign in
           </Button>
           <Link
             component="button"
             type="button"
+            onClick={handleClickOpen}
             variant="body2"
             sx={{ alignSelf: "center" }}>
-            Quên mật khẩu?
+            Forgot your password?
           </Link>
         </Box>
-        <Divider>hoặc</Divider>
+        <Divider>or</Divider>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Button
             fullWidth
             variant="outlined"
             onClick={() => alert("Sign in with Google")}
             startIcon={<GoogleIcon />}>
-            Đăng nhập với Google
+            Sign in with Google
           </Button>
           <Button
             fullWidth
             variant="outlined"
             onClick={() => alert("Sign in with Facebook")}
             startIcon={<FacebookIcon />}>
-            Đăng nhập với Facebook
+            Sign in with Facebook
           </Button>
+          <Typography sx={{ textAlign: "center" }}>
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/material-ui/getting-started/templates/sign-in/"
+              variant="body2"
+              sx={{ alignSelf: "center" }}>
+              Sign up
+            </Link>
+          </Typography>
         </Box>
       </Card>
     </SignInContainer>
