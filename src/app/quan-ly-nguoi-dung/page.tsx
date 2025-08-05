@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -20,30 +20,12 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
-
-const mockUsers = [
-  {
-    id: 1,
-    username: "0337293205",
-    name: "Huỳnh Trung Đông",
-    dob: "2000-01-01",
-    phone: "0337293205",
-  },
-  {
-    id: 2,
-    username: "090690770",
-    name: "Nguyễn Thị Phương Thúy",
-    dob: "1982-10-11",
-    phone: "090690770",
-  },
-  {
-    id: 3,
-    username: "0945195957",
-    name: "Lê Bích Ngọc",
-    dob: "1994-10-11",
-    phone: "0945195957",
-  },
-];
+import { IUserItem } from "@/model/user"; 
+import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
+import { instnguoidung, gettnguoidung, gettnhomnguoidung } from "@/actions/emr_tnguoidung";
+import { get } from "http";
+import { useUserStore } from "@/store/user";
+import { useRouter } from "next/navigation";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -62,21 +44,190 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 export default function UserManagementPage() {
-  const [selectedUser, setSelectedUser] = useState(mockUsers[0]);
+  const router = useRouter();
+  const [users, setUsers] = useState<IUserItem[]>([]);
+  const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);
+  const { data: loginedUser } = useUserStore();
+  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<{ value: string; label: string }[]>([]);
+  const [selectedNhomNguoiDung, setSelectedNhomNguoiDung] = useState("");
+  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>([]);
+  const [selectedKhoa, setSelectedKhoa] = useState("");
   const [page, setPage] = useState(0);
+  const [newUserStatus, setNewUserStatus] = useState(0);
+  useEffect(() => {
+    if (!loginedUser || !loginedUser.ctaikhoan) {
+      router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
+      return;
+    }
+    async function fetchUsers() {
+      const result = await gettnguoidung(loginedUser.ctaikhoan, "1");
+      if (Array.isArray(result)) {
+        setUsers(result as IUserItem[]);
+        setSelectedUser(result[0] as IUserItem);
+      }
+    }
+    fetchUsers();
+    async function fetchNhomNguoiDungList() {
+      try {
+        const result = await gettnhomnguoidung(loginedUser.ctaikhoan, "1");
+        if (Array.isArray(result)) {
+          const mapped = result.map((item: any) => ({
+            value: item.cid,
+            label: item.ctennhom,
+          }));
+          setNhomNguoiDungList([{ value: "", label: "Chọn nhóm người dùng" }, ...mapped]);
+        } else {
+          setNhomNguoiDungList([{ value: "", label: "Chọn nhóm người dùng" }]);
+        }
+      } catch (error) {
+        setNhomNguoiDungList([{ value: "", label: "Chọn nhóm người dùng" }]);
+      }
+    }
+    fetchNhomNguoiDungList();
 
-  const handleRowClick = (user: any) => setSelectedUser(user);
+    async function fetchKhoaList() {
+      try {
+        const result = await gettDMKhoaPhongs();
+        if (Array.isArray(result)) {
+          const mapped = result.map((item: any) => ({
+            value: item.cid,
+            label: item.ckyhieu + " - " + item.ctenkhoa,
+          }));
+          setKhoaList([{ value: "", label: "Chọn Khoa phòng" }, ...mapped]);
+        } else {
+          setKhoaList([{ value: "", label: "Chọn Khoa phòng" }]);
+        }
+      } catch (error) {
+        setKhoaList([{ value: "", label: "Chọn Khoa phòng" }]);
+      }
+    }
+    fetchKhoaList();
+  }, [loginedUser]);
+  const handleRowClick = (user: any) => {
+    setSelectedUser(user);
+     console.log("manhomnguoidung", user.cmanhomnguoidung);
+  };
   const handleChange = (field: string, value: any) => {
-    setSelectedUser((prev) => ({ ...prev, [field]: value }));
+    setSelectedUser((prev) => {
+      if (!prev) return prev;
+      return { ...prev, [field]: value } as IUserItem;
+    });
+  };
+  const onchangeKhoa = (o: any) => {
+    handleChange("cmadonvi", o);
+    setSelectedKhoa(o);
   };
 
+  const onchangeNhom = (o: any) => {
+    handleChange("cmanhomnguoidung", o);
+    setSelectedNhomNguoiDung(o);
+  };
+ 
+  const handleThem = async () => {
+    setNewUserStatus(1);
+    setSelectedUser({
+      cid: 0,
+      ctaikhoan: "",
+      cmatkhau: "",
+      choten: "",
+      cngaysinh: "",
+      cdienthoai: "",
+      cdiachi: "",
+      ccchn: "",
+      cemail: "",
+      cchucdanh: "",
+      cghichu: "",
+      cxacthuc2lop: "",
+      cmadonvi: selectedKhoa,
+      cmanhomnguoidung: selectedNhomNguoiDung,
+      ctrangthai: "1",
+      cngaytao: "",
+      cnguoitao: loginedUser.ctaikhoan,
+    } as IUserItem);
+  
+  };
+  const handleLuu = async () => {
+    if (newUserStatus === 1) {
+      if (!selectedUser || !selectedUser.ctaikhoan || !selectedUser.cmatkhau) {
+        alert("Vui lòng nhập đầy đủ thông tin tài khoản và mật khẩu");
+        return;
+      }
+      const result = await instnguoidung(loginedUser.ctaikhoan, "1", selectedUser);
+      if (result) {
+        alert("Thêm người dùng thành công");
+        setUsers((prev) => [...prev, selectedUser]);
+        setSelectedUser(null);
+        setNewUserStatus(0);
+      } else {
+        alert("Thêm người dùng thất bại");
+      }
+      return; 
+    }
+    else if (newUserStatus === 0) { 
+      if (!selectedUser) return;
+      console.log("selectedUser", selectedUser);
+      const result = await instnguoidung(loginedUser.ctaikhoan, "2", selectedUser);
+      console.log("result", result);
+      if (result) {
+        alert("Cập nhật người dùng thành công");
+        setUsers((prev) => prev.map((user) => (user.cid === selectedUser.cid ? selectedUser : user)));
+      } else {
+        alert("Cập nhật người dùng thất bại");
+      }
+    }
+  };
+
+  const handleHuy = () => {
+    setSelectedUser(null);
+    setNewUserStatus(0);
+  };
+  const handleXoa = async () => {
+    if (!selectedUser) return;
+    if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
+      const result = await instnguoidung(loginedUser.ctaikhoan, "3", selectedUser);
+      if (result) {
+        alert("Xóa người dùng thành công");
+        setUsers((prev) => prev.filter((user) => user.cid !== selectedUser.cid));
+        setSelectedUser(null);
+      } else {
+        alert("Xóa người dùng thất bại");
+      }
+    }
+  };
+  const handleDoiMatKhau = async () => {
+    if (!selectedUser) return;
+    const result = await instnguoidung(loginedUser.ctaikhoan, "4", selectedUser);
+    if (result) {
+      alert("Đổi mật khẩu người dùng thành công");
+      setUsers((prev) => prev.filter((user) => user.cid !== selectedUser.cid));
+      setSelectedUser(null);
+    } else {
+      alert("Đổi mật khẩu người dùng thất bại");
+    }
+  }
+  const handlePhanQuyen = () => {
+    if (!selectedUser) return;
+    router.push(`/phan-quyen/${selectedUser.cid}`);
+  };
+  const taikhoans:  { field: keyof IUserItem; label: string; type?: string }[] = [
+              { label: "Tài khoản", field: "ctaikhoan" },
+              { label: "Họ Tên", field: "choten" },
+              { label: "Ngày sinh", field: "cngaysinh", type: "date" },
+              { label: "Số điện thoại", field: "cdienthoai" },
+              { label: "Địa chỉ", field: "cdiachi" },
+              { label: "CCHN", field: "ccchn" },
+              { label: "Email", field: "cemail" },
+              { label: "Chức danh", field: "cchucdanh" },
+              { label: "Ghi chú", field: "cghichu" },
+              { label: "Xác thực 2 lớp", field: "cxacthuc2lop", type: "checkbox"   }, 
+            ];
   return (
     <Grid container spacing={1} p={1} className="h-full overflow-hidden">
       {/* Bảng danh sách */}
       <Grid
         size={8}
         className="h-full flex flex-col overflow-hidden bg-white p-4">
-        <Typography variant="h6" mb={1}>
+        <Typography variant="h6" mb={1} sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           DANH SÁCH NGƯỜI DÙNG
         </Typography>
         <TableContainer
@@ -114,27 +265,27 @@ export default function UserManagementPage() {
               </TableRow> */}
             </TableHead>
             <TableBody>
-              {mockUsers.map((user, idx) => (
+              {users.map((user, idx) => (
                 <StyledTableRow
-                  key={user.id}
+                  key={user.cid}
                   hover
-                  selected={selectedUser?.id === user.id}
+                  selected={selectedUser?.cid === user.cid}
                   onClick={() => handleRowClick(user)}
                   sx={{ cursor: "pointer" }}>
                   <TableCell>{idx + 1}</TableCell>
-                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.ctaikhoan}</TableCell>
                   <TableCell component="th" scope="row">
-                    {user.name}
+                    {user.choten}
                   </TableCell>
-                  <TableCell>{user.dob}</TableCell>
-                  <TableCell>{user.phone}</TableCell>
+                  <TableCell>{user.cngaysinh}</TableCell>
+                  <TableCell>{user.cdienthoai}</TableCell>
                 </StyledTableRow>
               ))}
             </TableBody>
           </Table>
           <TablePagination
             component="div"
-            count={mockUsers.length}
+            count={users.length}
             rowsPerPage={5}
             page={page}
             onPageChange={(_, newPage) => setPage(newPage)}
@@ -145,20 +296,16 @@ export default function UserManagementPage() {
       </Grid>
 
       {/* Form chi tiết */}
+     
       <Grid
         size={4}
         className="h-full flex flex-col overflow-hidden bg-white p-4">
-        <Typography variant="h6" mb={1}>
+        <Typography variant="h6" mb={1} sx={{ color: "#1976d2", letterSpacing: 1 }}>
           THÔNG TIN NGƯỜI DÙNG
-        </Typography>
+        </Typography> <form  >
         <Box className="h-full flex flex-col overflow-hidden py-2">
           <Grid container spacing={2}>
-            {[
-              { label: "Tài khoản", field: "username" },
-              { label: "Họ Tên", field: "name" },
-              { label: "Ngày sinh", field: "dob", type: "date" },
-              { label: "Số điện thoại", field: "phone" },
-            ].map(({ label, field, type }) => (
+            {taikhoans.map(({ label, field, type }) => (
               <Grid size={12} key={field}>
                 <TextField
                   fullWidth
@@ -169,39 +316,71 @@ export default function UserManagementPage() {
                   onChange={(e) => handleChange(field, e.target.value)}
                 />
               </Grid>
-            ))}
-
+            ))} 
+            <Grid size={12} >
+                <TextField
+                  fullWidth
+                  //autoComplete="current-password"
+                  size="small"
+                  label="Mật khẩu *"
+                  value=""
+                  type= "password"
+                  placeholder="********"
+                  onChange={(e) => handleChange("cmatkhau", e.target.value)}
+                  // disabled={newUserStatus === 0} // Disable when adding new user
+                />
+            </Grid>
             <Grid size={12}>
+             <Select
+                fullWidth
+                size="small"
+                value={
+                  khoaList.some((item) => item.value === selectedUser?.cmadonvi)
+                    ? selectedUser?.cmadonvi
+                    : ""
+                }
+                onChange={(e) => handleChange("cmadonvi", e.target.value)}
+                displayEmpty
+              >
+                {khoaList.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Grid>
+            <Grid size={12}>              
               <Select
                 fullWidth
                 size="small"
-                value={selectedUser?.group || ""}
-                onChange={(e) => handleChange("group", e.target.value)}
-                // input={<OutlinedInput label="Chọn nhóm người dùng" />}
-                displayEmpty>
-                <MenuItem value="">Chọn nhóm người dùng</MenuItem>
-                <MenuItem value="root">root</MenuItem>
-                <MenuItem value="admin">Admin đơn vị</MenuItem>
-                <MenuItem value="doctor">Bác sĩ</MenuItem>
-                <MenuItem value="head">Trưởng khoa</MenuItem>
+                value={
+                  nhomNguoiDungList.some((item) => item.value === selectedUser?.cmanhomnguoidung)
+                    ? selectedUser?.cmanhomnguoidung
+                    : ""
+                }
+                onChange={(e) => handleChange("cmanhomnguoidung", e.target.value)}
+                displayEmpty
+              >
+                {nhomNguoiDungList.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
               </Select>
             </Grid>
-
             <Grid size={12}>
               <Box display="flex" gap={1} flexWrap="wrap">
-                <Button variant="contained">THÊM</Button>
-                <Button variant="contained" color="primary">
-                  LƯU
-                </Button>
-                <Button variant="outlined">HUỶ</Button>
-                <Button variant="outlined" color="error">
-                  XOÁ
-                </Button>
-                <Button variant="outlined">PHÂN QUYỀN</Button>
+                <Button variant="contained" onClick={() => handleThem() }>THÊM</Button>
+                <Button variant="contained" color="primary" onClick={() => handleLuu() }>LƯU</Button>
+                <Button variant="contained" color="primary" onClick={() => handleDoiMatKhau() }>ĐỔI MẬT KHẨU</Button>
+                <Button variant="outlined" onClick={() => handleHuy() }>HUỶ</Button>
+                <Button variant="outlined" color="error" onClick={() => handleXoa() }>XOÁ</Button>
+                <Button variant="outlined" onClick={() => handlePhanQuyen() }>PHÂN QUYỀN</Button>
               </Box>
             </Grid>
           </Grid>
         </Box>
+      </form>
       </Grid>
     </Grid>
   );

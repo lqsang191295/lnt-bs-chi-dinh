@@ -6,7 +6,7 @@ import {
   FormControlLabel,
   FormControl,
   FormLabel,
-  Box, 
+  Box,
   Button,
   MenuItem,
   Select,
@@ -19,7 +19,8 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import React, { useEffect, useState } from "react";
 import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
-import { getHosobenhan } from "@/actions/emr_hosobenhan"; 
+import { getHosobenhan } from "@/actions/emr_hosobenhan";
+import { useUserStore } from "@/store/user";
 
 export default function HosoBenhAnPage() {
   const columns: GridColDef[] = [
@@ -36,7 +37,7 @@ export default function HosoBenhAnPage() {
           {params.value}
         </Button>
       ),
-    }, 
+    },
     { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
     { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
     { field: "Hoten", headerName: "Họ và tên", width: 200 },
@@ -52,82 +53,63 @@ export default function HosoBenhAnPage() {
     // { field: "hinhThuc", headerName: "Hình thức xử trí", width: 130 },
     // { field: "phieu", headerName: "Phiếu", width: 100 },
   ];
-/*
-ID, MaBANoiTru, SoBenhAn, MaBN, Hoten, Ngaysinh, Gioitinh, Dienthoai,
-        Diachi, SoCCCD, SoNhapVien, SoVaoVien, SoLuuTru, KhoaVaoVien, KhoaDieuTri,
-        NgayVao, NgayRa, LoaiBenhAn, NoiDungJson, NoiDungXml, NoiDungPdf,
-        TruongKhoaKyTen, GdbvKyTen, BsLamBAKyTen, BsDieuTriKyTen, TrangThaiBA,
-        NgayCapNhat, NgayTao
-*/
-  const rows1 = [
-    {
-      id: 1,
-      trangThai: "Mở",
-      trangThaiLuuTru: "Chưa lưu trữ",
-      phieuBG: "",
-      maBA: "BA2507290216",
-      hoTen: "TEST KSK LA KIM NGAN",
-      maBN: "BN00038313",
-      ngaySinh: "01/01/1969",
-      ngayVaoVien: "29/07/2025",
-      ngayRaVien: "29/07/2025",
-      soLuuTru: "",
-      khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-      loaiBA: "Khám bệnh",
-      loaiDieuTri: "Khám bệnh",
-      doiTuong: "Miễn phí",
-      hinhThuc: "Không thay đổi",
-      phieu: "0 / 0",
-    },
-    // thêm dữ liệu mẫu...
-  ];
-const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>([]);
-const [selectedKhoa, setSelectedKhoa] = useState("all");
-const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
-const [denNgay, setDenNgay] = useState<Date | null>(new Date());
-const [rows, setRows] = useState<any[]>([]);
-const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
+  /*
+  ID, MaBANoiTru, SoBenhAn, MaBN, Hoten, Ngaysinh, Gioitinh, Dienthoai,
+          Diachi, SoCCCD, SoNhapVien, SoVaoVien, SoLuuTru, KhoaVaoVien, KhoaDieuTri,
+          NgayVao, NgayRa, LoaiBenhAn, NoiDungJson, NoiDungXml, NoiDungPdf,
+          TruongKhoaKyTen, GdbvKyTen, BsLamBAKyTen, BsDieuTriKyTen, TrangThaiBA,
+          NgayCapNhat, NgayTao
+  */
+  // State variables
+  
+  const { data: loginedUser } = useUserStore();
+  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>([]);
+  const [selectedKhoa, setSelectedKhoa] = useState("all");
+  const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
+  const [denNgay, setDenNgay] = useState<Date | null>(new Date());
+  const [rows, setRows] = useState<any[]>([]);
+  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   // Fetch khoa list from API
   useEffect(() => {
     async function fetchKhoaList() {
       try {
-      const result =  await gettDMKhoaPhongs();
-      // console.log("Khoa Phongs fetched:", result);
-      if ( Array.isArray(result)) {
-        const mapped = result.map((item: any) => ({
-          value: item.cmakhoa,
-          label: item.ckyhieu + " - " + item.ctenkhoa,
-        }));
-        setKhoaList([{ value: "all", label: "Tất cả" }, ...mapped]);
-      } else {
-        setKhoaList([{ value: "all", label: "Tất cả" }]);
-      }
+        const result = await gettDMKhoaPhongs();
+        // console.log("Khoa Phongs fetched:", result);
+        if (Array.isArray(result)) {
+          const mapped = result.map((item: any) => ({
+            value: item.cmakhoa,
+            label: item.ckyhieu + " - " + item.ctenkhoa,
+          }));
+          setKhoaList([{ value: "all", label: "Tất cả" }, ...mapped]);
+        } else {
+          setKhoaList([{ value: "all", label: "Tất cả" }]);
+        }
       } catch (error) {
         setKhoaList([{ value: "all", label: "Tất cả" }]);
       }
     }
     fetchKhoaList();
   }, []);
-  
+
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
     if (!tuNgay || !denNgay) return;
     const formatDate = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-    const data = await getHosobenhan("userlogin", popt, selectedKhoa, formatDate(tuNgay), formatDate(denNgay));
-    console.log("popt: ",  popt);  
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }; 
+    const data = await getHosobenhan(loginedUser.ctaikhoan, popt, selectedKhoa, formatDate(tuNgay), formatDate(denNgay));
+     
     setRows(
       (data || []).map((item: any, idx: number) => ({
         id: idx + 1,
         ...item,
       }))
     );
-    console.log("Search results:", data);
+    //console.log("Search results:", data);
   };
   // Render component
   return (
@@ -136,7 +118,6 @@ const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra vi�
         <Typography variant="h6" gutterBottom sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           TRA CỨU HỒ SƠ BỆNH ÁN
         </Typography>
-
         <Grid container spacing={2} mb={2}>
           <Grid item xs={3}>
             <Select
@@ -151,7 +132,7 @@ const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra vi�
               ))}
             </Select>
           </Grid>
-           <Grid item xs={3}>
+          <Grid item xs={3}>
             <FormControl>
               <FormLabel id="popt-radio-group-label" sx={{ color: "#1976d2", fontWeight: "bold" }}
               >Tùy chọn ngày</FormLabel>
@@ -162,18 +143,18 @@ const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra vi�
                 value={popt}
                 onChange={(e) => setPopt(e.target.value)}
               >
-                <FormControlLabel value="1" control={<Radio 
-          sx={{
-            color: "#1976d2",
-            "&.Mui-checked": { color: "#1976d2" },
-          }}/>} label="Ngày vào viện" 
-      sx={{ color: "#1976d2", fontWeight: "bold" }}/>
-                <FormControlLabel value="2" control={<Radio 
-          sx={{
-            color: "#1976d2",
-            "&.Mui-checked": { color: "#1976d2" },
-          }}/>} label="Ngày ra viện" 
-      sx={{ color: "#1976d2", fontWeight: "bold" }}/>
+                <FormControlLabel value="1" control={<Radio
+                  sx={{
+                    color: "#1976d2",
+                    "&.Mui-checked": { color: "#1976d2" },
+                  }} />} label="Ngày vào viện"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }} />
+                <FormControlLabel value="2" control={<Radio
+                  sx={{
+                    color: "#1976d2",
+                    "&.Mui-checked": { color: "#1976d2" },
+                  }} />} label="Ngày ra viện"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }} />
               </RadioGroup>
             </FormControl>
           </Grid>

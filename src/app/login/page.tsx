@@ -16,6 +16,7 @@ import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { useRouter } from "next/navigation"; 
 import { login } from "@/actions/emr_tnguoidung";
+import { sha256 } from "@/utils/auth"; 
 import {
   GoogleIcon,
   FacebookIcon,
@@ -64,15 +65,6 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
     }),
   },
 }));
-// Hàm mã hóa SHA256 trả về hex string
-async function sha256(message: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-  const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [username, setUsername] = React.useState("");
@@ -88,12 +80,11 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     try { 
         const hashedPassword = await sha256(password);
         const res = await login(username, hashedPassword);
-        console.log("hashpass:", hashedPassword);
+        //console.log("hashpass:", hashedPassword);
         if (res && res.status === "success") {
         // Lưu token nếu cần
-
         Cookies.set("authToken", res.token, {expires: 7}); // Lưu token trong cookie với thời gian hết hạn 1 giờ
-        console.log("Login successful, token:", res.token);
+        //console.log("Login successful, token:", res.token);
         router.push("/");
         } else {
         setError("Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu.");

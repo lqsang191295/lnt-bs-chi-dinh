@@ -49,14 +49,14 @@ export default function RootLayout({
   const InitData = async () => {
     try {
       const menu = await getMenuItems();
-      console.log("Menu items fetched:", menu);
+      //console.log("Menu items fetched:", menu);
       setData(menu);
 
       const claims = getClaimsFromToken();
       if (claims) {
         setUserData(claims);
         // Log or handle the claims as needed 
-        console.log("User claims:", claims);
+        //console.log("User claims:", claims);
         // You can set user claims in a global state or context if needed
       } else {
         console.warn("No valid claims found in token");

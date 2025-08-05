@@ -1,7 +1,14 @@
 import { post } from "@/api/client";
-
-
-export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: string, TuNgay: string, DenNgay: string) => {
+import { IUserItem } from "@/model/user";
+import { sha256 } from "@/utils/auth";
+ 
+/** * Hàm thực hiện các thao tác với người dùng
+ * @param pUser Tên người dùng thực hiện thao tác
+ * @param pOpt Loại thao tác (1 thêm, 2 sửa, 3 xóa, 4 đổi mật khẩu )
+ * @param user Thông tin người dùng cần thao tác      
+ * @return Kết quả trả về popt=1 @@IDENTITY  as  _ID của dữ liệu được thêm, popt=2,3,4 @@ROWCOUNT  as  số dòng được cập nhật ;
+  */
+export const instnguoidung = async (pUser: string, pOpt: string, user:IUserItem) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
@@ -10,21 +17,21 @@ export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: str
       paraData: [
         { paraName: "puser", paraValue: pUser },
         { paraName: "popt", paraValue: pOpt },
-        { paraName: "cid", paraValue: KhoaDieuTri },
-        { paraName: "ctaikhoan", paraValue: TuNgay },
-        { paraName: "choten", paraValue: DenNgay },
-        { paraName: "cngaysinh", paraValue: DenNgay },
-        { paraName: "cmadonvi", paraValue: DenNgay },
-        { paraName: "cmanhomnguoidung", paraValue: DenNgay },
-        { paraName: "cdiachi", paraValue: DenNgay },
-        { paraName: "cdienthoai", paraValue: DenNgay },
-        { paraName: "ccchn", paraValue: DenNgay },
-        { paraName: "cemail", paraValue: DenNgay },
-        { paraName: "cchucdanh", paraValue: DenNgay },
-        { paraName: "cghichu", paraValue: DenNgay },
-        { paraName: "cmatkhau", paraValue: DenNgay },
-        { paraName: "cxacthuc2lop", paraValue: DenNgay },
-        { paraName: "ctrangthai", paraValue: DenNgay },
+        { paraName: "cid", paraValue: user.cid },
+        { paraName: "ctaikhoan", paraValue: user.ctaikhoan },
+        { paraName: "choten", paraValue: user.choten },
+        { paraName: "cngaysinh", paraValue: user.cngaysinh },
+        { paraName: "cmadonvi", paraValue: user.cmadonvi },
+        { paraName: "cmanhomnguoidung", paraValue: user.cmanhomnguoidung },
+        { paraName: "cdiachi", paraValue: user.cdiachi },
+        { paraName: "cdienthoai", paraValue: user.cdienthoai },
+        { paraName: "ccchn", paraValue: user.ccchn },
+        { paraName: "cemail", paraValue: user.cemail },
+        { paraName: "cchucdanh", paraValue: user.cchucdanh },
+        { paraName: "cghichu", paraValue: user.cghichu },
+        { paraName: "cmatkhau", paraValue: sha256(user.cmatkhau)},
+        { paraName: "cxacthuc2lop", paraValue: user.cxacthuc2lop },
+        { paraName: "ctrangthai", paraValue: user.ctrangthai },
       ],
     });
     //     @puser nvarchar(100),
@@ -54,8 +61,51 @@ export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: str
   }
 };
 
+export const gettnguoidung = async (pUser: string, pOpt: string) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tnguoidung",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt }, // 1: Lấy thông tin người dùng
+        { paraName: "ctaikhoan", paraValue: "0" }, 
+        { paraName: "cmatkhau", paraValue: "0" }, 
+      ],
+    }); 
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+export const gettnhomnguoidung = async (pUser: string, pOpt: string) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tnhomnguoidung",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },  
+      ],
+    }); 
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
 /**
- * Hàm đăng nhập người dùng
+ * Hàm đăng nhập  
  * @param username Tên đăng nhập
  * @param password Mật khẩu
  * @returns Kết quả đăng nhập
@@ -65,11 +115,10 @@ export const login = async (username: string, password: string) => {
     const response = await post(`/api/Auth/login`, {
       Username: username,
       Password: password,
-    }); 
-    
-
+    });
     return  response.token ? { status: "success", token: response.token } : { status: "error", message: response.message }  ;
   } catch (error) {
     return { status: "error", message: "Đăng nhập thất bại. Vui lòng thử lại." }; 
   }
 };
+

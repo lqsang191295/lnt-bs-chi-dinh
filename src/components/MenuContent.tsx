@@ -11,6 +11,16 @@ import {
   Stack,
 } from "@mui/material";
 import { ExpandLess, ExpandMore, Folder, Bookmark } from "@mui/icons-material";
+import HomeIcon from '@mui/icons-material/Home';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import SettingsIcon from '@mui/icons-material/Settings';
+import HistoryIcon from '@mui/icons-material/History';
+import IosShareIcon from '@mui/icons-material/IosShare';
+import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
+import StorageIcon from '@mui/icons-material/Storage';
+import ContentPasteSearchIcon from '@mui/icons-material/ContentPasteSearch';
+import ManageSearchIcon from '@mui/icons-material/ManageSearch';
+import SwitchAccountIcon from '@mui/icons-material/SwitchAccount';
 import Link from "next/link";
 import { useMenuStore } from "@/store/menu";
 import { buildMenuTree } from "@/utils/menu";
@@ -27,7 +37,7 @@ export default function MenuContent() {
           <ListItemIcon>
             <Bookmark />
           </ListItemIcon>
-          <ListItemText primary="BookMark" />
+          <ListItemText primary="CHỨC NĂNG" />
         </ListItemButton>
 
         {menuTree.map((item: IMenuTree) => (
@@ -41,7 +51,22 @@ export default function MenuContent() {
 function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
   const [open, setOpen] = useState(false);
   const hasChildren = item.children && item.children.length > 0;
-
+  
+  const iconMap: Record<string, React.ElementType> = {
+    home: HomeIcon,
+    SettingsIcon: SettingsIcon,
+    folder: Folder,
+    ManageAccountsIcon: ManageAccountsIcon,
+    HistoryIcon: HistoryIcon,
+    IosShareIcon: IosShareIcon,
+    PublishedWithChangesIcon: PublishedWithChangesIcon,
+    StorageIcon: StorageIcon,
+    ContentPasteSearchIcon: ContentPasteSearchIcon,
+    ManageSearchIcon: ManageSearchIcon,
+    SwitchAccountIcon: SwitchAccountIcon,
+    
+    // thêm các icon khác nếu cần
+  };
   const handleClick = () => {
     if (hasChildren) setOpen(!open);
     // nếu không có children thì bạn có thể điều hướng tại đây
@@ -51,7 +76,11 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
     <>
       <ListItemButton onClick={handleClick} sx={{ pl: 2 + level * 2 }}>
         <ListItemIcon>
-          <Folder />
+           {(() => {
+              const IconComponent = iconMap[item.cicon] || Folder;
+              console.log("iconname", item.cicon);
+              return <IconComponent />;
+            })()}
         </ListItemIcon>
         <ListItemText primary={item.ctenmenu} />
         {hasChildren ? open ? <ExpandLess /> : <ExpandMore /> : null}

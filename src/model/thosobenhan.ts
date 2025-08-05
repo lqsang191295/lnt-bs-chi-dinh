@@ -1,0 +1,30 @@
+export interface IHoSoBenhAn {
+  ID: number;
+  MaBANoiTru?: string | null;
+  SoBenhAn?: string | null;
+  MaBN?: string | null;
+  Hoten?: string | null;
+  Ngaysinh?: string | null;
+  Gioitinh?: string | null;
+  Dienthoai?: string | null;
+  Diachi?: string | null;
+  SoCCCD?: string | null;
+  SoNhapVien?: string | null;
+  SoVaoVien?: string | null;
+  SoLuuTru?: string | null;
+  KhoaVaoVien?: string | null;
+  KhoaDieuTri?: string | null;
+  NgayVao?: string | null;
+  NgayRa?: string | null;
+  LoaiBenhAn?: string | null;
+  NoiDungJson?: string | null;
+  NoiDungXml?: string | null;
+  NoiDungPdf?: string | null;
+  TruongKhoaKyTen?: string | null;
+  GdbvKyTen?: string | null;
+  BsLamBAKyTen?: string | null;
+  BsDieuTriKyTen?: string | null;
+  TrangThaiBA?: string | null;
+  NgayCapNhat?: string | null;
+  NgayTao?: string | null;
+}

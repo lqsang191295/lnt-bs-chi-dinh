@@ -11,6 +11,7 @@ export interface IUserItem {
   cemail: string;                 // Email
   cchucdanh: string;              // Chức danh
   cghichu: string;                // Ghi chú
+  cmatkhau: string;               // Mật khẩu
   cxacthuc2lop: string;           // Xác thực 2 lớp
   ctrangthai: number | string;    // Trạng thái
   cngaytao: string;               // Ngày tạo
