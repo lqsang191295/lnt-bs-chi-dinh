@@ -6,7 +6,7 @@ import { sha256 } from "@/utils/auth";
  * @param pUser Tên người dùng thực hiện thao tác
  * @param pOpt Loại thao tác (1 thêm, 2 sửa, 3 xóa, 4 đổi mật khẩu )
  * @param user Thông tin người dùng cần thao tác      
- * @return Kết quả trả về popt=1 @@IDENTITY  as  _ID của dữ liệu được thêm, popt=2,3,4 @@ROWCOUNT  as  số dòng được cập nhật ;
+ * @return Kết quả trả về: popt=1 _ID của dữ liệu được thêm, popt=2,3,4 ROW_COUNT số dòng được cập nhật ;
   */
 export const instnguoidung = async (pUser: string, pOpt: string, user:IUserItem) => {
   try {
@@ -29,7 +29,7 @@ export const instnguoidung = async (pUser: string, pOpt: string, user:IUserItem)
         { paraName: "cemail", paraValue: user.cemail },
         { paraName: "cchucdanh", paraValue: user.cchucdanh },
         { paraName: "cghichu", paraValue: user.cghichu },
-        { paraName: "cmatkhau", paraValue: sha256(user.cmatkhau)},
+        { paraName: "cmatkhau", paraValue: (await sha256(user.cmatkhau)).toString() },
         { paraName: "cxacthuc2lop", paraValue: user.cxacthuc2lop },
         { paraName: "ctrangthai", paraValue: user.ctrangthai },
       ],
@@ -57,6 +57,39 @@ export const instnguoidung = async (pUser: string, pOpt: string, user:IUserItem)
 
     return response.message;
   } catch {
+    return [];
+  }
+};
+
+export const instnguoidungdoimatkhau = async (pUser: string, pOpt: string,
+  user: { userid: string, oldPassword: string, newPassword: string }) => {
+  try {
+    // console.log("ctaikhoan:", pUser);
+    // console.log("popt:", pOpt);
+    // console.log("userid:", user.userid);
+    // console.log("old:", user.oldPassword);
+    // console.log("oldhash:", (await sha256(user.oldPassword)).toString());
+    // console.log("new:", user.newPassword);
+    // console.log("newhash:", (await sha256(user.newPassword)).toString());
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pins_tnguoidung_doimatkhau",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "cid", paraValue: user.userid },
+        { paraName: "cmatkhaucu", paraValue: (await sha256(user.oldPassword)).toString() },
+        { paraName: "cmatkhau", paraValue: (await sha256(user.newPassword)).toString() }
+      ]
+    }); 
+    if (response.status === "error") {
+      return [];
+    }
+    //console.log("instnguoidungdoimatkhau response:", response);
+    return response.message;
+  } catch (error) {
+    //console.log("instnguoidungdoimatkhau error:", error); 
     return [];
   }
 };
@@ -122,3 +155,102 @@ export const login = async (username: string, password: string) => {
   }
 };
 
+
+export const getphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan: string) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tphanquyenbakhoa",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },  
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
+      ],
+    }); 
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+
+export const luuphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan: string, cmakhoa: string, ctrangthai: string) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pins_tphanquyenbakhoa",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },  
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
+        { paraName: "cmakhoa", paraValue: cmakhoa },  
+        { paraName: "ctrangthai", paraValue: ctrangthai },  
+        { paraName: "cnguoitao", paraValue: pUser },
+        { paraName: "cnguoicapnhat", paraValue: pUser }
+      ],
+    }); 
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+
+export const getphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: string) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tphanquyenmenu",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },  
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
+      ],
+    }); 
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+
+export const luuphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: string, cmenu: string, ctrangthai: string) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pins_tphanquyenmenu",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },  
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
+        { paraName: "cmenu", paraValue: cmenu },  
+        { paraName: "ctrangthai", paraValue: ctrangthai },  
+        { paraName: "cnguoitao", paraValue: pUser },
+        { paraName: "cnguoicapnhat", paraValue: pUser }
+      ],
+    }); 
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};

@@ -1,5 +1,5 @@
 export interface IUserItem {
-  cid: number | string;           // ID user
+  cid: string;                    // ID user
   ctaikhoan: string;              // Tài khoản
   choten: string;                 // Họ tên
   cngaysinh: string;              // Ngày sinh

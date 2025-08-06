@@ -14,6 +14,8 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { usePathname } from "next/navigation";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT  
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,9 +42,14 @@ export default function RootLayout({
   const useNoLayout = pathnameNotUseLayout.some((path) =>
     pathname.startsWith(path)
   );
+  const router = useRouter();
   const { setData } = useMenuStore();
   const {setUserData} = useUserStore(); 
   useEffect(() => {
+    const token = Cookies.get("authToken");
+    if (!token && window.location.pathname !== "/login") {
+      router.push("/login");
+    }
     InitData();
   }, []);
 

@@ -98,7 +98,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   return (
     <SignInContainer direction="column" justifyContent="space-between">
       <Card variant="outlined">
-        <SitemarkIcon />
+        <img src="/logo.png" alt="Logo" style={{ height: 32, width: 32 }} />
         <Typography
           component="h1"
           variant="h4"

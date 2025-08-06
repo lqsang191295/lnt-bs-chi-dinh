@@ -48,7 +48,7 @@ const Logged = () => {
         }}>
         <MenuContent />
         <CardAlert />
-      </Box>
+      </Box>{/* 
       <Stack
         direction="row"
         sx={{
@@ -74,8 +74,8 @@ const Logged = () => {
             riley@email.com
           </Typography>
         </Box>
-        <OptionsMenu />
-      </Stack>
+        <OptionsMenu /> 
+      </Stack>*/}
     </Drawer>
   );
 };
@@ -106,7 +106,7 @@ export default function SideMenu() {
           <MenuContent />
           <CardAlert />
         </Box>
-        <Stack
+        {/* <Stack
           direction="row"
           sx={{
             p: 2,
@@ -121,7 +121,7 @@ export default function SideMenu() {
             }}>
             Login
           </Button>
-        </Stack>
+        </Stack> */}
       </Drawer>
     );
   }

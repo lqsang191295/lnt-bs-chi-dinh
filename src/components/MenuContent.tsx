@@ -78,7 +78,7 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
         <ListItemIcon>
            {(() => {
               const IconComponent = iconMap[item.cicon] || Folder;
-              console.log("iconname", item.cicon);
+              //console.log("iconname", item.cicon);
               return <IconComponent />;
             })()}
         </ListItemIcon>
