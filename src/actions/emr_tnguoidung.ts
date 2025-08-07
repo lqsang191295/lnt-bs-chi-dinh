@@ -9,7 +9,12 @@ import { sha256 } from "@/utils/auth";
  * @return Kết quả trả về: popt=1 _ID của dữ liệu được thêm, popt=2,3,4 ROW_COUNT số dòng được cập nhật ;
   */
 export const instnguoidung = async (pUser: string, pOpt: string, user:IUserItem) => {
-  try {
+  try {   
+
+      console.log("puser", pUser);
+      console.log("popt", pOpt);
+      console.log("user", user);
+       
     const response = await post(`/api/callService`, {
       userId: "",
       option: "",
@@ -117,6 +122,29 @@ export const gettnguoidung = async (pUser: string, pOpt: string) => {
   }
 };
 
+export const gettnhatkynguoidung = async (pUser: string, pOpt: string, sTuNgay: string, sDenNgay: string) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tnhatkynguoidung",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt }, 
+        { paraName: "tungay", paraValue: sTuNgay },
+        { paraName: "denngay", paraValue: sDenNgay },
+      ],
+    }); 
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
 export const gettnhomnguoidung = async (pUser: string, pOpt: string) => {
   try {
     const response = await post(`/api/callService`, {
@@ -171,7 +199,6 @@ export const getphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan:
     if (response.status === "error") {
       return [];
     }
-
     return response.message;
   } catch {
     return [];
@@ -198,7 +225,6 @@ export const luuphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan:
     if (response.status === "error") {
       return [];
     }
-
     return response.message;
   } catch {
     return [];
@@ -221,7 +247,6 @@ export const getphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: s
     if (response.status === "error") {
       return [];
     }
-
     return response.message;
   } catch {
     return [];
@@ -245,6 +270,71 @@ export const luuphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: s
         { paraName: "cnguoicapnhat", paraValue: pUser }
       ],
     }); 
+    if (response.status === "error") {
+      return [];
+    }
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+export const getphanquyenba = async (pUser: string, pOpt: string, ctaikhoan: string, KhoaDieuTri: string, TuNgay: string, DenNgay: string) => {
+  try {    
+    // console.log("puser:", pUser);
+    // console.log("popt:", pOpt);
+    // console.log("ctaikhoan:", ctaikhoan);
+    // console.log("KhoaDieuTri:", KhoaDieuTri);
+    // console.log("TuNgay:", TuNgay);
+    // console.log("DenNgay:", DenNgay);
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tphanquyenba",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },
+        { paraName: "KhoaDieuTri", paraValue: KhoaDieuTri },
+        { paraName: "TuNgay", paraValue: TuNgay },
+        { paraName: "DenNgay", paraValue: DenNgay },
+      ],
+    });
+    // console.log("getphanquyenba response:", response);
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+export const luuphanquyenba = async (pUser: string, pOpt: string, ctaikhoan: string, cmaba: string, ctrangthai: string) => {
+  try {
+    // console.log("puser:", pUser);
+    // console.log("popt:", pOpt);
+    // console.log("ctaikhoan:", ctaikhoan);
+    // console.log("cmaba:", cmaba);
+    // console.log("ctrangthai:", ctrangthai);
+    // console.log("cnguoitao:", pUser);
+    // console.log("cnguoicapnhat:", pUser);
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pins_tphanquyenba",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },  
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
+        { paraName: "cmaba", paraValue: cmaba },  
+        { paraName: "ctrangthai", paraValue: ctrangthai },  
+        { paraName: "cnguoitao", paraValue: pUser },
+        { paraName: "cnguoicapnhat", paraValue: pUser }
+      ],
+    }); 
+    // console.log("luuphanquyenba response:", response);
     if (response.status === "error") {
       return [];
     }

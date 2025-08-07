@@ -21,6 +21,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import ContentPasteSearchIcon from '@mui/icons-material/ContentPasteSearch';
 import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import SwitchAccountIcon from '@mui/icons-material/SwitchAccount';
+import EventRepeatOutlinedIcon from '@mui/icons-material/EventRepeatOutlined';
 import Link from "next/link";
 import { useMenuStore } from "@/store/menu";
 import { buildMenuTree } from "@/utils/menu";
@@ -64,7 +65,7 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
     ContentPasteSearchIcon: ContentPasteSearchIcon,
     ManageSearchIcon: ManageSearchIcon,
     SwitchAccountIcon: SwitchAccountIcon,
-    
+    EventRepeatOutlinedIcon: EventRepeatOutlinedIcon,
     // thêm các icon khác nếu cần
   };
   const handleClick = () => {

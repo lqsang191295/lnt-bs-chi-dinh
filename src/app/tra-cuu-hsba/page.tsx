@@ -135,7 +135,7 @@ export default function HosoBenhAnPage() {
           <Grid item xs={3}>
             <FormControl>
               <FormLabel id="popt-radio-group-label" sx={{ color: "#1976d2", fontWeight: "bold" }}
-              >Tùy chọn ngày</FormLabel>
+              ></FormLabel>
               <RadioGroup
                 row
                 aria-labelledby="popt-radio-group-label"

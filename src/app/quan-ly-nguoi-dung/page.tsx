@@ -21,14 +21,23 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
-import { IUserItem } from "@/model/user"; 
-import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
-import { instnguoidung, gettnguoidung, gettnhomnguoidung, getphanquyenbakhoa, luuphanquyenbakhoa, getphanquyenmenu, luuphanquyenmenu} from "@/actions/emr_tnguoidung";
 import { get } from "http";
-import { useUserStore } from "@/store/user";
 import { useRouter } from "next/navigation"; 
 import CloseIcon from "@mui/icons-material/Close";
 import * as MuiIcons from "@mui/icons-material";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import Draggable from "react-draggable";
+import { IUserItem } from "@/model/user"; 
+import { useUserStore } from "@/store/user";
+import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong"; 
+import { 
+  instnguoidung, gettnguoidung, 
+  gettnhomnguoidung, 
+  getphanquyenbakhoa, luuphanquyenbakhoa, 
+  getphanquyenmenu, luuphanquyenmenu,
+  getphanquyenba, luuphanquyenba
+} from "@/actions/emr_tnguoidung";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -45,6 +54,25 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     backgroundColor: theme.palette.action.hover,
   },
 }));
+
+// Wrapper cho DialogContent để resize
+const ResizablePaper = React.forwardRef(function ResizablePaper(props: any, ref) {
+  return (
+    <Paper
+      ref={ref}
+      {...props}
+      style={{
+        resize: "both",
+        overflow: "auto",
+        minWidth: 1024,
+        minHeight: 768,
+        maxWidth: "100vw",
+        maxHeight: "100vh",
+        ...props.style,
+      }}
+    />
+  );
+});
 
 function TabPanel(props: { children?: React.ReactNode; value: number; index: number }) {
   const { children, value, index, ...other } = props;
@@ -73,24 +101,17 @@ export default function UserManagementPage() {
   { cthutu: String; cidquyen: string; cidkhoa: string; cmakhoa: string; ctenkhoa: string; ckyhieu: string; ctrangthai: number }[]
 >([]);
 // State cho tab phân quyền BA
-const [selectedKhoaBA, setSelectedKhoaBA] = useState("");
-const [fromDate, setFromDate] = useState("");
-const [toDate, setToDate] = useState("");
+const [selectedKhoaBA, setSelectedKhoaBA] = useState("all");
+const [fromDate, setFromDate] = useState<Date>(new Date());
+const [toDate, setToDate] = useState<Date>(new Date());
 const [dsHSBA, setDsHSBA] = useState<
-  { maBA: string; hoten: string; tuoi: number; ngayvaovien: string; khoadieutri: string; ketqua: string; checked: boolean }[]
+  { ID: string; SoBenhAn: string; hoten: string; Ngaysinh: string; Gioitinh: string;Diachi:string; SoVaoVien: string; NgayVao: string;  NgayRa: string; KhoaDieuTri: string; ctrangthai: number }[]
 >([]);
 // state cho danh sách menu phân quyền
 const [dsMenu, setDsMenu] = useState<
   { cid: string; cthutu: string; cmamenu: string; ctenmenu: string; clink: string; ccap: number; cidcha: string; cicon: string; ctrangthai: number }[]
 >([]);
  
-// const handleCheckMenu = (cid: string) => {
-//   setDsMenu((prev) =>
-//     prev.map((row) =>
-//       row.cid === cid ? { ...row, ctrangthai: row.ctrangthai === 1 ? 0 : 1 } : row
-//     )
-//   );
-// };
 const handleCheckMenu = (cid: string, checked: boolean, newMenuList: any[]) => {
   setDsMenu(newMenuList);
 };
@@ -98,16 +119,24 @@ const handleLuuPhanQuyenMenu = async () => {
   if (!selectedUser) return;
   for (const item of dsMenu) {
     // Gọi API lưu phân quyền menu cho từng menu
-    await luuphanquyenmenu(selectedUser.ctaikhoan,"1",selectedUser.ctaikhoan,item.cmamenu, item.ctrangthai.toString());
+    await luuphanquyenmenu(loginedUser.ctaikhoan,"1",selectedUser.ctaikhoan,item.cid, item.ctrangthai.toString());
   }
   alert("Lưu phân quyền menu thành công!");
 };
 // Hàm lấy danh sách HSBA theo filter
 const fetchHSBA = async () => {
   // TODO: Gọi API lấy danh sách HSBA theo selectedKhoaBA, fromDate, toDate
-  // Ví dụ:
-  // const result = await getDanhSachHSBA(selectedKhoaBA, fromDate, toDate);
-  // setDsHSBA(result);
+  if (!selectedUser) return;  
+  if (!fromDate || !toDate) return;
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const result = await getphanquyenba(loginedUser.ctaikhoan,"1", selectedUser.ctaikhoan, selectedKhoaBA, formatDate(fromDate), formatDate(toDate));
+  //console.log("Danh sách HSBA:", result);
+  setDsHSBA(result);
 };
 function MenuTree({ menuList, onCheck }: { menuList: any[]; onCheck: (cid: string, checked: boolean, newMenuList: any[]) => void }) {
   // Tạo cây từ danh sách phẳng, menu gốc có cidcha = "" hoặc "0"
@@ -199,21 +228,22 @@ function MenuTree({ menuList, onCheck }: { menuList: any[]; onCheck: (cid: strin
         {node.ctenmenu}
       </span>
       {node.children && node.children.length > 0 && (
-         <Box sx={{  display: "flex", flexDirection: "column", width: "78%" }}>
+        //  <Box sx={{  display: "flex", flexDirection: "column", width: "78%" }}>
+        <span style={{ width: "78%" }}>
           {node.children.map((child: any) => renderNode(child, level + 1))}
-         </Box>
+        </span>
+        //  </Box>
       )}
     </Box>
   );
-
   return <Box sx={{ pl: 1 }}>{tree.map((node) => renderNode(node))}</Box>;
 }
 
 // Hàm xử lý chọn/bỏ chọn HSBA
-const handleCheckHSBA = (maBA: string) => {
+const handleCheckHSBA = (ID: string) => {
   setDsHSBA((prev) =>
     prev.map((row) =>
-      row.maBA === maBA ? { ...row, checked: !row.checked } : row
+      row.ID === ID ? { ...row, ctrangthai: row.ctrangthai === 1 ? 0 : 1 } : row
     )
   );
 };
@@ -221,9 +251,9 @@ const handleCheckHSBA = (maBA: string) => {
 // Hàm lưu phân quyền BA
 const handleLuuPhanQuyenBA = async () => {
   if (!selectedUser) return;
-  for (const item of dsHSBA.filter((row) => row.checked)) {
+  for (const item of dsHSBA.filter((row) => row.ctrangthai === 1)) {
     // TODO: Gọi API lưu phân quyền BA cho user
-    // await luuPhanQuyenBA(selectedUser.ctaikhoan, item.maBA);
+    await luuphanquyenba(loginedUser.ctaikhoan, "1", selectedUser.ctaikhoan, item.ID, item.ctrangthai.toString());
   }
   alert("Lưu phân quyền BA thành công!");
 };
@@ -231,14 +261,17 @@ const handleLuuPhanQuyenBA = async () => {
 const [phanQuyenKhoaChecked, setPhanQuyenKhoaChecked] = useState<string[]>([]);
 const handleTabChange = async (_: any, newIndex: number) => {
   setTabIndex(newIndex);
-  if (newIndex === 1 && selectedUser) {
+  if (newIndex === 0 && selectedUser) {
     // Gọi API lấy danh sách menu phân quyền cho user
-    const result = await getphanquyenmenu(selectedUser.ctaikhoan, "1", selectedUser.ctaikhoan); // Viết hàm này theo API của bạn
-    console.log("dsMenu phan quyen user", result);
+    const result = await getphanquyenmenu(loginedUser.ctaikhoan, "1", selectedUser.ctaikhoan); // Viết hàm này theo API của bạn
+    //console.log("dsMenu phan quyen user", result);
     if (Array.isArray(result)) setDsMenu(result);
     else setDsMenu([]);
   }
-  if (newIndex === 3 && selectedUser) {
+   if (newIndex === 1 && selectedUser) {
+    // Gọi API lấy danh sách phân quyền cho user theo HSBA
+  }
+  if (newIndex === 2 && selectedUser) {
     // Gọi API lấy danh sách quyền khoa của user
     const result = await getphanquyenbakhoa(loginedUser.ctaikhoan,"1",selectedUser.ctaikhoan); // Hàm này bạn tự viết
     if (Array.isArray(result)) setDsQuyenKhoa(result);
@@ -259,13 +292,13 @@ const handleTabChange = async (_: any, newIndex: number) => {
       // Lặp từng dòng dsQuyenKhoa, chỉ lấy dòng có thay đổi trạng thái
       for (const item of dsQuyenKhoa) {
         // Gọi API lưu phân quyền cho từng khoa
-        await luuphanquyenbakhoa(selectedUser.ctaikhoan, "1", selectedUser.ctaikhoan, item.cmakhoa, item.ctrangthai.toString());
+        await luuphanquyenbakhoa(loginedUser.ctaikhoan, "1", selectedUser.ctaikhoan, item.cmakhoa, item.ctrangthai.toString());
       }
       alert("Lưu phân quyền BA theo khoa thành công!");
   };
 
   const handlePhanQuyen = () => {
-    if (!selectedUser) return;
+    if (!selectedUser) return;  
     setOpenPhanQuyen(true);
   };
 
@@ -273,10 +306,10 @@ const handleTabChange = async (_: any, newIndex: number) => {
     setOpenPhanQuyen(false);
   };
   useEffect(() => {
-    if (!loginedUser || !loginedUser.ctaikhoan) {
-      router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
-      return;
-    }
+    // if (!loginedUser || !loginedUser.ctaikhoan) {
+    //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
+    //   return;
+    // }
     async function fetchUsers() {
       const result = await gettnguoidung(loginedUser.ctaikhoan, "1");
       if (Array.isArray(result)) {
@@ -311,19 +344,19 @@ const handleTabChange = async (_: any, newIndex: number) => {
             value: item.cid,
             label: item.ckyhieu + " - " + item.ctenkhoa,
           }));
-          setKhoaList([{ value: "", label: "Chọn Khoa phòng" }, ...mapped]);
+          setKhoaList([{ value: "all", label: "Tất cả" }, ...mapped]);
         } else {
-          setKhoaList([{ value: "", label: "Chọn Khoa phòng" }]);
+          setKhoaList([{ value: "all", label: "Tất cả" }]);
         }
       } catch (error) {
-        setKhoaList([{ value: "", label: "Chọn Khoa phòng" }]);
+        setKhoaList([{ value: "all", label: "Tất cả" }]);
       }
     }
     fetchKhoaList();
   }, [loginedUser]);
   const handleRowClick = (user: any) => {
     setSelectedUser(user);
-     console.log("manhomnguoidung", user.cmanhomnguoidung);
+    // console.log("manhomnguoidung", user.cmanhomnguoidung);
   };
   const handleChange = (field: string, value: any) => {
     setSelectedUser((prev) => {
@@ -371,7 +404,16 @@ const handleTabChange = async (_: any, newIndex: number) => {
         return;
       }
       const result = await instnguoidung(loginedUser.ctaikhoan, "1", selectedUser);
-      if (result) {
+      
+      const arr = result as Array<{ _ID: number }>;
+
+      if (typeof arr === "string" && arr === "Authorization has been denied for this request.") {
+        alert("Bạn không có quyền thêm người dùng!");
+      } else if (
+        Array.isArray(arr) &&
+        arr.length > 0 &&
+        typeof arr[0]._ID !== "undefined"
+      ) {
         alert("Thêm người dùng thành công");
         setUsers((prev) => [...prev, selectedUser]);
         setSelectedUser(null);
@@ -379,19 +421,27 @@ const handleTabChange = async (_: any, newIndex: number) => {
       } else {
         alert("Thêm người dùng thất bại");
       }
-      return; 
     }
     else if (newUserStatus === 0) { 
       if (!selectedUser) return;
-      console.log("selectedUser", selectedUser);
+      //console.log("selectedUser", selectedUser);
       const result = await instnguoidung(loginedUser.ctaikhoan, "2", selectedUser);
       console.log("result", result);
-      if (result) {
+      const arr = result as Array<{ ROW_COUNT: number }>;
+
+      if (typeof arr === "string" && arr === "Authorization has been denied for this request.") {
+        alert("Bạn không có quyền cập nhật thông tin người dùng!");
+      } else if (
+        Array.isArray(arr) &&
+        arr.length > 0 &&
+        typeof arr[0].ROW_COUNT !== "undefined"
+      ) {
         alert("Cập nhật người dùng thành công");
         setUsers((prev) => prev.map((user) => (user.cid === selectedUser.cid ? selectedUser : user)));
       } else {
         alert("Cập nhật người dùng thất bại");
       }
+      
     }
   };
 
@@ -425,7 +475,6 @@ const handleTabChange = async (_: any, newIndex: number) => {
   }
   
   const taikhoans:  { field: keyof IUserItem; label: string; type?: string }[] = [
-              { label: "Tài khoản", field: "ctaikhoan" },
               { label: "Họ Tên", field: "choten" },
               { label: "Ngày sinh", field: "cngaysinh", type: "date" },
               { label: "Số điện thoại", field: "cdienthoai" },
@@ -434,10 +483,13 @@ const handleTabChange = async (_: any, newIndex: number) => {
               { label: "Email", field: "cemail" },
               { label: "Chức danh", field: "cchucdanh" },
               { label: "Ghi chú", field: "cghichu" },
-              { label: "Xác thực 2 lớp", field: "cxacthuc2lop", type: "checkbox"   }, 
+              { label: "Tài khoản đăng nhập", field: "ctaikhoan" },
+              // { label: "Xác thực 2 lớp", field: "cxacthuc2lop", type: "checkbox"   }, 
             ];
   return (
+  <LocalizationProvider dateAdapter={AdapterDateFns}>
     <Grid container spacing={1} p={1} className="h-full overflow-hidden">
+    
       {/* Bảng danh sách */}
       <Grid
         size={8}
@@ -520,34 +572,10 @@ const handleTabChange = async (_: any, newIndex: number) => {
         </Typography> <form  >
         <Box className="h-full flex flex-col overflow-hidden py-2">
           <Grid container spacing={2}>
-            {taikhoans.map(({ label, field, type }) => (
-              <Grid size={12} key={field}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label={`${label} *`}
-                  value={selectedUser?.[field] || ""}
-                  type={type || "text"}
-                  onChange={(e) => handleChange(field, e.target.value)}
-                />
-              </Grid>
-            ))} 
-            <Grid size={12} >
-              <TextField
-                fullWidth
-                size="small"
-                label="Mật khẩu *"
-                value={newUserStatus === 1 ? password : selectedUser?.cmatkhau || ""}
-                type="password"
-                placeholder="********"
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  handleChange("cmatkhau", e.target.value);
-                }}
-                disabled={false}
-              />
-            </Grid>
-            <Grid size={12}>
+            <Grid size={12}>              
+              <Typography component="label" sx={{ fontSize: "small", whiteSpace: "normal", lineHeight: 1.2 ,color: "#4d5052ff", letterSpacing: 1 }}>
+                Khoa phòng
+              </Typography>
              <Select
                 fullWidth
                 size="small"
@@ -566,7 +594,10 @@ const handleTabChange = async (_: any, newIndex: number) => {
                 ))}
               </Select>
             </Grid>
-            <Grid size={12}>              
+            <Grid size={12}> 
+                <Typography component="label" sx={{ fontSize: "small", whiteSpace: "normal", lineHeight: 1.2 ,color: "#4d5052ff", letterSpacing: 1 }}>
+                 Nhóm người dùng
+                </Typography>             
               <Select
                 fullWidth
                 size="small"
@@ -585,6 +616,47 @@ const handleTabChange = async (_: any, newIndex: number) => {
                 ))}
               </Select>
             </Grid>
+            {taikhoans.map(({ label, field, type }) => (
+              <Grid size={12} key={field}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={`${label} *`}
+                  value={selectedUser?.[field] || ""}
+                  type={type || "text"}
+                  onChange={(e) => handleChange(field, e.target.value)}
+                />
+              </Grid>
+            ))} 
+            <Grid size={12}>
+              <Box display="flex" alignItems="center" minHeight={40}>
+                <input
+                  type="checkbox"
+                  checked={selectedUser?.cxacthuc2lop === "1"}
+                  onChange={(e) => handleChange("cxacthuc2lop", e.target.checked ? "1" : "0")}
+                  style={{ marginRight: 8 }}
+                />
+                <Typography component="label" sx={{ whiteSpace: "normal", lineHeight: 1.2 ,color: "#191a1bff", letterSpacing: 1 }}>
+                  Xác thực 2 lớp *
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid size={12} >
+              <TextField
+                fullWidth
+                size="small"
+                label="Mật khẩu *"
+                value={newUserStatus === 1 ? password : selectedUser?.cmatkhau || ""}
+                type="password"
+                placeholder="********"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  handleChange("cmatkhau", e.target.value);
+                }}
+                disabled={false}
+              />
+            </Grid>
+            
             <Grid size={12}>
               <Box display="flex" gap={1} flexWrap="wrap">
                 <Button variant="contained" onClick={() => handleThem() }>THÊM</Button>
@@ -599,8 +671,32 @@ const handleTabChange = async (_: any, newIndex: number) => {
         </Box>
       </form>
       </Grid>
-      <Dialog open={openPhanQuyen} onClose={handleClosePhanQuyen} maxWidth="xl" fullWidth>
-        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <Dialog open={openPhanQuyen} onClose={handleClosePhanQuyen}
+        maxWidth={false}
+        slots={{ paper: ResizablePaper }}
+        slotProps={{
+          paper: {
+            component: (props: any) => (
+              <Draggable
+                handle="#draggable-dialog-title"
+                cancel={'[class*="MuiDialogContent-root"]'}
+              >
+                <div {...props} />
+              </Draggable>
+            ),
+          },
+        }}
+      >
+        <DialogTitle 
+          id="draggable-dialog-title" 
+          sx={{ 
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            cursor: "move", // Hiện icon move khi hover tiêu đề
+            userSelect: "none",
+          }}
+        >
           <Typography fontWeight="bold">PHÂN QUYỀN NGƯỜI DÙNG</Typography>
           <IconButton onClick={handleClosePhanQuyen}>
             <CloseIcon />
@@ -611,24 +707,19 @@ const handleTabChange = async (_: any, newIndex: number) => {
             <Typography fontWeight="bold" mb={2}>THÔNG TIN NGƯỜI DÙNG</Typography>
             <Typography>Họ tên: {selectedUser?.choten}</Typography>
             <Typography>Tài khoản: {selectedUser?.ctaikhoan}</Typography>
-            <Typography>Đơn vị: {selectedUser?.cmadonvi}</Typography>
+              <Typography>  Đơn vị: {khoaList.find((item) => item.value === selectedUser?.cmadonvi)?.label || ""}</Typography>
           </Box>
           <Box sx={{ flex: 3 }}>
             <Tabs value={tabIndex} onChange={handleTabChange} sx={{ mb: 2 }}>
               <Tab label="Phân quyền chức năng" />
-              <Tab label="Phân quyền menu" />
-              <Tab label="Phân quyền BA" />
-              <Tab label="Phân quyền BA theo khoa" />
+              <Tab label="Phân quyền theo HSBA" />
+              <Tab label="Phân quyền HSBA theo khoa" />
             </Tabs>
             <TabPanel value={tabIndex} index={0}>
               {/* TODO: Phân quyền chức năng */}
-              <Typography>Phân quyền chức năng cho user</Typography>
-            </TabPanel>
-            <TabPanel value={tabIndex} index={1}>
-              {/* TODO: Phân quyền menu */}
                <Box sx={{ border: "1px solid #ccc", borderRadius: 2, p: 2, bgcolor: "#fff", maxHeight: 400, overflowY: "auto" }}>
                   <Typography fontWeight="bold" mb={2} sx={{ color: "#1976d2" }}>
-                    Danh sách menu
+                    Danh sách chức năng
                   </Typography>
                   <MenuTree
                     menuList={dsMenu}
@@ -641,7 +732,7 @@ const handleTabChange = async (_: any, newIndex: number) => {
                   </Box>
                 </Box>
             </TabPanel>
-            <TabPanel value={tabIndex} index={2}>
+            <TabPanel value={tabIndex} index={1}>
               {/* TODO: Phân quyền BA */}
                 <Box sx={{ border: "1px solid #ccc", borderRadius: 2, p: 2, bgcolor: "#fff" }}>
                   <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
@@ -658,56 +749,71 @@ const handleTabChange = async (_: any, newIndex: number) => {
                         </MenuItem>
                       ))}
                     </Select>
-                    <TextField
-                      size="small"
-                      type="date"
+                    <DatePicker
                       label="Từ ngày"
                       value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
-                      InputLabelProps={{ shrink: true }}
+                      onChange={setFromDate}
+                      format="dd/MM/yyyy"
                     />
-                    <TextField
-                      size="small"
-                      type="date"
-                      label="Đến ngày"
-                      value={toDate}
-                      onChange={(e) => setToDate(e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
+                     <DatePicker
+                        label="Đến ngày"
+                        value={toDate}
+                        onChange={setToDate}
+                        format="dd/MM/yyyy"
+                      /> 
                     <Button variant="contained" onClick={fetchHSBA}>Tìm kiếm</Button>
                   </Box>
-                  <Table size="small" sx={{ border: "1px solid #eee" }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell width={40}></TableCell>
-                        <TableCell>Mã BA</TableCell>
-                        <TableCell>Họ và tên</TableCell>
-                        <TableCell>Tuổi</TableCell>
-                        <TableCell>Ngày vào viện</TableCell>
-                        <TableCell>Khoa điều trị</TableCell>
-                        <TableCell>Kết quả điều trị</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {dsHSBA.map((item) => (
-                        <TableRow key={item.maBA}>
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              checked={item.checked}
-                              onChange={() => handleCheckHSBA(item.maBA)}
-                            />
-                          </TableCell>
-                          <TableCell>{item.maBA}</TableCell>
-                          <TableCell>{item.hoten}</TableCell>
-                          <TableCell>{item.tuoi}</TableCell>
-                          <TableCell>{item.ngayvaovien}</TableCell>
-                          <TableCell>{item.khoadieutri}</TableCell>
-                          <TableCell>{item.ketqua}</TableCell>
+                  <TableContainer sx={{ maxHeight: 440, flex: 1, overflowY: "auto"  }}>  
+                    <Table size="small" sx={{ border: "1px solid #eee" }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell
+                            width={40}
+                            sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}
+                          ></TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Mã BA</TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Số vào viện</TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Họ tên</TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Ngày sinh</TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Giới tính</TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Địa chỉ</TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Ngày vào viện</TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Ngày ra viện</TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Khoa điều trị</TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHead>
+                      <TableBody>
+                        {Array.isArray(dsHSBA) && dsHSBA.length > 0 ? (
+                          dsHSBA.map((item) => (
+                            <TableRow key={item.ID} sx={{ cursor: "pointer" }}>
+                              <TableCell>
+                                <input
+                                  type="checkbox"
+                                  checked={item.ctrangthai === 1}
+                                  onChange={() => handleCheckHSBA(item.ID)}
+                                />
+                              </TableCell>
+                              <TableCell>{item.ID}</TableCell>
+                              <TableCell>{item.SoVaoVien}</TableCell>
+                              <TableCell>{item.hoten}</TableCell>
+                              <TableCell>{item.Ngaysinh}</TableCell>
+                              <TableCell>{item.Gioitinh}</TableCell>
+                              <TableCell>{item.Diachi}</TableCell>
+                              <TableCell>{item.NgayVao}</TableCell>
+                              <TableCell>{item.NgayRa}</TableCell>
+                              <TableCell>{item.KhoaDieuTri}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={10} align="center">
+                              Không có dữ liệu
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                   <Box sx={{ textAlign: "right", mt: 2 }}>
                     <Button variant="contained" onClick={handleLuuPhanQuyenBA}>
                       LƯU
@@ -715,44 +821,49 @@ const handleTabChange = async (_: any, newIndex: number) => {
                   </Box>
               </Box>
             </TabPanel>
-            <TabPanel value={tabIndex} index={3}>
+            <TabPanel value={tabIndex} index={2}>
               {/* TODO: Phân quyền BA theo khoa */} 
                 <Box sx={{ border: "1px solid #ccc", borderRadius: 2, p: 2, bgcolor: "#fff" }}>
                   <Typography fontWeight="bold" mb={2} sx={{ color: "#1976d2" }}>
                     Danh sách khoa
                   </Typography>
-                  <Table size="small" sx={{ border: "1px solid #eee" }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell width={40}></TableCell>
-                        <TableCell>Ký hiệu</TableCell>
-                        <TableCell>Tên khoa</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {dsQuyenKhoa.map((item) => (
-                        <TableRow key={item.cidkhoa}>
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              checked={item.ctrangthai === 1}
-                              onChange={() => {
-                                setDsQuyenKhoa((prev) =>
-                                  prev.map((row) =>
-                                    row.cidkhoa === item.cidkhoa
-                                      ? { ...row, ctrangthai: row.ctrangthai === 1 ? 0 : 1 }
-                                      : row
-                                  )
-                                );
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>{item.ckyhieu}</TableCell>
-                          <TableCell>{item.ctenkhoa}</TableCell>
+                  <TableContainer sx={{ maxHeight: 440, flex: 1, overflowY: "auto" }}>
+                    <Table size="small" sx={{ border: "1px solid #eee" }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell
+                            width={40}
+                            sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}
+                          ></TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Ký hiệu</TableCell>
+                          <TableCell sx={{ position: "sticky", top: 0, background: "#fff", fontWeight: "bold", zIndex: 1 }}>Tên khoa</TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHead>
+                      <TableBody>
+                        {dsQuyenKhoa.map((item) => (
+                          <TableRow key={item.cidkhoa}>
+                            <TableCell>
+                              <input
+                                type="checkbox"
+                                checked={item.ctrangthai === 1}
+                                onChange={() => {
+                                  setDsQuyenKhoa((prev) =>
+                                    prev.map((row) =>
+                                      row.cidkhoa === item.cidkhoa
+                                        ? { ...row, ctrangthai: row.ctrangthai === 1 ? 0 : 1 }
+                                        : row
+                                    )
+                                  );
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>{item.ckyhieu}</TableCell>
+                            <TableCell>{item.ctenkhoa}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                   <Box sx={{ textAlign: "right", mt: 2 }}>
                     <Button variant="contained" onClick={handleLuuPhanQuyenKhoa}>
                       LƯU
@@ -761,16 +872,9 @@ const handleTabChange = async (_: any, newIndex: number) => {
                 </Box>
             </TabPanel>
           </Box>
-        </DialogContent>
-        {/* <DialogActions>
-          <Button variant="contained" color="primary" startIcon={<CloseIcon />} onClick={handleClosePhanQuyen}>
-            ĐÓNG
-          </Button>
-          <Button variant="contained" color="primary">
-            LƯU
-          </Button>
-        </DialogActions> */}
+        </DialogContent>        
       </Dialog>
     </Grid>
+    </LocalizationProvider>
   );
 }

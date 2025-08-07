@@ -58,7 +58,6 @@ export default function RootLayout({
       const menu = await getMenuItems();
       //console.log("Menu items fetched:", menu);
       setData(menu);
-
       const claims = getClaimsFromToken();
       if (claims) {
         setUserData(claims);
