@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+// import { jwtVerify } from "jose";
 
 export async function middleware(request: NextRequest) {
   try {
     const token = request.cookies.get("authToken")?.value;
 
-    console.log("Middleware token: ", token);
-
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
+    // Verify JWT
+    // const { payload } = await jwtVerify(
+    //   token,
+    //   new TextEncoder().encode(process.env.JWT_SECRET!)
+    // );
+    // console.log("payload ==== ", payload);
 
     return NextResponse.next();
   } catch (error) {
+    console.log("error", error);
     return NextResponse.redirect(new URL("/login", request.url));
   }
 }
