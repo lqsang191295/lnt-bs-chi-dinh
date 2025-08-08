@@ -30,6 +30,7 @@ import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import Draggable from "react-draggable";
 import { IUserItem } from "@/model/user"; 
 import { useUserStore } from "@/store/user";
+import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT  
 import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong"; 
 import { 
   instnguoidung, gettnguoidung, 
@@ -37,8 +38,7 @@ import {
   getphanquyenbakhoa, luuphanquyenbakhoa, 
   getphanquyenmenu, luuphanquyenmenu,
   getphanquyenba, luuphanquyenba
-} from "@/actions/emr_tnguoidung";
-
+} from "@/actions/emr_tnguoidung"; 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     // backgroundColor: theme.palette.common.black,
@@ -87,7 +87,7 @@ export default function UserManagementPage() {
   const router = useRouter();
   const [users, setUsers] = useState<IUserItem[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);
-  const { data: loginedUser } = useUserStore();
+  const {data: loginedUser, setUserData} = useUserStore();
   const [nhomNguoiDungList, setNhomNguoiDungList] = useState<{ value: string; label: string }[]>([]);
   const [selectedNhomNguoiDung, setSelectedNhomNguoiDung] = useState("");
   const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>([]);
@@ -98,7 +98,7 @@ export default function UserManagementPage() {
   const [openPhanQuyen, setOpenPhanQuyen] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
   const [dsQuyenKhoa, setDsQuyenKhoa] = useState<
-  { cthutu: String; cidquyen: string; cidkhoa: string; cmakhoa: string; ctenkhoa: string; ckyhieu: string; ctrangthai: number }[]
+  { cthutu: string; cidquyen: string; cidkhoa: string; cmakhoa: string; ctenkhoa: string; ckyhieu: string; ctrangthai: number }[]
 >([]);
 // State cho tab phân quyền BA
 const [selectedKhoaBA, setSelectedKhoaBA] = useState("all");
@@ -123,22 +123,22 @@ const handleLuuPhanQuyenMenu = async () => {
   }
   alert("Lưu phân quyền menu thành công!");
 };
-// Hàm lấy danh sách HSBA theo filter
-const fetchHSBA = async () => {
-  // TODO: Gọi API lấy danh sách HSBA theo selectedKhoaBA, fromDate, toDate
-  if (!selectedUser) return;  
-  if (!fromDate || !toDate) return;
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+  // Hàm lấy danh sách HSBA theo filter
+  const fetchHSBA = async () => {
+    // TODO: Gọi API lấy danh sách HSBA theo selectedKhoaBA, fromDate, toDate
+    if (!selectedUser) return;  
+    if (!fromDate || !toDate) return;
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+    const result = await getphanquyenba(loginedUser.ctaikhoan,"1", selectedUser.ctaikhoan, selectedKhoaBA, formatDate(fromDate), formatDate(toDate));
+    //console.log("Danh sách HSBA:", result);
+    setDsHSBA(result);
   };
-  const result = await getphanquyenba(loginedUser.ctaikhoan,"1", selectedUser.ctaikhoan, selectedKhoaBA, formatDate(fromDate), formatDate(toDate));
-  //console.log("Danh sách HSBA:", result);
-  setDsHSBA(result);
-};
-function MenuTree({ menuList, onCheck }: { menuList: any[]; onCheck: (cid: string, checked: boolean, newMenuList: any[]) => void }) {
+  function MenuTree({ menuList, onCheck }: { menuList: any[]; onCheck: (cid: string, checked: boolean, newMenuList: any[]) => void }) {
   // Tạo cây từ danh sách phẳng, menu gốc có cidcha = "" hoặc "0"
   const buildTree = (list: any[], parentId: number): any[] =>
     list
@@ -309,7 +309,20 @@ const handleTabChange = async (_: any, newIndex: number) => {
     // if (!loginedUser || !loginedUser.ctaikhoan) {
     //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
     //   return;
-    // }
+    // } 
+    const claims = getClaimsFromToken();
+    if (claims) {
+      // Log or handle the claims as needed 
+      console.log("User claims:", claims);
+      // You can set user claims in a global state or context if needed
+      setUserData(claims);
+      console.log("loginedUser:", loginedUser);
+
+    } else {
+      console.warn("No valid claims found in token");
+      router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
+      return;
+    } 
     async function fetchUsers() {
       const result = await gettnguoidung(loginedUser.ctaikhoan, "1");
       if (Array.isArray(result)) {
@@ -353,7 +366,8 @@ const handleTabChange = async (_: any, newIndex: number) => {
       }
     }
     fetchKhoaList();
-  }, [loginedUser]);
+  }, []);
+
   const handleRowClick = (user: any) => {
     setSelectedUser(user);
     // console.log("manhomnguoidung", user.cmanhomnguoidung);
@@ -646,7 +660,7 @@ const handleTabChange = async (_: any, newIndex: number) => {
                 fullWidth
                 size="small"
                 label="Mật khẩu *"
-                value={newUserStatus === 1 ? password : selectedUser?.cmatkhau || ""}
+                value={newUserStatus === 1 ? password : ""}
                 type="password"
                 placeholder="********"
                 onChange={(e) => {
@@ -752,13 +766,17 @@ const handleTabChange = async (_: any, newIndex: number) => {
                     <DatePicker
                       label="Từ ngày"
                       value={fromDate}
-                      onChange={setFromDate}
+                      onChange={(value) => {
+                        if (value !== null) setFromDate(value as Date);
+                      }}
                       format="dd/MM/yyyy"
                     />
                      <DatePicker
                         label="Đến ngày"
                         value={toDate}
-                        onChange={setToDate}
+                        onChange={(value) => {
+                          if (value !== null) setToDate(value as Date);
+                        }}
                         format="dd/MM/yyyy"
                       /> 
                     <Button variant="contained" onClick={fetchHSBA}>Tìm kiếm</Button>

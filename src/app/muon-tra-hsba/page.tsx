@@ -608,7 +608,7 @@ export default function ExportManagementPage() {
                         color="primary"
                         checked={isItemSelected}
                         inputProps={{ "aria-labelledby": labelId }}
-                        onChange={(event) => handleClick(event, row.id)}
+                        onChange={() => handleClick({} as React.MouseEvent<unknown>, row.id)}
                       />
                     </TableCell>
                     <TableCell>

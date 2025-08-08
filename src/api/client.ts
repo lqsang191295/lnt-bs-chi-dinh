@@ -40,7 +40,9 @@ export async function get(endpoint: string, options: RequestOptions = {}) {
   });
 
   if (!res.ok) {
-    throw new Error(`GET ${endpoint} failed: ${res.statusText}`);
+    
+    return {status: "error", message: res.statusText};
+    //throw new Error(`GET ${endpoint} failed: ${res.statusText}`);
   }
 
   return res.json();
@@ -62,6 +64,7 @@ export async function post(
 
   if (endpoint.includes("http")) URL = `${endpoint}`;
 
+  console.log("POST request to:", URL," |authToken:", token," |with body:", body);
   const res = await fetch(URL, {
     method: "POST",
     ...(credentials ? { credentials: "include" } : {}),
@@ -72,9 +75,9 @@ export async function post(
     },
     body: JSON.stringify(body),
   });
-
   if (!res.ok) {
-    throw new Error(`POST ${endpoint} failed: ${res.statusText}`);
+    return {status: "error", message: res.statusText};
+    //throw new Error(`POST ${endpoint} failed: ${res.statusText}`);
   }
 
   return res.json();

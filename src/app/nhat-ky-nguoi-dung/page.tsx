@@ -12,14 +12,15 @@ import {
   Select,
   TextField,
   Typography,
-} from "@mui/material";
-import Grid from "@mui/material/Grid";
+} from "@mui/material"; 
+import { Grid } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import React, { useEffect, useState } from "react"; 
 import { gettnhatkynguoidung } from "@/actions/emr_tnguoidung";
 import { useUserStore } from "@/store/user";
+import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT  
 import { get } from "@/api/client";
 
 export default function NhatKyNguoiDungPage() {
@@ -34,8 +35,8 @@ export default function NhatKyNguoiDungPage() {
   ];
  
   // State variables
-  
-  const { data: loginedUser } = useUserStore(); 
+   
+  const { data: loginedUser, setUserData} = useUserStore();  
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<any[]>([]);
@@ -62,6 +63,22 @@ export default function NhatKyNguoiDungPage() {
     );
     //console.log("Search results:", data);
   };
+    useEffect(() => {
+      // if (!loginedUser || !loginedUser.ctaikhoan) {
+      //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
+      //   return;
+      // } 
+      const claims = getClaimsFromToken();
+      if (claims) {
+        setUserData(claims);
+        // Log or handle the claims as needed 
+        //console.log("User claims:", claims);
+        // You can set user claims in a global state or context if needed
+      } else {
+        console.warn("No valid claims found in token");
+      }  
+    }, []);
+    
   // Render component
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -69,37 +86,40 @@ export default function NhatKyNguoiDungPage() {
         <Typography variant="h6" gutterBottom sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           NHẬT KÝ NGƯỜI DÙNG
         </Typography>
-        <Grid container spacing={2} mb={2}>   
-          <Grid item xs={2}>
+        <Box display="flex" gap={2} mb={2}>
+          <Box flex={2}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
-              onChange={setTuNgay}
+              onChange={(value) => setTuNgay(value as Date)}
               format="dd/MM/yyyy"
             />
-          </Grid>
-          <Grid item xs={2}>
+          </Box>
+          <Box flex={2}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
-              onChange={setDenNgay}
+              onChange={(value) => setDenNgay(value as Date)}
               format="dd/MM/yyyy"
             />
-          </Grid>
-          <Grid item xs={2}>
+          </Box>
+          <Box flex={2}>
             <Button fullWidth variant="contained" onClick={handleSearch}>
               Tìm kiếm
             </Button>
-          </Grid>
-        </Grid>
-
+          </Box>
+        </Box>
         <Box sx={{ height: 550, width: "100%" }}>
           <DataGrid
             rows={rows}
             columns={columns}
             pagination
-            pageSize={10}
-            rowsPerPageOptions={[10, 20, 50]}
+            initialState={{
+              pagination: {
+                paginationModel: { pageSize: 10, page: 0 },
+              },
+            }}
+            pageSizeOptions={[10, 20, 50]}
             disableRowSelectionOnClick
             sx={{
               "& .MuiDataGrid-columnHeaders": {

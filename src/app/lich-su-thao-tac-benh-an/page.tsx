@@ -32,6 +32,7 @@ import FirstPageIcon from "@mui/icons-material/FirstPage";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import type { SelectChangeEvent } from "@mui/material/Select";
 
 // Dữ liệu cứng cho bảng
 interface DataRow {
@@ -230,8 +231,9 @@ export default function AuditLogPage() {
     setPage(newPage);
   };
 
+
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLSelectElement>
+    event: SelectChangeEvent
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang
