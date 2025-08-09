@@ -231,6 +231,7 @@ export default function HosoBenhAnPage() {
             pagination
             checkboxSelection
             disableRowSelectionOnClick
+            density="compact"
             sx={{
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",

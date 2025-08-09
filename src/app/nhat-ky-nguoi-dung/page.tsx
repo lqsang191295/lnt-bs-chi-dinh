@@ -1,138 +1,399 @@
- 
 "use client";
+
+import React from "react";
 import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Box,
+  TextField,
+  Button,
+  IconButton,
+  Tabs,
+  Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Checkbox,
+  Pagination,
+  Select,
+  MenuItem,
+  FormControl,
+  InputAdornment,
+  FormLabel,
+  FormControlLabel,
   Radio,
   RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
-  Box,
-  Button,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-} from "@mui/material"; 
-import { Grid } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import React, { useEffect, useState } from "react"; 
-import { gettnhatkynguoidung } from "@/actions/emr_tnguoidung";
-import { useUserStore } from "@/store/user";
-import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT  
-import { get } from "@/api/client";
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import AddIcon from "@mui/icons-material/Add"; // Dùng cho nút "Làm mới"
+import DateRangeIcon from "@mui/icons-material/DateRange"; // Icon cho DatePicker
+import FirstPageIcon from "@mui/icons-material/FirstPage";
+import LastPageIcon from "@mui/icons-material/LastPage";
+import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import { DatePicker } from "@mui/x-date-pickers";
+import {
+  HighlightOff,
+  History,
+  NoteAdd,
+  Refresh,
+  Search,
+} from "@mui/icons-material";
+import { DataGrid } from "@mui/x-data-grid";
 
-export default function NhatKyNguoiDungPage() {
-  const columns: GridColDef[] = [
-    { field: "cid", headerName: "ID", width: 60 },    
-    { field: "ctaikhoan", headerName: "Tài khoản", width: 150, filterable: true  },
-    { field: "choten", headerName: "Họ tên", width: 150 , filterable: true },
-    { field: "cdienthoai", headerName: "Điện thoại", width: 130 , filterable: true },
-    { field: "tngaythaotac", headerName: "Ngày thao tác", width: 180 , filterable: true },
-    { field: "cthaotac", headerName: "Thao tác", width: 100 , filterable: true},
-    { field: "cnoidung", headerName: "Nội dung", width: 400},
-  ];
- 
-  // State variables
-   
-  const { data: loginedUser, setUserData} = useUserStore();  
-  const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
-  const [denNgay, setDenNgay] = useState<Date | null>(new Date());
-  const [rows, setRows] = useState<any[]>([]);
-  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
+// Dữ liệu cứng cho bảng
+interface DataRow {
+  id: string;
+  trangThaiXetXuat: "CHƯA XÉT XUẤT" | "ĐÃ XÉT XUẤT"; // Trạng thái thực tế
+  ngayKetXuat: string; // Có thể rỗng nếu chưa xét xuất
+  loaiBaSoTo: string;
+  maBenhAn: string;
+  maBenhNhan: string; // Cột mới
+  hoVaTen: string;
+  tuoi: string;
+  ngayVaoVien: string;
+  ngayRaVien: string; // Có thể rỗng
+  chanDoan: string;
+  khoa: string;
+}
 
-  // Fetch khoa list from API
-   
-  // Hàm tìm kiếm hồ sơ bệnh án
-  const handleSearch = async () => {
-    if (!tuNgay || !denNgay) return;
-    const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    }; 
-    const data = await gettnhatkynguoidung(loginedUser.ctaikhoan, popt, formatDate(tuNgay), formatDate(denNgay));
-     
-    setRows(
-      (data || []).map((item: any, idx: number) => ({
-        id: idx + 1,
-        ...item,
-      }))
-    );
-    //console.log("Search results:", data);
+const mockData: DataRow[] = [
+  {
+    id: "1",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290172",
+    maBenhNhan: "BN0008830",
+    hoVaTen: "ĐỖ MINH KHANG",
+    tuoi: "18 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "2",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290191",
+    maBenhNhan: "BN00044925",
+    hoVaTen: "NGUYỄN THỊ ANH TUYẾT",
+    tuoi: "88 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "3",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290190",
+    maBenhNhan: "BN00007627",
+    hoVaTen: "HUỲNH THỊ TRÚC LY",
+    tuoi: "34 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "4",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290189",
+    maBenhNhan: "BN00001385",
+    hoVaTen: "LÊ THỊ PHƯỢNG",
+    tuoi: "50 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "5",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290188",
+    maBenhNhan: "BN00010961",
+    hoVaTen: "NGUYỄN HOÀNG VŨ",
+    tuoi: "33 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "6",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290187",
+    maBenhNhan: "BN00383804",
+    hoVaTen: "NGUYỄN THỊ CÚC",
+    tuoi: "65 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "7",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290186",
+    maBenhNhan: "BN00016440",
+    hoVaTen: "NGUYỄN THỊ HƯƠNG",
+    tuoi: "42 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "8",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290183",
+    maBenhNhan: "BN00002171",
+    hoVaTen: "HOÀNG VŨ QUÝ",
+    tuoi: "54 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "9",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290184",
+    maBenhNhan: "BN00037429",
+    hoVaTen: "TÔ VĂN HUỆ",
+    tuoi: "66 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "10",
+    trangThaiXetXuat: "CHƯA XÉT XUẤT",
+    ngayKetXuat: "",
+    loaiBaSoTo: "",
+    maBenhAn: "BA2507290183",
+    maBenhNhan: "BN00038059",
+    hoVaTen: "VÕ THỊ PHƯỚC CHÂU",
+    tuoi: "38 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+];
+const columns = [
+  { field: "id", headerName: "ID", width: 80 },
+  { field: "trangThaiXetXuat", headerName: "Trạng Thái Xét Xuất", flex: 1 },
+  { field: "ngayKetXuat", headerName: "Ngày Kết Xuất", width: 150 },
+  { field: "loaiBaSoTo", headerName: "Loại BA Sổ To", width: 150 },
+  { field: "maBenhAn", headerName: "Mã Bệnh Án", width: 160 },
+  { field: "maBenhNhan", headerName: "Mã Bệnh Nhân", width: 160 },
+  { field: "hoVaTen", headerName: "Họ và Tên", flex: 1 },
+  { field: "tuoi", headerName: "Tuổi", width: 120 },
+  { field: "ngayVaoVien", headerName: "Ngày Vào Viện", width: 150 },
+  { field: "ngayRaVien", headerName: "Ngày Ra Viện", width: 150 },
+  { field: "chanDoan", headerName: "Chẩn Đoán", flex: 1 },
+  { field: "khoa", headerName: "Khoa", flex: 1 },
+];
+export default function ExportManagementPage() {
+  const [currentTab, setCurrentTab] = React.useState("export");
+  const [searchTerm, setSearchTerm] = React.useState(""); // Tên tài liệu
+  const [searchStatus, setSearchStatus] = React.useState(""); // Tình trạng xét xuất
+  const [searchTuNgay, setSearchTuNgay] = React.useState("");
+  const [searchDenNgay, setSearchDenNgay] = React.useState("");
+  const [searchDateType, setSearchDateType] = React.useState("ngayVaoVien"); // Default search by "Ngày vào viện"
+
+  // State và hàm cho Pagination
+  const [page, setPage] = React.useState(1);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [selected, setSelected] = React.useState<readonly string[]>([]);
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setCurrentTab(newValue);
   };
-    useEffect(() => {
-      // if (!loginedUser || !loginedUser.ctaikhoan) {
-      //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
-      //   return;
-      // } 
-      const claims = getClaimsFromToken();
-      if (claims) {
-        setUserData(claims);
-        // Log or handle the claims as needed 
-        //console.log("User claims:", claims);
-        // You can set user claims in a global state or context if needed
-      } else {
-        console.warn("No valid claims found in token");
-      }  
-    }, []);
-    
-  // Render component
+
+  const handleSearch = () => {
+    console.log("Searching with:", {
+      searchTerm,
+      searchStatus,
+      searchTuNgay,
+      searchDenNgay,
+      searchDateType,
+    });
+    // Logic lọc dữ liệu mockData
+  };
+
+  const handleRefresh = () => {
+    console.log("Refresh clicked!");
+  };
+
+  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      const newSelecteds = mockData.map((n) => n.id);
+      setSelected(newSelecteds);
+      return;
+    }
+    setSelected([]);
+  };
+
+  const handleClick = (event: React.MouseEvent<unknown>, id: string) => {
+    const selectedIndex = selected.indexOf(id);
+    let newSelected: readonly string[] = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selected, id);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selected.slice(1));
+    } else if (selectedIndex === selected.length - 1) {
+      newSelected = newSelected.concat(selected.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1)
+      );
+    }
+    setSelected(newSelected);
+  };
+
+  const isSelected = (id: string) => selected.indexOf(id) !== -1;
+
+  // Lấy dữ liệu cho trang hiện tại
+  const paginatedData = mockData.slice(
+    (page - 1) * rowsPerPage,
+    (page - 1) * rowsPerPage + rowsPerPage
+  );
+  const totalPages = Math.ceil(mockData.length / rowsPerPage);
+
+  const handleChangePage = (
+    event: React.ChangeEvent<unknown>,
+    newPage: number
+  ) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang
+  };
+
+  // Hàm render nút trạng thái "CHƯA XÉT XUẤT"
+  const renderStatusButton = (status: DataRow["trangThaiXetXuat"]) => {
+    const bgColor = status === "CHƯA XÉT XUẤT" ? "#ffc107" : "#28a745"; // Vàng cho Chưa, Xanh lá cho Đã
+    const textColor = status === "CHƯA XÉT XUẤT" ? "#212529" : "#fff";
+
+    return (
+      <Button
+        variant="contained"
+        size="small"
+        sx={{
+          bgcolor: bgColor,
+          color: textColor,
+          textTransform: "none",
+          minWidth: "100px",
+          height: "24px",
+          fontSize: "0.7rem",
+          fontWeight: "bold",
+          borderRadius: "4px",
+          boxShadow: "none",
+          "&:hover": {
+            bgcolor: bgColor,
+            opacity: 0.9,
+          },
+        }}
+        onClick={(e) => {
+          e.stopPropagation(); // Ngăn chặn sự kiện click lan ra row
+          console.log(`Action: ${status}`);
+        }}>
+        {status}
+      </Button>
+    );
+  };
+
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box p={2}>
-        <Typography variant="h6" gutterBottom sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
-          NHẬT KÝ NGƯỜI DÙNG
-        </Typography>
-        <Box display="flex" gap={2} mb={2}>
-          <Box flex={2}>
-            <DatePicker
-              label="Từ ngày"
-              value={tuNgay}
-              onChange={(value) => setTuNgay(value as Date)}
-              format="dd/MM/yyyy"
-            />
-          </Box>
-          <Box flex={2}>
-            <DatePicker
-              label="Đến ngày"
-              value={denNgay}
-              onChange={(value) => setDenNgay(value as Date)}
-              format="dd/MM/yyyy"
-            />
-          </Box>
-          <Box flex={2}>
-            <Button fullWidth variant="contained" onClick={handleSearch}>
-              Tìm kiếm
-            </Button>
-          </Box>
-        </Box>
-        <Box sx={{ height: 550, width: "100%" }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            pagination
-            initialState={{
-              pagination: {
-                paginationModel: { pageSize: 10, page: 0 },
-              },
-            }}
-            pageSizeOptions={[10, 20, 50]}
-            disableRowSelectionOnClick
-            sx={{
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#f5f5f5",
-                fontWeight: "bold",
-              },
-              "& .MuiDataGrid-cell": {
-                border: "1px solid #e0e0e0",
-              },
-            }}
-          />
-        </Box>
+    <Box p={2} className="w-full h-full flex flex-col">
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+        QUẢN LÝ LỊCH SỬ THAO TÁC BỆNH ÁN
+      </Typography>
+
+      {/* Filter/Search Bar */}
+      <Box display="flex" gap={2} mb={2}>
+        <DatePicker
+          label="Từ ngày"
+          format="dd/MM/yyyy"
+          slotProps={{
+            textField: {
+              size: "small",
+            },
+          }}
+        />
+        <DatePicker
+          label="Đến ngày"
+          format="dd/MM/yyyy"
+          slotProps={{
+            textField: {
+              size: "small",
+            },
+          }}
+        />
+        <Button
+          variant="contained"
+          startIcon={<Search />}
+          onClick={handleSearch}>
+          Tìm kiếm
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<Refresh />}
+          onClick={handleSearch}>
+          Làm mới
+        </Button>
       </Box>
-    </LocalizationProvider>
+
+      {/* Main Content Area (Padding around the table) */}
+      <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+        <DataGrid
+          rows={mockData}
+          columns={columns}
+          pagination
+          checkboxSelection
+          disableRowSelectionOnClick
+          density="compact"
+          sx={{
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "#f5f5f5",
+              fontWeight: "bold",
+            },
+          }}
+        />
+      </Box>
+    </Box>
   );
 }

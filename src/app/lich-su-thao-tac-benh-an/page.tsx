@@ -33,6 +33,8 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import type { SelectChangeEvent } from "@mui/material/Select";
+import { DatePicker } from "@mui/x-date-pickers";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 // Dữ liệu cứng cho bảng
 interface DataRow {
@@ -170,7 +172,23 @@ const mockData: DataRow[] = [
     noiDung: "Dữ liệu cập nhật 1",
   },
 ];
-
+const columns: GridColDef[] = [
+  {
+    field: "stt",
+    headerName: "STT",
+    width: 70,
+    align: "center",
+    headerAlign: "center",
+  },
+  { field: "maBenhAn", headerName: "Mã bệnh án", width: 150 },
+  { field: "thoiGian", headerName: "Thời gian", width: 180 },
+  { field: "giaTriCu", headerName: "Giá trị cũ", width: 150 },
+  { field: "giaTriMoi", headerName: "Giá trị mới", width: 150 },
+  { field: "loai", headerName: "Loại", width: 150 },
+  { field: "tacVu", headerName: "Tác vụ", width: 150 },
+  { field: "ghiChu", headerName: "Ghi chú", width: 200 },
+  { field: "noiDung", headerName: "Nội dung", width: 200 },
+];
 export default function AuditLogPage() {
   const [searchFromDate, setSearchFromDate] = React.useState("");
   const [searchToDate, setSearchToDate] = React.useState("");
@@ -231,10 +249,7 @@ export default function AuditLogPage() {
     setPage(newPage);
   };
 
-
-  const handleChangeRowsPerPage = (
-    event: SelectChangeEvent
-  ) => {
+  const handleChangeRowsPerPage = (event: SelectChangeEvent) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang
   };
@@ -274,264 +289,68 @@ export default function AuditLogPage() {
   );
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: "#f0f2f5", minHeight: "100vh" }}>
-      {/* Header */}
-      <AppBar
-        position="static"
-        color="inherit"
-        elevation={1}
-        sx={{ bgcolor: "#fff" }}>
-        <Toolbar>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, color: "#333" }}>
-            QUẢN LÝ LỊCH SỬ THAO TÁC BỆNH ÁN
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box p={2} className="w-full h-full flex flex-col">
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+        QUẢN LÝ LỊCH SỬ THAO TÁC BỆNH ÁN
+      </Typography>
 
-      {/* Filter/Search Bar */}
-      <Box sx={{ p: 2, bgcolor: "#fff", borderBottom: "1px solid #e0e0e0" }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            justifyContent: "flex-end",
-            mb: 2,
-          }}>
-          <Typography variant="body2" color="text.secondary">
-            Từ ngày
-          </Typography>
-          <TextField
-            type="date"
-            variant="outlined"
-            size="small"
-            value={searchFromDate}
-            onChange={(e) => setSearchFromDate(e.target.value)}
-            sx={{ width: "150px" }}
-            InputLabelProps={{ shrink: true }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <DateRangeIcon fontSize="small" />
-                </InputAdornment>
-              ),
+      {/* Bộ lọc */}
+      <Box display="flex" gap={2} mb={2}>
+        <Box flex={2}>
+          <DatePicker
+            label="Từ ngày"
+            format="dd/MM/yyyy"
+            className="w-full"
+            slotProps={{
+              textField: {
+                size: "small",
+              },
             }}
           />
-          <Typography variant="body2" color="text.secondary">
-            Đến ngày
-          </Typography>
-          <TextField
-            type="date"
-            variant="outlined"
-            size="small"
-            value={searchToDate}
-            onChange={(e) => setSearchToDate(e.target.value)}
-            sx={{ width: "150px" }}
-            InputLabelProps={{ shrink: true }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <DateRangeIcon fontSize="small" />
-                </InputAdornment>
-              ),
+        </Box>
+        <Box flex={2}>
+          <DatePicker
+            label="Đến ngày"
+            format="dd/MM/yyyy"
+            className="w-full"
+            slotProps={{
+              textField: {
+                size: "small",
+              },
             }}
           />
-          {/* Biểu tượng Toggle View (tùy chọn) */}
-          <IconButton sx={{ ml: 1, p: 0.5 }}>
-            <GridViewIcon />
-          </IconButton>
-          <Button
-            variant="contained"
-            startIcon={<SearchIcon />}
-            onClick={handleSearch}
-            sx={{ px: 3, bgcolor: "#1976d2", textTransform: "none" }}>
+        </Box>
+        <Box flex={1}>
+          <Button fullWidth variant="contained">
             Tìm kiếm
           </Button>
-          <Button
-            variant="contained"
-            startIcon={<RefreshIcon />}
-            onClick={handleRefresh}
-            sx={{
-              bgcolor: "#28a745",
-              "&:hover": {
-                bgcolor: "#218838",
-              },
-              color: "#fff",
-              textTransform: "none",
-              px: 3,
-            }}>
-            REFRESH
+        </Box>
+        <Box flex={1}>
+          <Button fullWidth variant="contained">
+            Làm mới
           </Button>
         </Box>
       </Box>
 
       {/* Main Content Area (Padding around the table) */}
-      <Box sx={{ p: 2 }}>
-        {/* Data Table */}
-        <TableContainer
-          component={Paper}
+      <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+        <DataGrid
+          rows={mockData}
+          columns={columns}
+          pagination
+          checkboxSelection
+          disableRowSelectionOnClick
+          density="compact"
           sx={{
-            boxShadow: "none",
-            border: "1px solid #e0e0e0",
-            borderRadius: "4px",
-          }}>
-          <Table
-            sx={{ minWidth: 650 }}
-            aria-label="audit log table"
-            size="small">
-            <TableHead sx={{ bgcolor: "#e0e0e0" }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>Stt</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  Mã bệnh án
-                  <ColumnSearchTextField
-                    value={colSearchMaBenhAn}
-                    onChange={setColSearchMaBenhAn}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  Thời gian
-                  <ColumnSearchTextField
-                    value={colSearchThoiGian}
-                    onChange={setColSearchThoiGian}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  Giá trị cũ
-                  <ColumnSearchTextField
-                    value={colSearchGiaTriCu}
-                    onChange={setColSearchGiaTriCu}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  Giá trị mới
-                  <ColumnSearchTextField
-                    value={colSearchGiaTriMoi}
-                    onChange={setColSearchGiaTriMoi}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  Loại
-                  <ColumnSearchTextField
-                    value={colSearchLoai}
-                    onChange={setColSearchLoai}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  Tác vụ
-                  <ColumnSearchTextField
-                    value={colSearchTacVu}
-                    onChange={setColSearchTacVu}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  Ghi chú
-                  <ColumnSearchTextField
-                    value={colSearchGhiChu}
-                    onChange={setColSearchGhiChu}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  Nội dung
-                  <ColumnSearchTextField
-                    value={colSearchNoiDung}
-                    onChange={setColSearchNoiDung}
-                  />
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedData.map((row) => (
-                <TableRow
-                  hover
-                  key={row.id}
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
-                  <TableCell>{row.stt}</TableCell>
-                  <TableCell>{row.maBenhAn}</TableCell>
-                  <TableCell>{row.thoiGian}</TableCell>
-                  <TableCell>{row.giaTriCu}</TableCell>
-                  <TableCell>{row.giaTriMoi}</TableCell>
-                  <TableCell>{row.loai}</TableCell>
-                  <TableCell>{row.tacVu}</TableCell>
-                  <TableCell>{row.ghiChu}</TableCell>
-                  <TableCell>{row.noiDung}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Pagination */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mt: 2,
-            p: 2,
-            bgcolor: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "4px",
-            boxShadow: "none",
-          }}>
-          <Typography variant="body2" color="text.secondary">
-            {`${(page - 1) * rowsPerPage + 1} đến ${Math.min(
-              page * rowsPerPage,
-              totalItems
-            )} trên ${totalItems}`}
-          </Typography>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={handleChangePage}
-            color="primary"
-            renderItem={(item) => (
-              <Button
-                {...item}
-                sx={{
-                  minWidth: "32px",
-                  height: "32px",
-                  borderRadius: "4px",
-                  "&.Mui-selected": {
-                    bgcolor: "#1976d2",
-                    color: "#fff",
-                    "&:hover": {
-                      bgcolor: "#1565c0",
-                    },
-                  },
-                  "&:hover": {
-                    bgcolor: "#e0e0e0",
-                  },
-                }}>
-                {item.type === "previous" && <KeyboardArrowLeft />}
-                {item.type === "next" && <KeyboardArrowRight />}
-                {item.type === "first" && <FirstPageIcon />}
-                {item.type === "last" && <LastPageIcon />}
-                {item.type === "page" && item.page}
-              </Button>
-            )}
-          />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Rows per page:
-            </Typography>
-            <FormControl variant="outlined" size="small">
-              <Select
-                value={rowsPerPage.toString()}
-                onChange={handleChangeRowsPerPage}
-                displayEmpty
-                inputProps={{ "aria-label": "Rows per page" }}
-                sx={{ height: "32px" }}>
-                <MenuItem value={10}>10</MenuItem>
-                <MenuItem value={25}>25</MenuItem>
-                <MenuItem value={50}>50</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </Box>
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "#f5f5f5",
+              fontWeight: "bold",
+            },
+          }}
+        />
       </Box>
     </Box>
   );
