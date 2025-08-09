@@ -22,7 +22,8 @@ export function AppBreadcrumbs() {
     setBreadcrumbs(breadcrumbItems);
   }, [pathname, menuData]);
 
-  if (!breadcrumbs.length) return null;
+  if (!breadcrumbs.length)
+    return <Typography color="text.primary">Hồ sơ bệnh án</Typography>;
 
   return (
     <Breadcrumbs aria-label="breadcrumb">
