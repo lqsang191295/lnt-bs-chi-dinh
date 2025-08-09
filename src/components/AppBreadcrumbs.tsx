@@ -16,20 +16,20 @@ export function AppBreadcrumbs() {
   useEffect(() => {
     if (!menuData || menuData.length === 0) return;
     const menuTree: IMenuTree[] = buildMenuTree(menuData);
-    const breadcrumbItems = getBreadcrumbs(menuTree, pathname);
+    const breadcrumbItems = getBreadcrumbs(menuTree, pathname ?? "");
 
-    console.log("Breadcrumbs:", menuTree, breadcrumbItems, pathname);
+    //console.log("Breadcrumbs:", menuTree, breadcrumbItems, pathname);
     setBreadcrumbs(breadcrumbItems);
   }, [pathname, menuData]);
 
   if (!breadcrumbs.length)
-    return <Typography color="text.primary">Hồ sơ bệnh án</Typography>;
+    return <Typography color="white">Hồ sơ bệnh án</Typography>;
 
   return (
     <Breadcrumbs aria-label="breadcrumb">
       {breadcrumbs.map((item, index) =>
         index === breadcrumbs.length - 1 ? (
-          <Typography key={item.cid} color="text.primary">
+          <Typography key={item.cid} color="white">
             {item.ctenmenu}
           </Typography>
         ) : (

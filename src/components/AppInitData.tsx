@@ -22,7 +22,7 @@ export function AppInitData() {
   const initMenu = async () => {
     try {
       const menu = await getMenuItems();
-      console.log("Menu items fetched:", menu);
+      //console.log("Menu items fetched:", menu);
       setData(menu);
     } catch (error) {
       console.error("Error fetching menu items:", error);
@@ -32,7 +32,7 @@ export function AppInitData() {
   const initUser = async () => {
     try {
       const claims = getClaimsFromToken();
-      console.log("Claims fetched:", claims);
+      //console.log("Claims fetched:", claims);
       if (claims) {
         setUserData(claims);
       } else {

@@ -36,7 +36,7 @@ import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import Draggable from "react-draggable";
 import { IUserItem } from "@/model/user";
 import { useUserStore } from "@/store/user";
-import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
+import { b64DecodeUnicode } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
 import {
   instnguoidung,
@@ -105,6 +105,7 @@ export default function UserManagementPage() {
   const [users, setUsers] = useState<IUserItem[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);
   const { data: loginedUser, setUserData } = useUserStore();
+  const [token, setToken] = useState<string | null>(null);
   const [nhomNguoiDungList, setNhomNguoiDungList] = useState<
     { value: string; label: string }[]
   >([]);
@@ -419,22 +420,49 @@ export default function UserManagementPage() {
     setOpenPhanQuyen(false);
   };
   useEffect(() => {
-    // if (!loginedUser || !loginedUser.ctaikhoan) {
-    //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
-    //   return;
-    // }
-    const claims = getClaimsFromToken();
-    if (claims) {
-      // Log or handle the claims as needed
-      console.log("User claims:", claims);
-      // You can set user claims in a global state or context if needed
-      setUserData(claims);
-      console.log("loginedUser:", loginedUser);
-    } else {
-      console.warn("No valid claims found in token");
+
+    const getTokenFromClient = () => {
+      // Cách 1: Từ localStorage nếu bạn lưu token ở đó
+      const storedToken = localStorage.getItem("authToken");
+      // Cách 2: Từ document.cookie
+      const cookieToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('authToken='))
+        ?.split('=')[1];
+      
+      return storedToken || cookieToken || null;
+    };
+    const getClaimsFromToken=(token: string) => { 
+      if (!token) return null;
+      try {
+        const payload = token.split(".")[1];
+        const decoded = JSON.parse(b64DecodeUnicode(payload));
+        return decoded;
+      } catch {
+        return null;
+      }
+    };
+    const clientToken = getTokenFromClient();
+    setToken(clientToken);
+    if (!clientToken) {
+      //console.warn("No token found in client storage");
       router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
       return;
     }
+
+    const claims = getClaimsFromToken(clientToken);
+    if (claims) {
+      // Log or handle the claims as needed
+      //console.log("User claims:", claims);
+      // You can set user claims in a global state or context if needed
+      setUserData(claims);
+      //console.log("loginedUser:", loginedUser);
+    } else {
+      //console.warn("No valid claims found in token");
+      router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
+      return;
+    }
+
     async function fetchUsers() {
       const result = await gettnguoidung(loginedUser.ctaikhoan, "1");
       if (Array.isArray(result)) {

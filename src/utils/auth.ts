@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import Cookies from "js-cookie";
 
 // Hàm giải mã base64url an toàn với Unicode
-function b64DecodeUnicode(str: string) {
+export function b64DecodeUnicode(str: string) {
   // Chuyển base64url -> base64
   str = str.replace(/-/g, "+").replace(/_/g, "/");
   // Thêm padding nếu thiếu

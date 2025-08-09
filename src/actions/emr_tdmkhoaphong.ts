@@ -2,7 +2,7 @@ import { post } from "@/api/client";
 
 export const gettDMKhoaPhongs = async () => {
   try {
-    console.log("Fetching tDMKhoaPhongs...");
+    //console.log("Fetching tDMKhoaPhongs...");
     // Gọi API để lấy danh sách khoa phòng
     const response = await post(`/api/callService`, {
       userId: "",

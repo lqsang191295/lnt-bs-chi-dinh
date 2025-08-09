@@ -367,7 +367,7 @@ export const luuanhnguoidung = async (pUser: string, pOpt: string, cid: number, 
         { paraName: "cimg", paraValue: cimg }
       ],
     }); 
-    //console.log("luuanhnguoidung response:", response);
+    //console.log("luuanhnguoidung responselenght:[", response.message.length,"]");
     if (response.status === "error") {
       return [];
     }

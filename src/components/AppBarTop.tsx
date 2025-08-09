@@ -108,14 +108,7 @@ export default function AppBarTop() {
             sx={{ mr: 2 }}>
             <MenuIcon />
           </IconButton>
-          {/* <img
-              src="/logow.png"
-              alt="Logo"
-              style={{ height: 32, marginRight: 8 }}
-            />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG
-          </Typography> */}
+         
           <AppBreadcrumbs />
 
           <Box

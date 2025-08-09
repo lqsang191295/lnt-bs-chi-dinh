@@ -3,7 +3,7 @@ import { post } from "@/api/client";
 
 export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: string, TuNgay: string, DenNgay: string) => {
   try {
-    console.log("Fetching HoSoBenhAn...");
+    //console.log("Fetching HoSoBenhAn...");
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
