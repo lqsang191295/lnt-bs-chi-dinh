@@ -13,7 +13,7 @@ import { useUserStore } from "@/store/user";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
-import Cookies from "js-cookie";
+import { Toaster } from "sonner";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation"; // Cho App Router (Next.js 13+)
 
@@ -42,17 +42,16 @@ export default function RootLayout({
   const useNoLayout = pathnameNotUseLayout.some((path) =>
     pathname ? pathname.startsWith(path) : false
   );
-  const router = useRouter();
   const { setData } = useMenuStore();
-  const { setUserData } = useUserStore();
+  const { data: userData, setUserData } = useUserStore();
+
   useEffect(() => {
-    InitData();
+    initUser();
   }, []);
 
-  const InitData = async () => {
+  useEffect(() => {
     initMenu();
-    initUser();
-  };
+  }, [userData]);
 
   const initMenu = async () => {
     try {
@@ -86,6 +85,7 @@ export default function RootLayout({
           <Box className="flex w-screen h-screen">
             <Box className="bg-blue-100 h-full w-full">{children}</Box>
           </Box>
+          <Toaster />
         </body>
       </html>
     );
@@ -106,6 +106,7 @@ export default function RootLayout({
               </Box>
             </Box>
           </Box>
+          <Toaster />
         </LocalizationProvider>
       </body>
     </html>

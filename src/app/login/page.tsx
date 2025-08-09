@@ -3,7 +3,6 @@ import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
-import CssBaseline from "@mui/material/CssBaseline";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Divider from "@mui/material/Divider";
 import FormLabel from "@mui/material/FormLabel";
@@ -14,15 +13,14 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { login } from "@/actions/emr_tnguoidung";
-import { sha256 } from "@/utils/auth"; 
-import {
-  GoogleIcon,
-  FacebookIcon,
-  SitemarkIcon,
-} from "@/components/CustomIcons"; 
+import { getClaimsFromToken, sha256 } from "@/utils/auth";
+import { GoogleIcon, FacebookIcon } from "@/components/CustomIcons";
 import Cookies from "js-cookie";
+import Spinner from "@/components/spinner";
+import { ToastSuccess, ToastError } from "@/utils/toast";
+import { useUserStore } from "@/store/user";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -72,27 +70,44 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const router = useRouter();
-  
+  const { setUserData } = useUserStore();
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setLoading(true);
-    try { 
-        const hashedPassword = await sha256(password);
-        const res = await login(username, hashedPassword);
-        //console.log("hashpass:", hashedPassword);
-        if (res && res.status === "success") {
+    try {
+      const hashedPassword = await sha256(password);
+      const res = await login(username, hashedPassword);
+      //console.log("hashpass:", hashedPassword);
+      if (res && res.status === "success") {
         // Lưu token nếu cần
-        Cookies.set("authToken", res.token, {expires: 7}); // Lưu token trong cookie với thời gian hết hạn 1 giờ
+        Cookies.set("authToken", res.token, { expires: 7 }); // Lưu token trong cookie với thời gian hết hạn 1 giờ
         //console.log("Login successful, token:", res.token);
         router.push("/");
-        } else {
-        setError("Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu.");
-        }
+        ToastSuccess("Đăng nhập thành công");
+        initUserData();
+      } else {
+        setError(
+          "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu."
+        );
+        ToastError("Đăng nhập thất bại");
+      }
     } catch {
       setError("Có lỗi xảy ra. Vui lòng thử lại.");
+      ToastError("Đăng nhập thất bại");
     }
     setLoading(false);
+  };
+
+  const initUserData = async () => {
+    const claims = getClaimsFromToken();
+    console.log("Claims fetched:", claims);
+    if (claims) {
+      setUserData(claims);
+    } else {
+      console.warn("No valid claims found in token");
+    }
   };
 
   return (
@@ -127,7 +142,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               fullWidth
               variant="outlined"
               value={username}
-              onChange={e => setUsername(e.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </FormControl>
           <FormControl>
@@ -142,7 +157,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               fullWidth
               variant="outlined"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </FormControl>
           <FormControlLabel
@@ -159,8 +174,10 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             fullWidth
             variant="contained"
             disabled={loading}
+            className="gap-2"
             sx={{ fontWeight: "bold" }}>
-            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            {loading && <Spinner />}
+            <span>Đăng nhập</span>
           </Button>
           <Link
             component="button"

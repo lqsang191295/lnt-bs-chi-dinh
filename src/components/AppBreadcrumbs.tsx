@@ -1,65 +1,43 @@
-// components/CustomBreadcrumbs.tsx
+"use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router"; // hoặc usePathname từ 'next/navigation' cho App Router
 import Link from "next/link";
 import { Breadcrumbs, Typography } from "@mui/material";
-import { buildMenuTree, getBreadcrumbs } from "@/utils/menu"; // Giả sử các hàm được đặt trong file này
+import { buildMenuTree, getBreadcrumbs } from "@/utils/menu";
 import { IMenuItem, IMenuTree } from "@/model/menu";
 import { useMenuStore } from "@/store/menu";
-
-interface AppBreadcrumbsProps {
-  menuData: IMenuItem[];
-}
+import { usePathname } from "next/navigation";
 
 export function AppBreadcrumbs() {
-  const { data: menuData } = useMenuStore(); // Sử dụng zustand để lấy dữ liệu menu
-
-  if (!menuData || menuData.length === 0) {
-    return null; // Không hiển thị nếu không có dữ liệu menu
-  }
-
-  const router = useRouter(); // Sử dụng useRouter để lấy pathname
+  const { data: menuData } = useMenuStore();
+  const pathname = usePathname();
   const [breadcrumbs, setBreadcrumbs] = useState<IMenuItem[]>([]);
 
   useEffect(() => {
-    // 1. Xây dựng cây menu từ dữ liệu thô
+    if (!menuData || menuData.length === 0) return;
     const menuTree: IMenuTree[] = buildMenuTree(menuData);
+    const breadcrumbItems = getBreadcrumbs(menuTree, pathname);
 
-    // 2. Lấy đường dẫn hiện tại từ useRouter
-    const currentLink = router.pathname;
-
-    // 3. Sử dụng hàm getBreadcrumbs để tìm đường dẫn
-    const breadcrumbItems = getBreadcrumbs(menuTree, currentLink);
-
-    // 4. Cập nhật state
+    console.log("Breadcrumbs:", menuTree, breadcrumbItems, pathname);
     setBreadcrumbs(breadcrumbItems);
-  }, [router.pathname, menuData]);
+  }, [pathname, menuData]);
 
-  if (!breadcrumbs || breadcrumbs.length === 0) {
-    return null; // Không hiển thị nếu không tìm thấy breadcrumbs
-  }
+  if (!breadcrumbs.length)
+    return <Typography color="text.primary">Hồ sơ bệnh án</Typography>;
 
   return (
     <Breadcrumbs aria-label="breadcrumb">
-      {/* Duyệt qua mảng breadcrumbs để render */}
-      {breadcrumbs.map((item, index) => {
-        // Nếu là item cuối cùng, hiển thị dưới dạng Typography (text)
-        if (index === breadcrumbs.length - 1) {
-          return (
-            <Typography key={item.cid} color="text.primary">
-              {item.ctenmenu}
-            </Typography>
-          );
-        }
-
-        // Các item còn lại hiển thị dưới dạng Link
-        return (
-          <Link key={item.cid} color="inherit" href={item.clink} passHref>
+      {breadcrumbs.map((item, index) =>
+        index === breadcrumbs.length - 1 ? (
+          <Typography key={item.cid} color="text.primary">
+            {item.ctenmenu}
+          </Typography>
+        ) : (
+          <Link key={item.cid} href={item.clink || "#"}>
             {item.ctenmenu}
           </Link>
-        );
-      })}
+        )
+      )}
     </Breadcrumbs>
   );
 }
