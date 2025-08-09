@@ -1,4 +1,5 @@
 import { post } from "@/api/client";
+import { get } from "@/api/client";
 import { IUserItem } from "@/model/user";
 import { sha256 } from "@/utils/auth";
  
@@ -339,6 +340,37 @@ export const luuphanquyenba = async (pUser: string, pOpt: string, ctaikhoan: str
       return [];
     }
 
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+
+export const luuanhnguoidung = async (pUser: string, pOpt: string, cid: number, ctaikhoan: string, choten: string, cimg: string) => {
+  try {
+    // console.log("puser:", pUser);
+    // console.log("popt:", pOpt);
+    // console.log("cid:", cid);
+    // console.log("ctaikhoan:", ctaikhoan);
+    // console.log("choten:", choten); 
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pins_tnguoidung_img",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },  
+        { paraName: "cid", paraValue: cid },  
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
+        { paraName: "choten", paraValue: choten },  
+        { paraName: "cimg", paraValue: cimg }
+      ],
+    }); 
+    //console.log("luuanhnguoidung response:", response);
+    if (response.status === "error") {
+      return [];
+    }
     return response.message;
   } catch {
     return [];

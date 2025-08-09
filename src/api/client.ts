@@ -14,7 +14,7 @@ const API_BASE_URL = "http://172.16.0.10:3003";
  * Hàm GET request
  */
 export async function get(endpoint: string, options: RequestOptions = {}) {
-  console.log("API_BASE_URL ==============", API_BASE_URL);
+  //console.log("API_BASE_URL ==============", API_BASE_URL);
 
   const cookieStore = await cookies();
   const token = cookieStore.get("authToken")?.value;
@@ -63,20 +63,20 @@ export async function post(
 
   if (endpoint.includes("http")) URL = `${endpoint}`;
 
-  console.log(
-    "POST request to:",
-    URL,
-    " |authToken:",
-    token,
-    " |with body:",
-    body
-  );
+  // console.log(
+  //   "POST request to:",
+  //   URL,
+  //   " |authToken:",
+  //   token,
+  //   " |with body:",
+  //   body
+  // );
 
-  console.log("API_BASE_URL ==============----------------", {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...headers,
-  });
+  // console.log("API_BASE_URL ==============----------------", {
+  //   "Content-Type": "application/json",
+  //   ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  //   ...headers,
+  // });
   const res = await fetch(URL, {
     method: "POST",
     ...(credentials ? { credentials: "include" } : {}),

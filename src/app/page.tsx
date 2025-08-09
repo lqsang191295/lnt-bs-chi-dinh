@@ -24,13 +24,13 @@ import {
   IconButton,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 import HeadMetadata from "./head-metadata";
+
 export default function HSBAMoPage() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
@@ -60,7 +60,7 @@ export default function HSBAMoPage() {
         variant="h6"
         gutterBottom
         sx={{ color: "#1976d2", fontWeight: "normal", letterSpacing: 1 }}>
-        HỒ SƠ BỆNH ÁN
+        BỆNH ÁN ĐIỆN TỬ
       </Typography>
     </Box>
   );
