@@ -15,7 +15,6 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { usePathname } from "next/navigation";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 import { Toaster } from "sonner";
-import { useRouter } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
