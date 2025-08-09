@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -45,6 +45,9 @@ import {
   Search,
 } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
+import DsMuonHsba from "./components/ds-muon-hsba";
+import LsMuonTraHsba from "./components/ls-muon-tra-hsba";
+import DsTraHsba from "./components/ds-tra-hsba";
 
 // Dữ liệu cứng cho bảng
 interface DataRow {
@@ -230,6 +233,9 @@ export default function ExportManagementPage() {
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [selected, setSelected] = React.useState<readonly string[]>([]);
+  const [isOpenDsMuonHsba, setIsOpenDsMuonHsba] = useState(false);
+  const [isOpenLsMuonTraHsba, setIsOpenLsMuonTraHsba] = useState(false);
+  const [isOpenDsTraHsba, setIsOpenDsTraHsba] = useState(false);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setCurrentTab(newValue);
@@ -421,13 +427,25 @@ export default function ExportManagementPage() {
 
       {/* Tab Navigation */}
       <Box className="bg-white flex gap-2 p-2">
-        <Button variant="contained" startIcon={<NoteAdd />} size="small">
+        <Button
+          variant="contained"
+          startIcon={<NoteAdd />}
+          size="small"
+          onClick={() => setIsOpenDsMuonHsba(true)}>
           Mượn HSBA
         </Button>
-        <Button variant="contained" startIcon={<HighlightOff />} size="small">
+        <Button
+          variant="contained"
+          startIcon={<HighlightOff />}
+          size="small"
+          onClick={() => setIsOpenDsTraHsba(true)}>
           Trả HSBA
         </Button>
-        <Button variant="contained" startIcon={<History />} size="small">
+        <Button
+          variant="contained"
+          startIcon={<History />}
+          size="small"
+          onClick={() => setIsOpenLsMuonTraHsba(true)}>
           Lịch sử mượn trả
         </Button>
         <Button variant="contained" startIcon={<Refresh />} size="small">
@@ -444,6 +462,9 @@ export default function ExportManagementPage() {
           checkboxSelection
           disableRowSelectionOnClick
           density="compact"
+          onRowDoubleClick={(row) => {
+            setIsOpenDsMuonHsba(true);
+          }}
           sx={{
             "& .MuiDataGrid-columnHeaders": {
               backgroundColor: "#f5f5f5",
@@ -452,6 +473,19 @@ export default function ExportManagementPage() {
           }}
         />
       </Box>
+
+      <DsMuonHsba
+        open={isOpenDsMuonHsba}
+        onClose={() => setIsOpenDsMuonHsba(false)}
+      />
+      <LsMuonTraHsba
+        open={isOpenLsMuonTraHsba}
+        onClose={() => setIsOpenLsMuonTraHsba(false)}
+      />
+      <DsTraHsba
+        open={isOpenDsTraHsba}
+        onClose={() => setIsOpenDsTraHsba(false)}
+      />
     </Box>
   );
 }
