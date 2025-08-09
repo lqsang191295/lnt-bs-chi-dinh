@@ -14,6 +14,7 @@ import DevicesRoundedIcon from "@mui/icons-material/DevicesRounded";
 import SmartphoneRoundedIcon from "@mui/icons-material/SmartphoneRounded";
 import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
 import Typography from "@mui/material/Typography";
+import { Stack } from "@mui/material";
 
 const Avatar = styled(MuiAvatar)(({ theme }) => ({
   width: 28,
@@ -36,12 +37,15 @@ export default function SelectContent() {
   };
 
   return (
-    <>
+    <div className="flex items-center">
       <img src="/logo.png" alt="Logo" style={{ height: 32, marginRight: 8 }} />
-      <Typography gutterBottom sx={{ fontSize: 18, fontWeight: 600 }}>
-        HỆ THỐNG EMR
-      </Typography>
-    </>
+      <Stack spacing={1}>
+        <span className="font-bold text-xs">
+          BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG
+        </span>
+        <span className="text-xs text-gray-500">HỆ THỐNG EMR</span>
+      </Stack>
+    </div>
     // <Select
     //   labelId="company-select"
     //   id="company-simple-select"
@@ -105,6 +109,5 @@ export default function SelectContent() {
     //     <ListItemText primary="Add product" secondary="Web app" />
     //   </MenuItem>
     // </Select>
-  
   );
 }

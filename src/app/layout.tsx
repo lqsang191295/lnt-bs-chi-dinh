@@ -101,7 +101,9 @@ export default function RootLayout({
             {/* <AppNavbar /> */}
             <Box className="w-full h-full flex flex-col flex-1 overflow-hidden">
               <AppBarTop />
-              <Box className="bg-blue-100 h-full w-full">{children}</Box>
+              <Box className="bg-blue-100 h-full w-full overflow-hidden">
+                {children}
+              </Box>
             </Box>
           </Box>
         </LocalizationProvider>

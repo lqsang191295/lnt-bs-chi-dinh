@@ -6,7 +6,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
-import PermIdentityIcon from '@mui/icons-material/PermIdentity';
+import PermIdentityIcon from "@mui/icons-material/PermIdentity";
 import MenuIcon from "@mui/icons-material/Menu";
 import Cookies from "js-cookie";
 import { useUserStore } from "@/store/user";
@@ -17,9 +17,10 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
-import KeyIcon from '@mui/icons-material/Key';
-import LogoutIcon from '@mui/icons-material/Logout';
-import { instnguoidung, gettnguoidung, gettnhomnguoidung, instnguoidungdoimatkhau } from "@/actions/emr_tnguoidung";
+import KeyIcon from "@mui/icons-material/Key";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { instnguoidungdoimatkhau } from "@/actions/emr_tnguoidung";
+import { AppBreadcrumbs } from "./AppBreadcrumbs";
 
 export default function AppBarTop() {
   const { setUserData } = useUserStore();
@@ -36,7 +37,7 @@ export default function AppBarTop() {
     setUserData({} as IUserItem);
     window.location.href = "/login";
   };
-    const handleOpenChangePw = () => {
+  const handleOpenChangePw = () => {
     setShowLogout(false);
     setOpenChangePw(true);
   };
@@ -59,7 +60,7 @@ export default function AppBarTop() {
       setPwError("Mật khẩu mới không khớp.");
       return;
     }
-    // TODO: Gọi API đổi mật khẩu tại đây 
+    // TODO: Gọi API đổi mật khẩu tại đây
     if (!loginedUser) return;
     const result = await instnguoidungdoimatkhau(loginedUser.ctaikhoan, "4", {
       userid: loginedUser.cid,
@@ -74,7 +75,10 @@ export default function AppBarTop() {
     // console.log("result:", result);
     const arr = result as Array<{ ROW_COUNT: number }>;
 
-    if (typeof arr === "string" && arr === "Authorization has been denied for this request.") {
+    if (
+      typeof arr === "string" &&
+      arr === "Authorization has been denied for this request."
+    ) {
       alert("Bạn không có quyền đổi mật khẩu!");
       //console.log("change pass unauthorized:", arr);
     } else if (
@@ -87,7 +91,6 @@ export default function AppBarTop() {
     } else {
       //console.log("change pass err response message:", arr);
       alert("Đổi mật khẩu người dùng thất bại");
-
     }
     // Giả sử API đổi mật khẩu thành công
     //handleCloseChangePw();
@@ -104,16 +107,20 @@ export default function AppBarTop() {
             aria-label="menu"
             sx={{ mr: 2 }}>
             <MenuIcon />
-            <img src="/logow.png" alt="Logo" style={{ height: 32, marginRight: 8 }} />
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG
-            </Typography>
           </IconButton>
+          {/* <img
+              src="/logow.png"
+              alt="Logo"
+              style={{ height: 32, marginRight: 8 }}
+            />
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG
+          </Typography> */}
+          <AppBreadcrumbs />
+
           <Box
-            sx={{ display: "flex", alignItems: "center", ml: "auto" 
-            }}
-            onClick={() => setShowLogout(true)}
-          >
+            sx={{ display: "flex", alignItems: "center", ml: "auto" }}
+            onClick={() => setShowLogout(true)}>
             <IconButton color="inherit">
               <PermIdentityIcon />
             </IconButton>
@@ -134,16 +141,14 @@ export default function AppBarTop() {
                   borderRadius: 1,
                   p: 1,
                 }}
-                onMouseLeave={() => setShowLogout(false)}
-              >
+                onMouseLeave={() => setShowLogout(false)}>
                 <Button
                   color="primary"
                   variant="text"
                   size="small"
                   fullWidth
                   sx={{ justifyContent: "flex-start", mb: 1 }}
-                  onClick={handleOpenChangePw}
-                >
+                  onClick={handleOpenChangePw}>
                   <KeyIcon fontSize="small" sx={{ mr: 1 }} />
                   Đổi mật khẩu
                 </Button>
@@ -153,9 +158,8 @@ export default function AppBarTop() {
                   size="small"
                   fullWidth
                   sx={{ justifyContent: "flex-start" }}
-                  onClick={handleLogout}
-                >
-                <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
+                  onClick={handleLogout}>
+                  <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
                   Đăng xuất
                 </Button>
               </Box>
@@ -172,7 +176,7 @@ export default function AppBarTop() {
             fullWidth
             margin="normal"
             value={oldPw}
-            onChange={e => setOldPw(e.target.value)}
+            onChange={(e) => setOldPw(e.target.value)}
           />
           <TextField
             label="Mật khẩu mới"
@@ -180,7 +184,7 @@ export default function AppBarTop() {
             fullWidth
             margin="normal"
             value={newPw}
-            onChange={e => setNewPw(e.target.value)}
+            onChange={(e) => setNewPw(e.target.value)}
           />
           <TextField
             label="Nhập lại mật khẩu mới"
@@ -188,7 +192,7 @@ export default function AppBarTop() {
             fullWidth
             margin="normal"
             value={confirmPw}
-            onChange={e => setConfirmPw(e.target.value)}
+            onChange={(e) => setConfirmPw(e.target.value)}
           />
           {pwError && (
             <Typography color="error" variant="body2" mt={1}>
@@ -198,7 +202,10 @@ export default function AppBarTop() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseChangePw}>Hủy</Button>
-          <Button onClick={handleChangePassword} variant="contained" color="primary">
+          <Button
+            onClick={handleChangePassword}
+            variant="contained"
+            color="primary">
             Đổi mật khẩu
           </Button>
         </DialogActions>
