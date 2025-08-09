@@ -14,7 +14,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 import { Toaster } from "sonner";
-import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation"; // Cho App Router (Next.js 13+)
 
 const geistSans = Geist({

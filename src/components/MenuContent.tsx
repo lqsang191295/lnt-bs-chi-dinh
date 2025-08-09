@@ -11,26 +11,26 @@ import {
   Stack,
 } from "@mui/material";
 import { ExpandLess, ExpandMore, Folder, Bookmark } from "@mui/icons-material";
-import HomeIcon from '@mui/icons-material/Home';
-import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
-import SettingsIcon from '@mui/icons-material/Settings';
-import HistoryIcon from '@mui/icons-material/History';
-import IosShareIcon from '@mui/icons-material/IosShare';
-import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
-import StorageIcon from '@mui/icons-material/Storage';
-import ContentPasteSearchIcon from '@mui/icons-material/ContentPasteSearch';
-import ManageSearchIcon from '@mui/icons-material/ManageSearch';
-import SwitchAccountIcon from '@mui/icons-material/SwitchAccount';
-import EventRepeatOutlinedIcon from '@mui/icons-material/EventRepeatOutlined';
+import HomeIcon from "@mui/icons-material/Home";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import SettingsIcon from "@mui/icons-material/Settings";
+import HistoryIcon from "@mui/icons-material/History";
+import IosShareIcon from "@mui/icons-material/IosShare";
+import PublishedWithChangesIcon from "@mui/icons-material/PublishedWithChanges";
+import StorageIcon from "@mui/icons-material/Storage";
+import ContentPasteSearchIcon from "@mui/icons-material/ContentPasteSearch";
+import ManageSearchIcon from "@mui/icons-material/ManageSearch";
+import SwitchAccountIcon from "@mui/icons-material/SwitchAccount";
+import EventRepeatOutlinedIcon from "@mui/icons-material/EventRepeatOutlined";
 import Link from "next/link";
 import { useMenuStore } from "@/store/menu";
 import { buildMenuTree } from "@/utils/menu";
 import type { IMenuTree } from "@/model/menu";
+import { usePathname } from "next/navigation";
 
 export default function MenuContent() {
   const { data: menuData } = useMenuStore();
   const menuTree = buildMenuTree(menuData);
-
   return (
     <Stack sx={{ flexGrow: 1, p: 1 }}>
       <List component="nav">
@@ -51,8 +51,14 @@ export default function MenuContent() {
 
 function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  console.log(
+    'pathname.replace(/^/+|/+$/g, "").toLowerCase() ============= ',
+    pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
+  );
+
   const hasChildren = item.children && item.children.length > 0;
-  
+
   const iconMap: Record<string, React.ElementType> = {
     home: HomeIcon,
     SettingsIcon: SettingsIcon,
@@ -75,13 +81,20 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
 
   return (
     <>
-      <ListItemButton onClick={handleClick} sx={{ pl: 2 + level * 2 }}>
+      <ListItemButton
+        onClick={handleClick}
+        sx={{ pl: 2 + level * 2 }}
+        className={
+          item.clink === pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
+            ? "bg-blue-300 hover:bg-blue-400"
+            : ""
+        }>
         <ListItemIcon>
-           {(() => {
-              const IconComponent = iconMap[item.cicon] || Folder;
-              //console.log("iconname", item.cicon);
-              return <IconComponent />;
-            })()}
+          {(() => {
+            const IconComponent = iconMap[item.cicon] || Folder;
+            //console.log("iconname", item.cicon);
+            return <IconComponent />;
+          })()}
         </ListItemIcon>
         <ListItemText primary={item.ctenmenu} />
         {hasChildren ? open ? <ExpandLess /> : <ExpandMore /> : null}

@@ -1,48 +1,37 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
   Box,
-  TextField,
+  Typography,
   Button,
   IconButton,
+  Select,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  TextField,
   Tabs,
   Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Checkbox,
-  Pagination,
-  Select,
-  MenuItem,
-  FormControl,
-  InputAdornment, // Để thêm icon vào TextField
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add"; // Dùng cho nút "Làm mới"
-import DateRangeIcon from "@mui/icons-material/DateRange"; // Icon cho DatePicker
-import FirstPageIcon from "@mui/icons-material/FirstPage";
-import LastPageIcon from "@mui/icons-material/LastPage";
-import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
-import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import AddIcon from "@mui/icons-material/Add";
+import { DatePicker } from "@mui/x-date-pickers";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Download, NoteAdd, Refresh } from "@mui/icons-material";
 
-// Dữ liệu cứng cho bảng
+// ----------------- MOCK DATA -----------------
 interface DataRow {
   id: string;
-  trangThaiMuon: "CHƯA MƯỢN" | "ĐANG MƯỢN"; // Trạng thái thực tế
+  trangThaiMuon: "CHƯA MƯỢN" | "ĐANG MƯỢN";
   loaiBaSoTo: string;
   maBenhAn: string;
   hoVaTen: string;
-  tuoi: string; // "Tuổi" có vẻ là trường tính toán, giữ dạng string cho đơn giản
+  tuoi: string;
   ngayVaoVien: string;
-  ngayRaVien: string; // Có thể rỗng
+  ngayRaVien: string;
   chanDoan: string;
   khoa: string;
 }
@@ -168,492 +157,280 @@ const mockData: DataRow[] = [
     chanDoan: "",
     khoa: "Khoa Khám bệnh - Liên chuyên khoa",
   },
+  {
+    id: "10",
+    trangThaiMuon: "CHƯA MƯỢN",
+    loaiBaSoTo: "BN000656B3",
+    maBenhAn: "BA2507290164",
+    hoVaTen: "NGUYỄN HOÀNG LƯƠNG",
+    tuoi: "53 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "10",
+    trangThaiMuon: "CHƯA MƯỢN",
+    loaiBaSoTo: "BN000656B3",
+    maBenhAn: "BA2507290164",
+    hoVaTen: "NGUYỄN HOÀNG LƯƠNG",
+    tuoi: "53 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
+  {
+    id: "10",
+    trangThaiMuon: "CHƯA MƯỢN",
+    loaiBaSoTo: "BN000656B3",
+    maBenhAn: "BA2507290164",
+    hoVaTen: "NGUYỄN HOÀNG LƯƠNG",
+    tuoi: "53 Tuổi",
+    ngayVaoVien: "29/07/2025",
+    ngayRaVien: "",
+    chanDoan: "",
+    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
+  },
 ];
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
-export default function BorrowReturnPage() {
-  const [currentTab, setCurrentTab] = React.useState("borrow");
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [selected, setSelected] = React.useState<readonly string[]>([]);
-  const [searchKhoa, setSearchKhoa] = React.useState("");
-  const [searchTuNgay, setSearchTuNgay] = React.useState("");
-  const [searchDenNgay, setSearchDenNgay] = React.useState("");
-  const [searchDateType, setSearchDateType] = React.useState("ngayVaoVien"); // Default search by "Ngày vào viện"
+function CustomTabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
 
-  // State và hàm cho Pagination
-  const [page, setPage] = React.useState(1);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
-    setCurrentTab(newValue);
-  };
-
-  const handleSearch = () => {
-    console.log("Searching with:", {
-      searchTerm,
-      searchKhoa,
-      searchTuNgay,
-      searchDenNgay,
-      searchDateType,
-    });
-    // Ở đây bạn có thể thêm logic lọc dữ liệu `mockData` dựa trên các trường tìm kiếm
-  };
-
-  const handleRefresh = () => {
-    console.log("Refresh clicked!");
-    // Logic cho nút "Làm mới"
-  };
-
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelecteds = mockData.map((n) => n.id);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event: React.MouseEvent<unknown>, id: string) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly string[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
-  };
-
-  const isSelected = (id: string) => selected.indexOf(id) !== -1;
-
-  // Lấy dữ liệu cho trang hiện tại
-  const paginatedData = mockData.slice(
-    (page - 1) * rowsPerPage,
-    (page - 1) * rowsPerPage + rowsPerPage
+  return (
+    <div
+      className="p-0 w-full h-full"
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}>
+      {value === index && (
+        <Box className="w-full h-full flex flex-col">{children}</Box>
+      )}
+    </div>
   );
-  const totalPages = Math.ceil(mockData.length / rowsPerPage);
+}
 
-  const handleChangePage = (
-    event: React.ChangeEvent<unknown>,
-    newPage: number
-  ) => {
-    setPage(newPage);
+function a11yProps(index: number) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
   };
+}
+// ----------------- COMPONENT -----------------
+export default function BorrowReturnPage() {
+  const [currentTab, setCurrentTab] = useState("borrow");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [value, setValue] = React.useState(0);
 
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang
-  };
+  // Cột cho DataGrid
+  const columns: GridColDef[] = [
+    { field: "id", headerName: "ID", width: 60 },
+    {
+      field: "trangThaiMuon",
+      headerName: "Trạng thái",
+      width: 100,
+      renderCell: (params) => {
+        const isChuaMuon = params.value === "CHƯA MƯỢN";
+        return (
+          <Button
+            variant="contained"
+            size="small"
+            sx={{
+              bgcolor: isChuaMuon ? "#28a745" : "#dc3545",
+              color: "#fff",
+              textTransform: "none",
+              minWidth: "60px",
+              height: "24px",
+              fontSize: "0.7rem",
+              fontWeight: "bold",
+              "&:hover": {
+                bgcolor: isChuaMuon ? "#28a745" : "#dc3545",
+                opacity: 0.9,
+              },
+            }}>
+            {isChuaMuon ? "MƯỢN" : "TRẢ"}
+          </Button>
+        );
+      },
+    },
+    { field: "loaiBaSoTo", headerName: "Số lưu trữ", width: 120 },
+    { field: "maBenhAn", headerName: "Mã BA", width: 150 },
+    { field: "hoVaTen", headerName: "Họ và tên", width: 200 },
+    { field: "tuoi", headerName: "Tuổi", width: 90 },
+    { field: "ngayVaoVien", headerName: "Ngày vào viện", width: 130 },
+    { field: "ngayRaVien", headerName: "Ngày ra viện", width: 130 },
+    { field: "chanDoan", headerName: "Chẩn đoán", width: 200 },
+    { field: "khoa", headerName: "Khoa", width: 250 },
+  ];
 
-  // Hàm render nút "MƯỢN" hoặc "TRẢ" dựa trên trạng thái
-  const renderActionButton = (status: DataRow["trangThaiMuon"]) => {
-    const buttonText = status === "CHƯA MƯỢN" ? "MƯỢN" : "TRẢ";
-    const bgColor = status === "CHƯA MƯỢN" ? "#28a745" : "#dc3545"; // Xanh lá cho MƯỢN, Đỏ cho TRẢ
+  // Rows: dùng luôn mockData vì đã trùng key với field trong columns
+  const rows = mockData;
 
-    return (
-      <Button
-        variant="contained"
-        size="small"
-        sx={{
-          bgcolor: bgColor,
-          color: "#fff",
-          textTransform: "none",
-          minWidth: "60px",
-          height: "24px",
-          fontSize: "0.7rem",
-          fontWeight: "bold",
-          borderRadius: "4px",
-          boxShadow: "none",
-          "&:hover": {
-            bgcolor: bgColor,
-            opacity: 0.9,
-          },
-        }}
-        onClick={(e) => {
-          e.stopPropagation(); // Ngăn chặn sự kiện click lan ra row
-          console.log(`Action: ${buttonText}`);
-        }}>
-        {buttonText}
-      </Button>
-    );
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
   };
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: "#f0f2f5", minHeight: "100vh" }}>
-      {/* Header */}
-      <AppBar
-        position="static"
-        color="inherit"
-        elevation={1}
-        sx={{ bgcolor: "#fff" }}>
-        <Toolbar>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, color: "#333" }}>
-            QUẢN LÝ MƯỢN TRẢ HỒ SƠ BỆNH ÁN
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box p={2} className="w-full h-full flex flex-col">
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+        QUẢN LÝ MƯỢN TRẢ HỒ SƠ BỆNH ÁN
+      </Typography>
 
-      {/* Filter/Search Bar */}
-      <Box sx={{ p: 2, bgcolor: "#fff", borderBottom: "1px solid #e0e0e0" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <TextField
-            label="Khoa"
-            variant="outlined"
-            size="small"
-            value={searchKhoa}
-            onChange={(e) => setSearchKhoa(e.target.value)}
-            sx={{ flex: 1 }}
-          />
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ ml: 2, mr: -1 }}>
-            Từ ngày
-          </Typography>
-          <TextField
-            type="date"
-            variant="outlined"
-            size="small"
-            value={searchTuNgay}
-            onChange={(e) => setSearchTuNgay(e.target.value)}
-            sx={{ width: "150px" }}
-            InputLabelProps={{ shrink: true }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <DateRangeIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ ml: 2, mr: -1 }}>
-            Đến ngày
-          </Typography>
-          <TextField
-            type="date"
-            variant="outlined"
-            size="small"
-            value={searchDenNgay}
-            onChange={(e) => setSearchDenNgay(e.target.value)}
-            sx={{ width: "150px" }}
-            InputLabelProps={{ shrink: true }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <DateRangeIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
-            <Select
-              value={searchDateType}
-              onChange={(e) => setSearchDateType(e.target.value as string)}
-              displayEmpty>
-              <MenuItem value="ngayVaoVien">Ngày vào viện</MenuItem>
-              <MenuItem value="ngayRaVien">Ngày ra viện</MenuItem>
-            </Select>
+      {/* Bộ lọc */}
+      <Box display="flex" gap={2} mb={2}>
+        <Box flex={3}>
+          <Select fullWidth size="small"></Select>
+        </Box>
+        <Box flex={2}>
+          <FormControl>
+            <FormLabel
+              id="popt-radio-group-label"
+              sx={{ color: "#1976d2", fontWeight: "bold" }}
+            />
+            <RadioGroup
+              row
+              aria-labelledby="popt-radio-group-label"
+              name="popt-radio-group">
+              <FormControlLabel
+                value="1"
+                control={
+                  <Radio
+                    sx={{
+                      color: "#1976d2",
+                      "&.Mui-checked": { color: "#1976d2" },
+                    }}
+                    size="small"
+                  />
+                }
+                label="Ngày vào viện"
+                sx={{ color: "#1976d2", fontWeight: "bold" }}
+              />
+              <FormControlLabel
+                value="2"
+                control={
+                  <Radio
+                    sx={{
+                      color: "#1976d2",
+                      "&.Mui-checked": { color: "#1976d2" },
+                    }}
+                    size="small"
+                  />
+                }
+                label="Ngày ra viện"
+                sx={{ color: "#1976d2", fontWeight: "bold" }}
+              />
+            </RadioGroup>
           </FormControl>
-          <Button
-            variant="contained"
-            startIcon={<SearchIcon />}
-            onClick={handleSearch}
-            sx={{ px: 3, bgcolor: "#1976d2", textTransform: "none" }}>
+        </Box>
+        <Box flex={1}>
+          <DatePicker
+            label="Từ ngày"
+            format="dd/MM/yyyy"
+            slotProps={{
+              textField: {
+                size: "small",
+              },
+            }}
+          />
+        </Box>
+        <Box flex={1}>
+          <DatePicker
+            label="Đến ngày"
+            format="dd/MM/yyyy"
+            slotProps={{
+              textField: {
+                size: "small",
+              },
+            }}
+          />
+        </Box>
+        <Box flex={1}>
+          <Button fullWidth variant="contained">
             Tìm kiếm
           </Button>
         </Box>
-        <TextField
-          label="Tên tài liệu"
-          variant="outlined"
-          size="small"
-          fullWidth
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === "Enter") {
-              handleSearch();
-            }
-          }}
-          InputProps={{
-            endAdornment: (
-              <IconButton onClick={handleSearch} edge="end" size="small">
-                <SearchIcon />
-              </IconButton>
-            ),
-          }}
-        />
       </Box>
 
-      {/* Tab Navigation */}
-      <Box
-        sx={{
-          borderBottom: 1,
-          borderColor: "divider",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          p: 1,
-          bgcolor: "#f5f5f5",
-        }}>
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          value={currentTab}
-          onChange={handleTabChange}
-          aria-label="borrow return tabs">
-          <Tab
-            label="MƯỢN HSBA"
-            value="borrow"
-            sx={{ textTransform: "none" }}
-          />
-          <Tab label="TRẢ HSBA" value="return" sx={{ textTransform: "none" }} />
-          <Tab
-            label="LỊCH SỬ MƯỢN TRẢ"
-            value="history"
-            sx={{ textTransform: "none" }}
-          />
+          aria-label="basic tabs example"
+          value={value}
+          onChange={handleChange}>
+          <Tab label="Kết xuất" {...a11yProps(0)} />
+          <Tab label="Lịch sử" {...a11yProps(1)} />
         </Tabs>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />} // Sử dụng AddIcon hoặc RefreshIcon nếu có
-          onClick={handleRefresh}
-          sx={{
-            bgcolor: "#28a745",
-            "&:hover": {
-              bgcolor: "#218838",
-            },
-            color: "#fff",
-            textTransform: "none",
-            ml: 2,
-          }}>
-          LÀM MỚI (F5)
-        </Button>
       </Box>
 
-      {/* Main Content Area (Padding around the table) */}
-      <Box sx={{ p: 2 }}>
-        {/* Data Table */}
-        <TableContainer
-          component={Paper}
-          sx={{
-            boxShadow: "none",
-            border: "1px solid #e0e0e0",
-            borderRadius: "4px",
-          }}>
-          <Table
-            sx={{ minWidth: 650 }}
-            aria-label="borrow return table"
-            size="small">
-            <TableHead sx={{ bgcolor: "#e0e0e0" }}>
-              <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    color="primary"
-                    indeterminate={
-                      selected.length > 0 &&
-                      selected.length < paginatedData.length
-                    }
-                    checked={
-                      paginatedData.length > 0 &&
-                      selected.length === paginatedData.length
-                    }
-                    onChange={handleSelectAllClick}
-                  />
-                  <Typography variant="caption" sx={{ ml: 1 }}>
-                    Chọn
-                  </Typography>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Trạng thái
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Loại BA/Số tờ
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Mã bệnh án
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Họ và tên
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Tuổi</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Ngày vào viện
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Ngày ra viện
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Chẩn đoán</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Khoa
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedData.map((row) => {
-                const isItemSelected = isSelected(row.id);
-                const labelId = `enhanced-table-checkbox-${row.id}`;
-
-                return (
-                  <TableRow
-                    hover
-                    // onClick={(event) => handleClick(event, row.id)} // Click row không toggle checkbox nếu có nút riêng
-                    role="checkbox"
-                    aria-checked={isItemSelected}
-                    tabIndex={-1}
-                    key={row.id}
-                    selected={isItemSelected}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        inputProps={{ "aria-labelledby": labelId }}
-                        onChange={(event) => handleClick(event, row.id)} // Checkbox riêng để toggle
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        {renderActionButton(row.trangThaiMuon)}
-                        <Typography variant="body2">
-                          {row.trangThaiMuon}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>{row.loaiBaSoTo}</TableCell>
-                    <TableCell component="th" id={labelId} scope="row">
-                      {row.maBenhAn}
-                    </TableCell>
-                    <TableCell>{row.hoVaTen}</TableCell>
-                    <TableCell>{row.tuoi}</TableCell>
-                    <TableCell>{row.ngayVaoVien}</TableCell>
-                    <TableCell>{row.ngayRaVien}</TableCell>
-                    <TableCell>{row.chanDoan}</TableCell>
-                    <TableCell>{row.khoa}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Pagination */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mt: 2,
-            p: 2,
-            bgcolor: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "4px",
-            boxShadow: "none",
-          }}>
-          <Typography variant="body2" color="text.secondary">
-            {`${(page - 1) * rowsPerPage + 1} đến ${Math.min(
-              page * rowsPerPage,
-              mockData.length
-            )} trên ${mockData.length}`}
-          </Typography>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={handleChangePage}
-            color="primary"
-            renderItem={(item) => (
-              <Button
-                {...item}
-                sx={{
-                  minWidth: "32px",
-                  height: "32px",
-                  borderRadius: "4px",
-                  "&.Mui-selected": {
-                    bgcolor: "#1976d2",
-                    color: "#fff",
-                    "&:hover": {
-                      bgcolor: "#1565c0",
-                    },
-                  },
-                  "&:hover": {
-                    bgcolor: "#e0e0e0",
-                  },
-                }}>
-                {item.type === "previous" && <KeyboardArrowLeft />}
-                {item.type === "next" && <KeyboardArrowRight />}
-                {item.type === "first" && <FirstPageIcon />}
-                {item.type === "last" && <LastPageIcon />}
-                {item.type === "page" && item.page}
-              </Button>
-            )}
-          />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Rows per page:
-            </Typography>
-            <FormControl variant="outlined" size="small">
-              <Select
-                value={rowsPerPage.toString()}
-                onChange={handleChangeRowsPerPage}
-                displayEmpty
-                inputProps={{ "aria-label": "Rows per page" }}
-                sx={{ height: "32px" }}>
-                <MenuItem value={10}>10</MenuItem>
-                <MenuItem value={25}>25</MenuItem>
-                <MenuItem value={50}>50</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+      {/* Tab Kết xuất */}
+      <CustomTabPanel value={value} index={0}>
+        <Box className="bg-white flex gap-2 p-2">
+          <Button variant="contained" startIcon={<NoteAdd />} size="small">
+            Kết xuất
+          </Button>
+          <Button variant="contained" startIcon={<Refresh />} size="small">
+            Làm mới
+          </Button>
         </Box>
-      </Box>
+
+        {/* DataGrid */}
+        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            pagination
+            checkboxSelection
+            disableRowSelectionOnClick
+            density="compact"
+            sx={{
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#f5f5f5",
+                fontWeight: "bold",
+              },
+            }}
+          />
+        </Box>
+      </CustomTabPanel>
+      {/* Tab Lịch sử */}
+      <CustomTabPanel value={value} index={1}>
+        <Box className="bg-white flex gap-2 p-2">
+          <Button variant="contained" startIcon={<Refresh />} size="small">
+            Làm mới
+          </Button>
+          <Button variant="contained" startIcon={<Download />} size="small">
+            Download
+          </Button>
+        </Box>
+
+        {/* DataGrid */}
+        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            pagination
+            checkboxSelection
+            disableRowSelectionOnClick
+            density="compact"
+            sx={{
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#f5f5f5",
+                fontWeight: "bold",
+              },
+            }}
+          />
+        </Box>
+      </CustomTabPanel>
     </Box>
   );
 }

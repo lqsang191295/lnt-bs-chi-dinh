@@ -49,6 +49,8 @@ import {
   getphanquyenba,
   luuphanquyenba,
 } from "@/actions/emr_tnguoidung";
+import Head from "next/head";
+import HeadMetadata from "./head-metadata";
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     // backgroundColor: theme.palette.common.black,
@@ -671,6 +673,7 @@ export default function UserManagementPage() {
     ];
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <HeadMetadata />
       <Grid container spacing={1} p={1} className="h-full overflow-hidden">
         {/* Bảng danh sách */}
         <Grid
