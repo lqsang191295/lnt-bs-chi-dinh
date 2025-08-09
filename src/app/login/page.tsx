@@ -3,7 +3,6 @@ import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
-import CssBaseline from "@mui/material/CssBaseline";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Divider from "@mui/material/Divider";
 import FormLabel from "@mui/material/FormLabel";
@@ -20,6 +19,7 @@ import { sha256 } from "@/utils/auth";
 import { GoogleIcon, FacebookIcon } from "@/components/CustomIcons";
 import Cookies from "js-cookie";
 import Spinner from "@/components/spinner";
+import { ToastSuccess, ToastError } from "@/utils/toast";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -83,13 +83,16 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
         Cookies.set("authToken", res.token, { expires: 7 }); // Lưu token trong cookie với thời gian hết hạn 1 giờ
         //console.log("Login successful, token:", res.token);
         router.push("/");
+        ToastSuccess("Đăng nhập thành công");
       } else {
         setError(
           "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu."
         );
+        ToastError("Đăng nhập thất bại");
       }
     } catch {
       setError("Có lỗi xảy ra. Vui lòng thử lại.");
+      ToastError("Đăng nhập thất bại");
     }
     setLoading(false);
   };

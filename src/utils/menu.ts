@@ -24,38 +24,44 @@ export function buildMenuTree(data: IMenuItem[]): IMenuTree[] {
 
 export function getBreadcrumbs(
   menuTree: IMenuTree[],
-  clink: string
+  linkToFind: string
 ): IMenuItem[] {
-  // Hàm đệ quy để tìm kiếm nút menu và tạo breadcrumbs
+  // Chuẩn hóa pathname: bỏ dấu "/" ở đầu và cuối
+  const normalize = (link: string) =>
+    link.replace(/^\/+|\/+$/g, "").toLowerCase();
+
+  const target = normalize(linkToFind);
+
   function findPath(
     nodes: IMenuTree[],
-    linkToFind: string,
     path: IMenuItem[] = []
   ): IMenuItem[] | null {
     for (const node of nodes) {
-      // Thêm nút hiện tại vào đường dẫn
       const newPath = [...path, node];
 
-      // Nếu link của nút hiện tại khớp với link cần tìm, trả về đường dẫn
-      if (node.clink === linkToFind) {
-        return newPath;
-      }
+      // Chuẩn hóa clink của menu node
+      const nodeLink = node.clink ? normalize(node.clink) : "";
 
-      // Nếu có menu con, tiếp tục tìm kiếm đệ quy
-      if (node.children && node.children.length > 0) {
-        const foundPath = findPath(node.children, linkToFind, newPath);
-        if (foundPath) {
-          return foundPath;
+      // Match nếu giống hệt hoặc target bắt đầu bằng nodeLink
+      if (nodeLink && (target === nodeLink || target.startsWith(nodeLink))) {
+        if (target === nodeLink) {
+          return newPath;
+        }
+        // Nếu còn children thì tiếp tục tìm
+        if (node.children && node.children.length > 0) {
+          const found = findPath(node.children, newPath);
+          if (found) return found;
+        }
+      } else {
+        // Nếu không match link nhưng vẫn có children → tiếp tục tìm
+        if (node.children && node.children.length > 0) {
+          const found = findPath(node.children, newPath);
+          if (found) return found;
         }
       }
     }
-    // Nếu không tìm thấy, trả về null
     return null;
   }
 
-  // Gọi hàm đệ quy để tìm đường dẫn từ cây menu gốc
-  const breadcrumbs = findPath(menuTree, clink);
-
-  // Nếu tìm thấy, trả về mảng breadcrumbs, ngược lại trả về mảng rỗng
-  return breadcrumbs || [];
+  return findPath(menuTree) || [];
 }
