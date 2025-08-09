@@ -12,10 +12,10 @@ import { useMenuStore } from "@/store/menu";
 import { useUserStore } from "@/store/user";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { usePathname } from "next/navigation";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation"; // Cho App Router (Next.js 13+)
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,7 +40,7 @@ export default function RootLayout({
   const pathname = usePathname();
   const pathnameNotUseLayout = ["/login"];
   const useNoLayout = pathnameNotUseLayout.some((path) =>
-    pathname.startsWith(path)
+    pathname ? pathname.startsWith(path) : false
   );
   const router = useRouter();
   const { setData } = useMenuStore();
