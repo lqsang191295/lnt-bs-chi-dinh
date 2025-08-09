@@ -51,10 +51,10 @@ export default function MenuContent() {
 
 function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
   console.log(
     'pathname.replace(/^/+|/+$/g, "").toLowerCase() ============= ',
-    pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
+    pathname?.replace(/^\/+|\/+$/g, "").toLowerCase()
   );
 
   const hasChildren = item.children && item.children.length > 0;
@@ -83,12 +83,19 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
     <>
       <ListItemButton
         onClick={handleClick}
-        sx={{ pl: 2 + level * 2 }}
-        className={
-          item.clink === pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
-            ? "bg-blue-300 hover:bg-blue-400"
-            : ""
-        }>
+        sx={{
+          pl: 2 + level * 2,
+          backgroundColor:
+            item.clink === pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
+              ? "oklch(80.9% 0.105 251.813)"
+              : "",
+          "&:hover": {
+            backgroundColor:
+              item.clink === pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
+                ? "oklch(70.7% 0.165 254.624)"
+                : "",
+          },
+        }}>
         <ListItemIcon>
           {(() => {
             const IconComponent = iconMap[item.cicon] || Folder;
@@ -101,7 +108,7 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
       </ListItemButton>
 
       {hasChildren && (
-        <Collapse in={open} timeout="auto" unmountOnExit>
+        <Collapse in={true} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {item.children!.map((child) => (
               <Link key={child.cid} href={child.clink || ""} passHref>
