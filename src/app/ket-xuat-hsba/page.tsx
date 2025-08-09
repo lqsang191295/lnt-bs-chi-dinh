@@ -20,6 +20,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import { DatePicker } from "@mui/x-date-pickers";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Download, NoteAdd, Refresh } from "@mui/icons-material";
 
 // ----------------- MOCK DATA -----------------
 interface DataRow {
@@ -193,11 +194,41 @@ const mockData: DataRow[] = [
     khoa: "Khoa Khám bệnh - Liên chuyên khoa",
   },
 ];
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
+function CustomTabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      className="p-0 w-full h-full"
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}>
+      {value === index && (
+        <Box className="w-full h-full flex flex-col">{children}</Box>
+      )}
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+}
 // ----------------- COMPONENT -----------------
 export default function BorrowReturnPage() {
   const [currentTab, setCurrentTab] = useState("borrow");
   const [searchTerm, setSearchTerm] = useState("");
+  const [value, setValue] = React.useState(0);
 
   // Cột cho DataGrid
   const columns: GridColDef[] = [
@@ -242,6 +273,10 @@ export default function BorrowReturnPage() {
 
   // Rows: dùng luôn mockData vì đã trùng key với field trong columns
   const rows = mockData;
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  };
 
   return (
     <Box p={2} className="w-full h-full flex flex-col">
@@ -327,83 +362,75 @@ export default function BorrowReturnPage() {
         </Box>
       </Box>
 
-      <TextField
-        label="Tên tài liệu"
-        variant="outlined"
-        size="small"
-        fullWidth
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        InputProps={{
-          endAdornment: (
-            <IconButton edge="end" size="small">
-              <SearchIcon />
-            </IconButton>
-          ),
-        }}
-      />
-
       {/* Tabs */}
-      <Box
-        sx={{
-          borderBottom: 1,
-          borderColor: "divider",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          p: 1,
-          bgcolor: "#f5f5f5",
-          mt: 2,
-        }}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          value={currentTab}
-          onChange={(e, v) => setCurrentTab(v)}
-          aria-label="borrow return tabs">
-          <Tab
-            label="MƯỢN HSBA"
-            value="borrow"
-            sx={{ textTransform: "none" }}
-          />
-          <Tab label="TRẢ HSBA" value="return" sx={{ textTransform: "none" }} />
-          <Tab
-            label="LỊCH SỬ MƯỢN TRẢ"
-            value="history"
-            sx={{ textTransform: "none" }}
-          />
+          aria-label="basic tabs example"
+          value={value}
+          onChange={handleChange}>
+          <Tab label="Kết xuất" {...a11yProps(0)} />
+          <Tab label="Lịch sử" {...a11yProps(1)} />
         </Tabs>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          sx={{
-            bgcolor: "#28a745",
-            "&:hover": {
-              bgcolor: "#218838",
-            },
-            color: "#fff",
-            textTransform: "none",
-            ml: 2,
-          }}>
-          LÀM MỚI (F5)
-        </Button>
       </Box>
 
-      {/* DataGrid */}
-      <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pagination
-          checkboxSelection
-          disableRowSelectionOnClick
-          density="compact"
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: "#f5f5f5",
-              fontWeight: "bold",
-            },
-          }}
-        />
-      </Box>
+      {/* Tab Kết xuất */}
+      <CustomTabPanel value={value} index={0}>
+        <Box className="bg-white flex gap-2 p-2">
+          <Button variant="contained" startIcon={<NoteAdd />} size="small">
+            Kết xuất
+          </Button>
+          <Button variant="contained" startIcon={<Refresh />} size="small">
+            Làm mới
+          </Button>
+        </Box>
+
+        {/* DataGrid */}
+        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            pagination
+            checkboxSelection
+            disableRowSelectionOnClick
+            density="compact"
+            sx={{
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#f5f5f5",
+                fontWeight: "bold",
+              },
+            }}
+          />
+        </Box>
+      </CustomTabPanel>
+      {/* Tab Lịch sử */}
+      <CustomTabPanel value={value} index={1}>
+        <Box className="bg-white flex gap-2 p-2">
+          <Button variant="contained" startIcon={<Refresh />} size="small">
+            Làm mới
+          </Button>
+          <Button variant="contained" startIcon={<Download />} size="small">
+            Download
+          </Button>
+        </Box>
+
+        {/* DataGrid */}
+        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            pagination
+            checkboxSelection
+            disableRowSelectionOnClick
+            density="compact"
+            sx={{
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#f5f5f5",
+                fontWeight: "bold",
+              },
+            }}
+          />
+        </Box>
+      </CustomTabPanel>
     </Box>
   );
 }
