@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -23,7 +23,11 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputAdornment, // Để thêm icon vào TextField
+  InputAdornment,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio, // Để thêm icon vào TextField
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add"; // Dùng cho nút "Làm mới"
@@ -32,6 +36,9 @@ import FirstPageIcon from "@mui/icons-material/FirstPage";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import { DatePicker } from "@mui/x-date-pickers";
+import { DataGrid } from "@mui/x-data-grid";
+import { GridColDef } from "@mui/x-data-grid";
 
 // Dữ liệu cứng cho bảng
 interface DataRow {
@@ -178,7 +185,37 @@ export default function BorrowReturnPage() {
   const [searchTuNgay, setSearchTuNgay] = React.useState("");
   const [searchDenNgay, setSearchDenNgay] = React.useState("");
   const [searchDateType, setSearchDateType] = React.useState("ngayVaoVien"); // Default search by "Ngày vào viện"
-
+  const columns: GridColDef[] = [
+    { field: "ID", headerName: "ID", width: 60 },
+    {
+      field: "TrangThaiBA",
+      headerName: "Trạng thái",
+      width: 100,
+      renderCell: (params) => (
+        <Button
+          size="small"
+          variant="contained"
+          color={params.value === "MO" ? "success" : "primary"}>
+          {params.value}
+        </Button>
+      ),
+    },
+    { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
+    { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
+    { field: "Hoten", headerName: "Họ và tên", width: 200 },
+    { field: "MaBN", headerName: "Mã BN", width: 130 },
+    { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+    { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
+    { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
+    { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+    { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+    { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
+    { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
+    // { field: "doiTuong", headerName: "Đối tượng", width: 100 },
+    // { field: "hinhThuc", headerName: "Hình thức xử trí", width: 130 },
+    // { field: "phieu", headerName: "Phiếu", width: 100 },
+  ];
+  const [rows, setRows] = useState<any[]>([]);
   // State và hàm cho Pagination
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -288,94 +325,88 @@ export default function BorrowReturnPage() {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: "#f0f2f5", minHeight: "100vh" }}>
-      {/* Header */}
-      <AppBar
-        position="static"
-        color="inherit"
-        elevation={1}
-        sx={{ bgcolor: "#fff" }}>
-        <Toolbar>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, color: "#333" }}>
-            QUẢN LÝ MƯỢN TRẢ HỒ SƠ BỆNH ÁN
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <Box p={2} className="w-full h-full flex flex-col">
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+        QUẢN LÝ MƯỢN TRẢ HỒ SƠ BỆNH ÁN
+      </Typography>
 
       {/* Filter/Search Bar */}
-      <Box sx={{ p: 2, bgcolor: "#fff", borderBottom: "1px solid #e0e0e0" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <TextField
-            label="Khoa"
-            variant="outlined"
-            size="small"
-            value={searchKhoa}
-            onChange={(e) => setSearchKhoa(e.target.value)}
-            sx={{ flex: 1 }}
-          />
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ ml: 2, mr: -1 }}>
-            Từ ngày
-          </Typography>
-          <TextField
-            type="date"
-            variant="outlined"
-            size="small"
-            value={searchTuNgay}
-            onChange={(e) => setSearchTuNgay(e.target.value)}
-            sx={{ width: "150px" }}
-            InputLabelProps={{ shrink: true }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <DateRangeIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ ml: 2, mr: -1 }}>
-            Đến ngày
-          </Typography>
-          <TextField
-            type="date"
-            variant="outlined"
-            size="small"
-            value={searchDenNgay}
-            onChange={(e) => setSearchDenNgay(e.target.value)}
-            sx={{ width: "150px" }}
-            InputLabelProps={{ shrink: true }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <DateRangeIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
-            <Select
-              value={searchDateType}
-              onChange={(e) => setSearchDateType(e.target.value as string)}
-              displayEmpty>
-              <MenuItem value="ngayVaoVien">Ngày vào viện</MenuItem>
-              <MenuItem value="ngayRaVien">Ngày ra viện</MenuItem>
-            </Select>
-          </FormControl>
-          <Button
-            variant="contained"
-            startIcon={<SearchIcon />}
-            onClick={handleSearch}
-            sx={{ px: 3, bgcolor: "#1976d2", textTransform: "none" }}>
-            Tìm kiếm
-          </Button>
+      <Box>
+        <Box display="flex" gap={2} mb={2}>
+          <Box flex={3}>
+            <Select fullWidth size="small"></Select>
+          </Box>
+          <Box flex={2}>
+            <FormControl>
+              <FormLabel
+                id="popt-radio-group-label"
+                sx={{ color: "#1976d2", fontWeight: "bold" }}
+              />
+              <RadioGroup
+                row
+                aria-labelledby="popt-radio-group-label"
+                name="popt-radio-group">
+                <FormControlLabel
+                  value="1"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                      size="small"
+                    />
+                  }
+                  label="Ngày vào viện"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }}
+                />
+                <FormControlLabel
+                  value="2"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                      size="small"
+                    />
+                  }
+                  label="Ngày ra viện"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }}
+                />
+              </RadioGroup>
+            </FormControl>
+          </Box>
+          <Box flex={1}>
+            <DatePicker
+              label="Từ ngày"
+              format="dd/MM/yyyy"
+              slotProps={{
+                textField: {
+                  size: "small",
+                },
+              }}
+            />
+          </Box>
+          <Box flex={1}>
+            <DatePicker
+              label="Đến ngày"
+              format="dd/MM/yyyy"
+              slotProps={{
+                textField: {
+                  size: "small",
+                },
+              }}
+            />
+          </Box>
+          <Box flex={1}>
+            <Button fullWidth variant="contained" onClick={handleSearch}>
+              Tìm kiếm
+            </Button>
+          </Box>
         </Box>
         <TextField
           label="Tên tài liệu"
@@ -444,215 +475,23 @@ export default function BorrowReturnPage() {
       </Box>
 
       {/* Main Content Area (Padding around the table) */}
-      <Box sx={{ p: 2 }}>
-        {/* Data Table */}
-        <TableContainer
-          component={Paper}
+      <Box className="flex-1">
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          pagination
+          checkboxSelection
+          disableRowSelectionOnClick
           sx={{
-            boxShadow: "none",
-            border: "1px solid #e0e0e0",
-            borderRadius: "4px",
-          }}>
-          <Table
-            sx={{ minWidth: 650 }}
-            aria-label="borrow return table"
-            size="small">
-            <TableHead sx={{ bgcolor: "#e0e0e0" }}>
-              <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    color="primary"
-                    indeterminate={
-                      selected.length > 0 &&
-                      selected.length < paginatedData.length
-                    }
-                    checked={
-                      paginatedData.length > 0 &&
-                      selected.length === paginatedData.length
-                    }
-                    onChange={handleSelectAllClick}
-                  />
-                  <Typography variant="caption" sx={{ ml: 1 }}>
-                    Chọn
-                  </Typography>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Trạng thái
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Loại BA/Số tờ
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Mã bệnh án
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Họ và tên
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Tuổi</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Ngày vào viện
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Ngày ra viện
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Chẩn đoán</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    Khoa
-                    <IconButton size="small" sx={{ ml: 0.5 }}>
-                      <SearchIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedData.map((row) => {
-                const isItemSelected = isSelected(row.id);
-                const labelId = `enhanced-table-checkbox-${row.id}`;
-
-                return (
-                  <TableRow
-                    hover
-                    // onClick={(event) => handleClick(event, row.id)} // Click row không toggle checkbox nếu có nút riêng
-                    role="checkbox"
-                    aria-checked={isItemSelected}
-                    tabIndex={-1}
-                    key={row.id}
-                    selected={isItemSelected}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        inputProps={{ "aria-labelledby": labelId }}
-                        onChange={(event) => handleClick(event, row.id)} // Checkbox riêng để toggle
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        {renderActionButton(row.trangThaiMuon)}
-                        <Typography variant="body2">
-                          {row.trangThaiMuon}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>{row.loaiBaSoTo}</TableCell>
-                    <TableCell component="th" id={labelId} scope="row">
-                      {row.maBenhAn}
-                    </TableCell>
-                    <TableCell>{row.hoVaTen}</TableCell>
-                    <TableCell>{row.tuoi}</TableCell>
-                    <TableCell>{row.ngayVaoVien}</TableCell>
-                    <TableCell>{row.ngayRaVien}</TableCell>
-                    <TableCell>{row.chanDoan}</TableCell>
-                    <TableCell>{row.khoa}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Pagination */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mt: 2,
-            p: 2,
-            bgcolor: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "4px",
-            boxShadow: "none",
-          }}>
-          <Typography variant="body2" color="text.secondary">
-            {`${(page - 1) * rowsPerPage + 1} đến ${Math.min(
-              page * rowsPerPage,
-              mockData.length
-            )} trên ${mockData.length}`}
-          </Typography>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={handleChangePage}
-            color="primary"
-            renderItem={(item) => (
-              <Button
-                {...item}
-                sx={{
-                  minWidth: "32px",
-                  height: "32px",
-                  borderRadius: "4px",
-                  "&.Mui-selected": {
-                    bgcolor: "#1976d2",
-                    color: "#fff",
-                    "&:hover": {
-                      bgcolor: "#1565c0",
-                    },
-                  },
-                  "&:hover": {
-                    bgcolor: "#e0e0e0",
-                  },
-                }}>
-                {item.type === "previous" && <KeyboardArrowLeft />}
-                {item.type === "next" && <KeyboardArrowRight />}
-                {item.type === "first" && <FirstPageIcon />}
-                {item.type === "last" && <LastPageIcon />}
-                {item.type === "page" && item.page}
-              </Button>
-            )}
-          />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Rows per page:
-            </Typography>
-            <FormControl variant="outlined" size="small">
-              <Select
-                value={rowsPerPage.toString()}
-                onChange={handleChangeRowsPerPage}
-                displayEmpty
-                inputProps={{ "aria-label": "Rows per page" }}
-                sx={{ height: "32px" }}>
-                <MenuItem value={10}>10</MenuItem>
-                <MenuItem value={25}>25</MenuItem>
-                <MenuItem value={50}>50</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </Box>
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "#f5f5f5",
+              fontWeight: "bold",
+            },
+            "& .MuiDataGrid-cell": {
+              border: "1px solid #e0e0e0",
+            },
+          }}
+        />
       </Box>
     </Box>
   );

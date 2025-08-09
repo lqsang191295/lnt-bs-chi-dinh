@@ -23,13 +23,13 @@ export function AppBreadcrumbs() {
   }, [pathname, menuData]);
 
   if (!breadcrumbs.length)
-    return <Typography color="text.primary">Hồ sơ bệnh án</Typography>;
+    return <Typography className="text-white">Hồ sơ bệnh án</Typography>;
 
   return (
     <Breadcrumbs aria-label="breadcrumb">
       {breadcrumbs.map((item, index) =>
         index === breadcrumbs.length - 1 ? (
-          <Typography key={item.cid} color="text.primary">
+          <Typography key={item.cid} className="text-white">
             {item.ctenmenu}
           </Typography>
         ) : (
