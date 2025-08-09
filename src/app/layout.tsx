@@ -42,17 +42,16 @@ export default function RootLayout({
   const useNoLayout = pathnameNotUseLayout.some((path) =>
     pathname.startsWith(path)
   );
-  const router = useRouter();
   const { setData } = useMenuStore();
-  const { setUserData } = useUserStore();
+  const { data: userData, setUserData } = useUserStore();
+
   useEffect(() => {
-    InitData();
+    initUser();
   }, []);
 
-  const InitData = async () => {
+  useEffect(() => {
     initMenu();
-    initUser();
-  };
+  }, [userData]);
 
   const initMenu = async () => {
     try {

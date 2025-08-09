@@ -15,11 +15,12 @@ import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { login } from "@/actions/emr_tnguoidung";
-import { sha256 } from "@/utils/auth";
+import { getClaimsFromToken, sha256 } from "@/utils/auth";
 import { GoogleIcon, FacebookIcon } from "@/components/CustomIcons";
 import Cookies from "js-cookie";
 import Spinner from "@/components/spinner";
 import { ToastSuccess, ToastError } from "@/utils/toast";
+import { useUserStore } from "@/store/user";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -69,6 +70,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const router = useRouter();
+  const { setUserData } = useUserStore();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -84,6 +86,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
         //console.log("Login successful, token:", res.token);
         router.push("/");
         ToastSuccess("Đăng nhập thành công");
+        initUserData();
       } else {
         setError(
           "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu."
@@ -95,6 +98,16 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       ToastError("Đăng nhập thất bại");
     }
     setLoading(false);
+  };
+
+  const initUserData = async () => {
+    const claims = getClaimsFromToken();
+    console.log("Claims fetched:", claims);
+    if (claims) {
+      setUserData(claims);
+    } else {
+      console.warn("No valid claims found in token");
+    }
   };
 
   return (
