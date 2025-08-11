@@ -1,6 +1,7 @@
+// src/app/nhat-ky-nguoi-dung/page.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react"; 
 import {
   AppBar,
   Toolbar,
@@ -35,207 +36,63 @@ import DateRangeIcon from "@mui/icons-material/DateRange"; // Icon cho DatePicke
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
-import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
-import { DatePicker } from "@mui/x-date-pickers";
+import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight"; 
 import {
   HighlightOff,
   History,
   NoteAdd,
   Refresh,
   Search,
-} from "@mui/icons-material";
-import { DataGrid } from "@mui/x-data-grid";
-
+} from "@mui/icons-material"; 
+import { Grid } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { gettnhatkynguoidung } from "@/actions/emr_tnguoidung";
+import { useUserStore } from "@/store/user";
+import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT  
+import { get } from "@/api/client";
+ 
 // Dữ liệu cứng cho bảng
 interface DataRow {
-  id: string;
-  trangThaiXetXuat: "CHƯA XÉT XUẤT" | "ĐÃ XÉT XUẤT"; // Trạng thái thực tế
-  ngayKetXuat: string; // Có thể rỗng nếu chưa xét xuất
-  loaiBaSoTo: string;
-  maBenhAn: string;
-  maBenhNhan: string; // Cột mới
-  hoVaTen: string;
-  tuoi: string;
-  ngayVaoVien: string;
-  ngayRaVien: string; // Có thể rỗng
-  chanDoan: string;
-  khoa: string;
+  cid: string;
+  ctaikhoan: string;
+  choten: string;
+  cdienthoai: string;
+  tngaythaotac: string;
+  cthaotac: string;
+  cnoidung: string;
 }
-
-const mockData: DataRow[] = [
-  {
-    id: "1",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290172",
-    maBenhNhan: "BN0008830",
-    hoVaTen: "ĐỖ MINH KHANG",
-    tuoi: "18 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-  {
-    id: "2",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290191",
-    maBenhNhan: "BN00044925",
-    hoVaTen: "NGUYỄN THỊ ANH TUYẾT",
-    tuoi: "88 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-  {
-    id: "3",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290190",
-    maBenhNhan: "BN00007627",
-    hoVaTen: "HUỲNH THỊ TRÚC LY",
-    tuoi: "34 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-  {
-    id: "4",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290189",
-    maBenhNhan: "BN00001385",
-    hoVaTen: "LÊ THỊ PHƯỢNG",
-    tuoi: "50 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-  {
-    id: "5",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290188",
-    maBenhNhan: "BN00010961",
-    hoVaTen: "NGUYỄN HOÀNG VŨ",
-    tuoi: "33 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-  {
-    id: "6",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290187",
-    maBenhNhan: "BN00383804",
-    hoVaTen: "NGUYỄN THỊ CÚC",
-    tuoi: "65 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-  {
-    id: "7",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290186",
-    maBenhNhan: "BN00016440",
-    hoVaTen: "NGUYỄN THỊ HƯƠNG",
-    tuoi: "42 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-  {
-    id: "8",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290183",
-    maBenhNhan: "BN00002171",
-    hoVaTen: "HOÀNG VŨ QUÝ",
-    tuoi: "54 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-  {
-    id: "9",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290184",
-    maBenhNhan: "BN00037429",
-    hoVaTen: "TÔ VĂN HUỆ",
-    tuoi: "66 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-  {
-    id: "10",
-    trangThaiXetXuat: "CHƯA XÉT XUẤT",
-    ngayKetXuat: "",
-    loaiBaSoTo: "",
-    maBenhAn: "BA2507290183",
-    maBenhNhan: "BN00038059",
-    hoVaTen: "VÕ THỊ PHƯỚC CHÂU",
-    tuoi: "38 Tuổi",
-    ngayVaoVien: "29/07/2025",
-    ngayRaVien: "",
-    chanDoan: "",
-    khoa: "Khoa Khám bệnh - Liên chuyên khoa",
-  },
-];
+ 
 const columns = [
-  { field: "id", headerName: "ID", width: 80 },
-  { field: "trangThaiXetXuat", headerName: "Trạng Thái Xét Xuất", flex: 1 },
-  { field: "ngayKetXuat", headerName: "Ngày Kết Xuất", width: 150 },
-  { field: "loaiBaSoTo", headerName: "Loại BA Sổ To", width: 150 },
-  { field: "maBenhAn", headerName: "Mã Bệnh Án", width: 160 },
-  { field: "maBenhNhan", headerName: "Mã Bệnh Nhân", width: 160 },
-  { field: "hoVaTen", headerName: "Họ và Tên", flex: 1 },
-  { field: "tuoi", headerName: "Tuổi", width: 120 },
-  { field: "ngayVaoVien", headerName: "Ngày Vào Viện", width: 150 },
-  { field: "ngayRaVien", headerName: "Ngày Ra Viện", width: 150 },
-  { field: "chanDoan", headerName: "Chẩn Đoán", flex: 1 },
-  { field: "khoa", headerName: "Khoa", flex: 1 },
+  { field: "cid", headerName: "ID", width: 60 },
+  { field: "ctaikhoan", headerName: "Tài khoản", width: 150, filterable: true },
+  { field: "choten", headerName: "Họ tên", width: 150, filterable: true },
+  { field: "cdienthoai", headerName: "Điện thoại", width: 130, filterable: true },
+  { field: "tngaythaotac", headerName: "Ngày thao tác", width: 180, filterable: true },
+  { field: "cthaotac", headerName: "Thao tác", width: 100, filterable: true },
+  { field: "cnoidung", headerName: "Nội dung", width: 400 },
 ];
-export default function ExportManagementPage() {
+export default function nhatkynguoidungPage() {
   const [currentTab, setCurrentTab] = React.useState("export");
   const [searchTerm, setSearchTerm] = React.useState(""); // Tên tài liệu
   const [searchStatus, setSearchStatus] = React.useState(""); // Tình trạng xét xuất
-  const [searchTuNgay, setSearchTuNgay] = React.useState("");
-  const [searchDenNgay, setSearchDenNgay] = React.useState("");
+  const [searchTuNgay, setSearchTuNgay] = useState<Date | null>(new Date());
+  const [searchDenNgay, setSearchDenNgay] = useState<Date | null>(new Date());
   const [searchDateType, setSearchDateType] = React.useState("ngayVaoVien"); // Default search by "Ngày vào viện"
-
+  const [mockData, setRows] = React.useState<DataRow[]>([]); // Dữ liệu bảng
   // State và hàm cho Pagination
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [selected, setSelected] = React.useState<readonly string[]>([]);
+  const { data: loginedUser } = useUserStore(); 
+  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setCurrentTab(newValue);
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     console.log("Searching with:", {
       searchTerm,
       searchStatus,
@@ -244,6 +101,21 @@ export default function ExportManagementPage() {
       searchDateType,
     });
     // Logic lọc dữ liệu mockData
+     if (!searchTuNgay || !searchDenNgay) return;
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+    const data = await gettnhatkynguoidung(loginedUser.ctaikhoan, popt, formatDate(searchTuNgay), formatDate(searchDenNgay));
+
+    setRows(
+      (data || []).map((item: any, idx: number) => ({
+        id: idx + 1,
+        ...item,
+      }))
+    );
   };
 
   const handleRefresh = () => {
@@ -252,7 +124,7 @@ export default function ExportManagementPage() {
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const newSelecteds = mockData.map((n) => n.id);
+      const newSelecteds = mockData.map((n) => n.cid);
       setSelected(newSelecteds);
       return;
     }
@@ -300,47 +172,15 @@ export default function ExportManagementPage() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang
   };
-
-  // Hàm render nút trạng thái "CHƯA XÉT XUẤT"
-  const renderStatusButton = (status: DataRow["trangThaiXetXuat"]) => {
-    const bgColor = status === "CHƯA XÉT XUẤT" ? "#ffc107" : "#28a745"; // Vàng cho Chưa, Xanh lá cho Đã
-    const textColor = status === "CHƯA XÉT XUẤT" ? "#212529" : "#fff";
-
-    return (
-      <Button
-        variant="contained"
-        size="small"
-        sx={{
-          bgcolor: bgColor,
-          color: textColor,
-          textTransform: "none",
-          minWidth: "100px",
-          height: "24px",
-          fontSize: "0.7rem",
-          fontWeight: "bold",
-          borderRadius: "4px",
-          boxShadow: "none",
-          "&:hover": {
-            bgcolor: bgColor,
-            opacity: 0.9,
-          },
-        }}
-        onClick={(e) => {
-          e.stopPropagation(); // Ngăn chặn sự kiện click lan ra row
-          console.log(`Action: ${status}`);
-        }}>
-        {status}
-      </Button>
-    );
-  };
-
-  return (
+ 
+  return (    
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
     <Box p={2} className="w-full h-full flex flex-col">
       <Typography
         variant="h6"
         gutterBottom
         sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
-        QUẢN LÝ LỊCH SỬ THAO TÁC BỆNH ÁN
+        QUẢN LÝ LỊCH SỬ THAO TÁC NGƯỜI DÙNG
       </Typography>
 
       {/* Filter/Search Bar */}
@@ -348,6 +188,8 @@ export default function ExportManagementPage() {
         <DatePicker
           label="Từ ngày"
           format="dd/MM/yyyy"
+          value={searchTuNgay}
+          onChange={(value) => setSearchTuNgay(value as Date)}
           slotProps={{
             textField: {
               size: "small",
@@ -357,6 +199,8 @@ export default function ExportManagementPage() {
         <DatePicker
           label="Đến ngày"
           format="dd/MM/yyyy"
+          value={searchDenNgay}
+          onChange={(value) => setSearchDenNgay(value as Date)}
           slotProps={{
             textField: {
               size: "small",
@@ -395,5 +239,7 @@ export default function ExportManagementPage() {
         />
       </Box>
     </Box>
+    
+    </LocalizationProvider>
   );
 }

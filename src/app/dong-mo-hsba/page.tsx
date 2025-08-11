@@ -11,22 +11,22 @@ import {
   MenuItem,
   Select,
   TextField,
-  Typography,
+  Typography, 
 } from "@mui/material";
-import Grid from "@mui/material/Grid";
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import Grid from "@mui/material/Grid";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import React, { useEffect, useState } from "react";
 import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
-import { getHosobenhan } from "@/actions/emr_hosobenhan";
+import { getHosobenhan, capnhathosobenhan} from "@/actions/emr_hosobenhan";
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 
-export default function tracuuhsbaPage() {
- const columns: GridColDef[] = [
+export default function dongmohsbaPage() {
+  const columns: GridColDef[] = [
     { field: "ID", headerName: "ID", width: 60 },
     {
       field: "TrangThaiBA",
@@ -80,16 +80,15 @@ export default function tracuuhsbaPage() {
     { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
     { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
   ];
-  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(
-    []
-  );
+  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(    []  );
   const [selectedKhoa, setSelectedKhoa] = useState("all");
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<any[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
-
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const { data: loginedUser, setUserData } = useUserStore();
+
   // Fetch khoa list from API
   useEffect(() => {
     // if (!loginedUser || !loginedUser.ctaikhoan) {
@@ -125,6 +124,56 @@ export default function tracuuhsbaPage() {
     fetchKhoaList();
   }, []);
 
+  // Hàm xử lý đóng/mở HSBA
+  const dongmohsba = async (loai: "DONG" | "MO", danhSachHSBA: any[]) => {
+    if (!danhSachHSBA || danhSachHSBA.length === 0) {
+      alert("Vui lòng chọn ít nhất một hồ sơ bệnh án!");
+      return;
+    }
+
+    try {
+      const promises = danhSachHSBA.map(async (hsba) => {
+        const updatedHsba = {
+          ...hsba,
+          TrangThaiBA: loai === "DONG" ? "DONG" : "MO"
+        };
+        return await capnhathosobenhan(loginedUser.ctaikhoan, "4", updatedHsba);
+      });
+
+      await Promise.all(promises);
+      
+      // Refresh data after update
+      await handleSearch();
+      
+      alert(`${loai === "DONG" ? "Đóng" : "Mở"} HSBA thành công cho ${danhSachHSBA.length} hồ sơ!`);
+    } catch (error) {
+      console.error("Error updating HSBA:", error);
+      alert(`Có lỗi xảy ra khi ${loai === "DONG" ? "đóng" : "mở"} HSBA!`);
+    }
+  };
+
+  // Hàm xử lý khi chọn rows trong DataGrid
+const handleRowSelectionChange = (selectionModel: any) => {
+  let selectionArray: any[] = [];
+  
+  console.log("selectionModel:", selectionModel); // For debugging
+  //console.log("rows:", rows); // For debugging
+   // Check if selectionModel has ids property (new DataGrid format)
+  if (selectionModel && selectionModel.ids) {
+    selectionArray = Array.from(selectionModel.ids);
+  } else if (Array.isArray(selectionModel)) {
+    selectionArray = selectionModel;
+  } else if (selectionModel && typeof selectionModel[Symbol.iterator] === 'function') {
+    // If it's iterable (like Set), convert to array
+    selectionArray = [...selectionModel];
+  }
+  const selectedRowsData = rows.filter((row) => 
+    selectionArray.includes(row.id)
+  );
+  setSelectedRows(selectedRowsData);
+  console.log("Selected rows:", selectedRowsData); // For debugging
+};
+
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
     if (!tuNgay || !denNgay) return;
@@ -143,8 +192,8 @@ export default function tracuuhsbaPage() {
     );
 
     setRows(
-      (data || []).map((item: any, idx: number) => ({
-        id: idx + 1,
+      (data || []).map((item: any) => ({
+        id: item.ID, // Use ID or index as row ID
         ...item,
       }))
     );
@@ -158,7 +207,7 @@ export default function tracuuhsbaPage() {
           variant="h6"
           gutterBottom
           sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
-          TRA CỨU HỒ SƠ BỆNH ÁN
+          ĐÓNG MỞ HỒ SƠ BỆNH ÁN
         </Typography>
         <Box display="flex" gap={2} mb={2}>
           <Box flex={3}>
@@ -248,6 +297,28 @@ export default function tracuuhsbaPage() {
               Tìm kiếm
             </Button>
           </Box>
+          <Box flex={1}>
+            <Button 
+              fullWidth 
+              variant="contained" 
+              color="error"
+              onClick={() => dongmohsba("DONG", selectedRows)}
+              disabled={selectedRows.length === 0}
+            >
+              Đóng HSBA
+            </Button>
+          </Box>
+          <Box flex={1}>
+            <Button 
+              fullWidth 
+              variant="contained" 
+              color="success"
+              onClick={() => dongmohsba("MO", selectedRows)}
+              disabled={selectedRows.length === 0}
+            >
+              Mở HSBA
+            </Button>
+          </Box>
         </Box>
 
         <Box className="w-full h-full">
@@ -257,7 +328,8 @@ export default function tracuuhsbaPage() {
             pagination
             checkboxSelection
             disableRowSelectionOnClick
-            density="compact" 
+            density="compact"
+            onRowSelectionModelChange={handleRowSelectionChange}
             sx={{
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",

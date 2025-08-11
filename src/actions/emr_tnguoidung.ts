@@ -146,6 +146,28 @@ export const gettnhatkynguoidung = async (pUser: string, pOpt: string, sTuNgay: 
   }
 };
 
+export const getnhatkythaotacba = async (pUser: string, pOpt: string, sTuNgay: string, sDenNgay: string) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tnhatkythaotacba",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt }, 
+        { paraName: "tungay", paraValue: sTuNgay },
+        { paraName: "denngay", paraValue: sDenNgay },
+      ],
+    }); 
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
 export const gettnhomnguoidung = async (pUser: string, pOpt: string) => {
   try {
     const response = await post(`/api/callService`, {

@@ -1,3 +1,4 @@
+// app/face-detect/page.tsx
 "use client";
 
 import {
@@ -437,7 +438,7 @@ useEffect(() => {
   );
 };
 
-export default function staffdetectPage() {
+export default function facedetectPage() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [ctaikhoan, setCtaikhoan] = useState("");
@@ -530,7 +531,10 @@ export default function staffdetectPage() {
       
     } catch (error) {
       console.error("🚨 Lỗi trong quá trình nhận diện:", error);
-      setChoten("Lỗi khi nhận diện: " + error.message);     
+      setChoten(
+        "Lỗi khi nhận diện: " +
+        (error instanceof Error ? error.message : String(error))
+      );     
       setServerImage(null);
     } finally {
       const endTime = Date.now();

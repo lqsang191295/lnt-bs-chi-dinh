@@ -1,3 +1,4 @@
+// src/app/quan-ly-nguoi-dung/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -102,7 +103,7 @@ function TabPanel(props: {
   );
 }
 
-export default function UserManagementPage() {
+export default function quanlynguoidungPage() {
   const router = useRouter();
   const [users, setUsers] = useState<IUserItem[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);

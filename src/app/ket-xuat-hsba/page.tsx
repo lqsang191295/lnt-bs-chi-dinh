@@ -1,5 +1,5 @@
+// app/ket-xuat-hsba/page.tsx
 "use client";
-
 import React, { useState } from "react";
 import {
   Box,
@@ -225,7 +225,7 @@ function a11yProps(index: number) {
   };
 }
 // ----------------- COMPONENT -----------------
-export default function BorrowReturnPage() {
+export default function ketxuathsbaPage() {
   const [currentTab, setCurrentTab] = useState("borrow");
   const [searchTerm, setSearchTerm] = useState("");
   const [value, setValue] = React.useState(0);

@@ -221,7 +221,7 @@ const columns = [
   { field: "chanDoan", headerName: "Chẩn Đoán", flex: 1 },
   { field: "khoa", headerName: "Khoa", flex: 1 },
 ];
-export default function ExportManagementPage() {
+export default function muontrahsbaPage() {
   const [currentTab, setCurrentTab] = React.useState("export");
   const [searchTerm, setSearchTerm] = React.useState(""); // Tên tài liệu
   const [searchStatus, setSearchStatus] = React.useState(""); // Tình trạng xét xuất

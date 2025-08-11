@@ -14,6 +14,7 @@ export interface IHoSoBenhAn {
   SoLuuTru?: string | null;
   KhoaVaoVien?: string | null;
   KhoaDieuTri?: string | null;
+  TenKhoaDieuTri?: string | null;
   NgayVao?: string | null;
   NgayRa?: string | null;
   LoaiBenhAn?: string | null;
@@ -27,4 +28,9 @@ export interface IHoSoBenhAn {
   TrangThaiBA?: string | null;
   NgayCapNhat?: string | null;
   NgayTao?: string | null;
+  ViTriLuuTru?: string | null;
+  LoaiLuuTru?: string | null;
+  NgayLuuTru?: string | null;
+  TenLoaiLuuTru?: string | null;
+  SoNamLuuTru?: string | null;
 }

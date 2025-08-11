@@ -10,24 +10,13 @@ import {
   Collapse,
   Stack,
 } from "@mui/material";
-import { ExpandLess, ExpandMore, Folder, Bookmark } from "@mui/icons-material";
-import HomeIcon from "@mui/icons-material/Home";
-import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
-import SettingsIcon from "@mui/icons-material/Settings";
-import HistoryIcon from "@mui/icons-material/History";
-import IosShareIcon from "@mui/icons-material/IosShare";
-import PublishedWithChangesIcon from "@mui/icons-material/PublishedWithChanges";
-import StorageIcon from "@mui/icons-material/Storage";
-import ContentPasteSearchIcon from "@mui/icons-material/ContentPasteSearch";
-import ManageSearchIcon from "@mui/icons-material/ManageSearch";
-import SwitchAccountIcon from "@mui/icons-material/SwitchAccount";
-import EventRepeatOutlinedIcon from "@mui/icons-material/EventRepeatOutlined";
+import * as MuiIcons from "@mui/icons-material";
+// import { ExpandLess, ExpandMore, Folder, Bookmark } from "@mui/icons-material"; 
 import Link from "next/link";
 import { useMenuStore } from "@/store/menu";
 import { buildMenuTree } from "@/utils/menu";
 import type { IMenuTree } from "@/model/menu";
 import { usePathname } from "next/navigation";
-
 export default function MenuContent() {
   const { data: menuData } = useMenuStore();
   const menuTree = buildMenuTree(menuData);
@@ -36,7 +25,7 @@ export default function MenuContent() {
       <List component="nav">
         <ListItemButton>
           <ListItemIcon>
-            <Bookmark />
+            <MuiIcons.Bookmark />
           </ListItemIcon>
           <ListItemText primary="CHỨC NĂNG" />
         </ListItemButton>
@@ -52,27 +41,20 @@ export default function MenuContent() {
 function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  console.log(
-    'pathname.replace(/^/+|/+$/g, "").toLowerCase() ============= ',
-    pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
-  );
+  // console.log(
+  //   'pathname.replace(/^/+|/+$/g, "").toLowerCase() ============= ',
+  //   pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
+  // );
 
   const hasChildren = item.children && item.children.length > 0;
-
-  const iconMap: Record<string, React.ElementType> = {
-    home: HomeIcon,
-    SettingsIcon: SettingsIcon,
-    folder: Folder,
-    ManageAccountsIcon: ManageAccountsIcon,
-    HistoryIcon: HistoryIcon,
-    IosShareIcon: IosShareIcon,
-    PublishedWithChangesIcon: PublishedWithChangesIcon,
-    StorageIcon: StorageIcon,
-    ContentPasteSearchIcon: ContentPasteSearchIcon,
-    ManageSearchIcon: ManageSearchIcon,
-    SwitchAccountIcon: SwitchAccountIcon,
-    EventRepeatOutlinedIcon: EventRepeatOutlinedIcon,
-    // thêm các icon khác nếu cần
+  
+      // Hàm render icon từ node.cicon
+  const renderIcon = (iconName: string) => {
+    const IconComponent =
+      MuiIcons[iconName.replace("Icon", "") as keyof typeof MuiIcons];
+    return IconComponent ? (
+      <IconComponent fontSize="small" sx={{ mr: 1 }} />
+    ) : null;
   };
   const handleClick = () => {
     if (hasChildren) setOpen(!open);
@@ -85,19 +67,21 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
         onClick={handleClick}
         sx={{ pl: 2 + level * 2 }}
         className={
-          item.clink === pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
+          item.clink === (pathname?.replace(/^\/+|\/+$/g, "").toLowerCase() ?? "")
             ? "bg-blue-300 hover:bg-blue-400"
             : ""
         }>
         <ListItemIcon>
-          {(() => {
+          {/* {(() => {
             const IconComponent = iconMap[item.cicon] || Folder;
             //console.log("iconname", item.cicon);
             return <IconComponent />;
-          })()}
+          })()} */
+          renderIcon(item.cicon)
+          }
         </ListItemIcon>
         <ListItemText primary={item.ctenmenu} />
-        {hasChildren ? open ? <ExpandLess /> : <ExpandMore /> : null}
+        {hasChildren ? open ? <MuiIcons.ExpandLess /> : <MuiIcons.ExpandMore /> : null}
       </ListItemButton>
 
       {hasChildren && (

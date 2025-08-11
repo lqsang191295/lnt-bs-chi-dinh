@@ -1,6 +1,7 @@
+// app/lich-su-thao-tac-hsba/page.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect, useState }  from "react";
 import {
   AppBar,
   Toolbar,
@@ -33,163 +34,50 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import type { SelectChangeEvent } from "@mui/material/Select";
-import { DatePicker } from "@mui/x-date-pickers";
+import { Grid } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { getnhatkythaotacba } from "@/actions/emr_tnguoidung";
+import { useUserStore } from "@/store/user";
+import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT  
+import { get } from "@/api/client";
 
 // Dữ liệu cứng cho bảng
 interface DataRow {
-  id: string; // Sử dụng id để theo dõi duy nhất
-  stt: number;
-  maBenhAn: string;
-  thoiGian: string;
-  giaTriCu: string;
-  giaTriMoi: string;
-  loai: string;
-  tacVu: string;
-  ghiChu: string;
-  noiDung: string;
+  cid: string;
+  ctaikhoan: string;
+  choten: string;
+  cdienthoai: string;
+  cmabenhan: string;
+  MaBN: string;
+  Hoten: string;
+  SoVaoVien: string;
+  SoLuuTru: string; 
+  KhoaDieuTri: string;
+  cthaotac: string;
+  cgiatricu: string;
+  cgiatrimoi: string;
+  tngaythaotac: string;
 }
-
-const mockData: DataRow[] = [
-  {
-    id: "1",
-    stt: 1,
-    maBenhAn: "BA25001437",
-    thoiGian: "23/07/2025 10:37:46",
-    giaTriCu: "",
-    giaTriMoi: "",
-    loai: "BENHANMO",
-    tacVu: "DONGBENHAN",
-    ghiChu: "đóng bệnh án",
-    noiDung: "string",
-  },
-  {
-    id: "2",
-    stt: 2,
-    maBenhAn: "BA25001438",
-    thoiGian: "23/07/2025 09:59:43",
-    giaTriCu: "",
-    giaTriMoi: "",
-    loai: "BENHANMO",
-    tacVu: "DONGBENHAN",
-    ghiChu: "đóng bệnh án",
-    noiDung: "string",
-  },
-  {
-    id: "3",
-    stt: 3,
-    maBenhAn: "BA250160150",
-    thoiGian: "20/05/2025 15:49:18",
-    giaTriCu: "",
-    giaTriMoi: "",
-    loai: "BENHANMO",
-    tacVu: "DONGBENHAN",
-    ghiChu: "",
-    noiDung: "string",
-  },
-  {
-    id: "4",
-    stt: 4,
-    maBenhAn: "BA250190046",
-    thoiGian: "20/05/2025 15:46:44",
-    giaTriCu: "",
-    giaTriMoi: "",
-    loai: "BENHANMO",
-    tacVu: "DONGBENHAN",
-    ghiChu: "đã xem đơn thuốc",
-    noiDung: "string",
-  },
-  {
-    id: "5",
-    stt: 5,
-    maBenhAn: "BA25001005",
-    thoiGian: "20/05/2025 07:40:22",
-    giaTriCu: "",
-    giaTriMoi: "",
-    loai: "BENHANMO",
-    tacVu: "DONGBENHAN",
-    ghiChu: "test",
-    noiDung: "string",
-  },
-  {
-    id: "6",
-    stt: 6,
-    maBenhAn: "BA250160161",
-    thoiGian: "18/05/2025 15:51:38",
-    giaTriCu: "",
-    giaTriMoi: "",
-    loai: "BENHANMO",
-    tacVu: "DONGBENHAN",
-    ghiChu: "",
-    noiDung: "string",
-  },
-  {
-    id: "7",
-    stt: 7,
-    maBenhAn: "BA25000998",
-    thoiGian: "18/05/2025 09:24:20",
-    giaTriCu: "",
-    giaTriMoi: "",
-    loai: "BENHANMO",
-    tacVu: "DONGBENHAN",
-    ghiChu: "",
-    noiDung: "string",
-  },
-  {
-    id: "8",
-    stt: 8,
-    maBenhAn: "BA25000998",
-    thoiGian: "18/05/2025 09:22:16",
-    giaTriCu: "",
-    giaTriMoi: "",
-    loai: "TONGHOPLUUTRU",
-    tacVu: "PHEDUYET",
-    ghiChu: "",
-    noiDung: "PHEDUYET",
-  },
-  {
-    id: "9",
-    stt: 9,
-    maBenhAn: "BA25000831",
-    thoiGian: "18/05/2025 08:41:51",
-    giaTriCu: "",
-    giaTriMoi: "",
-    loai: "BENHANMO",
-    tacVu: "DONGBENHAN",
-    ghiChu: "dong",
-    noiDung: "string",
-  },
-  {
-    id: "10",
-    stt: 10,
-    maBenhAn: "BA25001439",
-    thoiGian: "22/07/2025 11:00:00",
-    giaTriCu: "Old Value A",
-    giaTriMoi: "New Value A",
-    loai: "HOANTHANH",
-    tacVu: "CAPNHAT",
-    ghiChu: "cập nhật thông tin",
-    noiDung: "Dữ liệu cập nhật 1",
-  },
-];
+ 
 const columns: GridColDef[] = [
-  {
-    field: "stt",
-    headerName: "STT",
-    width: 70,
-    align: "center",
-    headerAlign: "center",
-  },
-  { field: "maBenhAn", headerName: "Mã bệnh án", width: 150 },
-  { field: "thoiGian", headerName: "Thời gian", width: 180 },
-  { field: "giaTriCu", headerName: "Giá trị cũ", width: 150 },
-  { field: "giaTriMoi", headerName: "Giá trị mới", width: 150 },
-  { field: "loai", headerName: "Loại", width: 150 },
-  { field: "tacVu", headerName: "Tác vụ", width: 150 },
-  { field: "ghiChu", headerName: "Ghi chú", width: 200 },
-  { field: "noiDung", headerName: "Nội dung", width: 200 },
+  { field: "cid", headerName: "ID", width: 60 },
+  { field: "ctaikhoan", headerName: "Tài khoản", width: 150, filterable: true },
+  { field: "choten", headerName: "Họ tên", width: 150, filterable: true },
+  { field: "cdienthoai", headerName: "Điện thoại", width: 130, filterable: true },
+  { field: "cmabenhan", headerName: "Mã bệnh án", width: 130, filterable: true },
+  { field: "MaBN", headerName: "Mã bệnh nhân", width: 130, filterable: true },
+  { field: "Hoten", headerName: "Tên bệnh nhân", width: 130, filterable: true },
+  { field: "SoVaoVien", headerName: "Số vào viện", width: 130, filterable: true },
+  { field: "SoLuuTru", headerName: "Số lưu trữ", width: 130, filterable: true }, 
+  { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 130, filterable: true },
+  { field: "cthaotac", headerName: "Thao tác", width: 100, filterable: true },
+  { field: "cgiatricu", headerName: "Giá trị cũ", width: 200 },
+  { field: "cgiatrimoi", headerName: "Giá trị mới", width: 200 },
+  { field: "tngaythaotac", headerName: "Ngày thao tác", width: 180, filterable: true },
 ];
-export default function AuditLogPage() {
+export default function lichsuthaotachsbaPage() {
   const [searchFromDate, setSearchFromDate] = React.useState("");
   const [searchToDate, setSearchToDate] = React.useState("");
 
@@ -202,12 +90,22 @@ export default function AuditLogPage() {
   const [colSearchTacVu, setColSearchTacVu] = React.useState("");
   const [colSearchGhiChu, setColSearchGhiChu] = React.useState("");
   const [colSearchNoiDung, setColSearchNoiDung] = React.useState("");
-
+  const [currentTab, setCurrentTab] = React.useState("export");
+  const [searchTerm, setSearchTerm] = React.useState(""); // Tên tài liệu
+  const [searchStatus, setSearchStatus] = React.useState(""); // Tình trạng xét xuất
+  const [searchTuNgay, setSearchTuNgay] = useState<Date | null>(new Date());
+  const [searchDenNgay, setSearchDenNgay] = useState<Date | null>(new Date());
+  const [searchDateType, setSearchDateType] = React.useState("ngayVaoVien"); // Default search by "Ngày vào viện"
+  const [mockData, setRows] = React.useState<DataRow[]>([]); // Dữ liệu bảng
   // State và hàm cho Pagination
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [selected, setSelected] = React.useState<readonly string[]>([]);
+  const { data: loginedUser } = useUserStore(); 
+  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
-  const handleSearch = () => {
+
+  const handleSearch = async () => {
     console.log("Searching with:", {
       searchFromDate,
       searchToDate,
@@ -216,6 +114,22 @@ export default function AuditLogPage() {
       // ... (thêm các trường tìm kiếm cột khác nếu cần)
     });
     // Logic lọc dữ liệu mockData dựa trên các trường tìm kiếm
+    // Logic lọc dữ liệu mockData
+         if (!searchTuNgay || !searchDenNgay) return;
+        const formatDate = (date: Date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+        const data = await getnhatkythaotacba(loginedUser.ctaikhoan, popt, formatDate(searchTuNgay), formatDate(searchDenNgay));
+    
+        setRows(
+          (data || []).map((item: any, idx: number) => ({
+            id: idx + 1,
+            ...item,
+          }))
+        );
   };
 
   const handleRefresh = () => {
@@ -289,6 +203,7 @@ export default function AuditLogPage() {
   );
 
   return (
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
     <Box p={2} className="w-full h-full flex flex-col">
       <Typography
         variant="h6"
@@ -302,7 +217,9 @@ export default function AuditLogPage() {
         <Box flex={2}>
           <DatePicker
             label="Từ ngày"
-            format="dd/MM/yyyy"
+            format="dd/MM/yyyy"            
+          value={searchTuNgay}
+          onChange={(value) => setSearchTuNgay(value as Date)}
             className="w-full"
             slotProps={{
               textField: {
@@ -315,6 +232,8 @@ export default function AuditLogPage() {
           <DatePicker
             label="Đến ngày"
             format="dd/MM/yyyy"
+          value={searchDenNgay}
+          onChange={(value) => setSearchDenNgay(value as Date)}
             className="w-full"
             slotProps={{
               textField: {
@@ -324,12 +243,16 @@ export default function AuditLogPage() {
           />
         </Box>
         <Box flex={1}>
-          <Button fullWidth variant="contained">
+          <Button fullWidth 
+                    variant="contained"
+                    onClick={handleSearch}>
             Tìm kiếm
           </Button>
         </Box>
         <Box flex={1}>
-          <Button fullWidth variant="contained">
+          <Button fullWidth 
+                    variant="contained"
+                    onClick={handleRefresh}>
             Làm mới
           </Button>
         </Box>
@@ -353,5 +276,7 @@ export default function AuditLogPage() {
         />
       </Box>
     </Box>
+        </LocalizationProvider>
+
   );
 }

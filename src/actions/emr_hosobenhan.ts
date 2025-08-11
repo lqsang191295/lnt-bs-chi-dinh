@@ -1,5 +1,5 @@
 import { post } from "@/api/client";
-
+import { IHoSoBenhAn } from "@/model/thosobenhan";
 
 export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: string, TuNgay: string, DenNgay: string) => {
   try {
@@ -15,6 +15,66 @@ export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: str
         { paraName: "KhoaDieuTri", paraValue: KhoaDieuTri },
         { paraName: "TuNgay", paraValue: TuNgay },
         { paraName: "DenNgay", paraValue: DenNgay },
+      ],
+    });
+
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+///
+/// Cập nhật hồ sơ bệnh án
+/// popt: 
+//  "1" - Thêm mới, 
+//  "2" - Cập nhật, 
+//  "3" - Cập nhật lưu trữ hsba SoLuuTru,VitriLuuTru,LoaiLuuTru,NgayLuuTru,
+//  "4" - Cập nhật trạng thái hồ sơ bệnh án [đóng/mở]
+export const capnhathosobenhan = async (pUser: string, pOpt: string, hsba: IHoSoBenhAn) => {
+  try {
+    //console.log("Fetching HoSoBenhAn...");
+    // Gọi API để lấy danh sách hồ sơ bệnh án
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pins_HoSoBenhAn",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "ID", paraValue: hsba.ID },
+        { paraName: "MaBANoiTru", paraValue: hsba.MaBANoiTru },
+        { paraName: "SoBenhAn", paraValue: hsba.SoBenhAn },
+        { paraName: "MaBN", paraValue: hsba.MaBN },
+        { paraName: "Hoten", paraValue: hsba.Hoten },
+        { paraName: "Ngaysinh", paraValue: hsba.Ngaysinh },
+        { paraName: "Gioitinh", paraValue: hsba.Gioitinh },
+        { paraName: "Dienthoai", paraValue: hsba.Dienthoai },
+        { paraName: "Diachi", paraValue: hsba.Diachi },
+        { paraName: "SoCCCD", paraValue: hsba.SoCCCD },
+        { paraName: "SoNhapVien", paraValue: hsba.SoNhapVien },
+        { paraName: "SoVaoVien", paraValue: hsba.SoVaoVien },
+        { paraName: "SoLuuTru", paraValue: hsba.SoLuuTru },
+        { paraName: "KhoaVaoVien", paraValue: hsba.KhoaVaoVien },
+        { paraName: "KhoaDieuTri", paraValue: hsba.KhoaDieuTri },
+        { paraName: "NgayVao", paraValue: hsba.NgayVao },
+        { paraName: "NgayRa", paraValue: hsba.NgayRa },
+        { paraName: "LoaiBenhAn", paraValue: hsba.LoaiBenhAn },
+        { paraName: "NoiDungJson", paraValue: hsba.NoiDungJson },
+        { paraName: "NoiDungXml", paraValue: hsba.NoiDungXml },
+        { paraName: "NoiDungPdf", paraValue: hsba.NoiDungPdf },
+        { paraName: "TruongKhoaKyTen", paraValue: hsba.TruongKhoaKyTen },
+        { paraName: "GdbvKyTen", paraValue: hsba.GdbvKyTen },
+        { paraName: "BsLamBAKyTen", paraValue: hsba.BsLamBAKyTen },
+        { paraName: "BsDieuTriKyTen", paraValue: hsba.BsDieuTriKyTen },
+        { paraName: "TrangThaiBA", paraValue: hsba.TrangThaiBA },
+        { paraName: "ViTriLuuTru", paraValue: hsba.ViTriLuuTru },
+        { paraName: "LoaiLuuTru", paraValue: hsba.LoaiLuuTru },
+        { paraName: "NgayLuuTru", paraValue: hsba.NgayLuuTru },
       ],
     });
 
