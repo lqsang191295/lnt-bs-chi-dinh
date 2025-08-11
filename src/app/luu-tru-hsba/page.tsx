@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   Typography,
   Box,
@@ -23,6 +23,9 @@ import {
   Search,
   Update,
 } from "@mui/icons-material";
+import DialogCapNhatSoLuuTru from "./components/ds-cap-so-luu-tru";
+import DialogCapNhatViTri from "./components/cap-nhat-vi-tri";
+import DialogPhanLoaiLuuTru from "./components/phan-loai-luu-tru";
 
 // Dữ liệu cứng cho bảng
 interface DataRow {
@@ -193,6 +196,9 @@ export default function HomePage() {
   const [currentTab, setCurrentTab] = React.useState("total");
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selected, setSelected] = React.useState<readonly string[]>([]);
+  const [isOpenDsCapSoLuuTru, setIsOpenDsCapSoLuuTru] = useState(false);
+  const [isOpenCapNhatViTri, setIsOpenCapNhatViTri] = useState(false);
+  const [isOpenPhanLoaiLuuTru, setIsOpenPhanLoaiLuuTru] = useState(false);
 
   // State và hàm cho Pagination
   const [page, setPage] = React.useState(1);
@@ -260,7 +266,6 @@ export default function HomePage() {
     event:
       | React.ChangeEvent<HTMLInputElement>
       | React.ChangeEvent<{ value: unknown }>
-      | any
   ) => {
     setRowsPerPage(parseInt(event.target.value as string, 10));
     setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang
@@ -399,21 +404,21 @@ export default function HomePage() {
         <Button
           variant="contained"
           startIcon={<ConfirmationNumber />}
-          onClick={handleAddNew}
+          onClick={() => setIsOpenDsCapSoLuuTru(true)}
           size="small">
           Số lưu trữ
         </Button>
         <Button
           variant="contained"
           startIcon={<Book />}
-          onClick={handleAddNew}
+          onClick={() => setIsOpenPhanLoaiLuuTru(true)}
           size="small">
           Phân loại bệnh án
         </Button>
         <Button
           variant="contained"
           startIcon={<Update />}
-          onClick={handleAddNew}
+          onClick={() => setIsOpenCapNhatViTri(true)}
           size="small">
           Cập nhật vị trí lưu trữ
         </Button>
@@ -457,6 +462,20 @@ export default function HomePage() {
           }}
         />
       </Box>
+
+      {/* Dialog */}
+      <DialogCapNhatSoLuuTru
+        open={isOpenDsCapSoLuuTru}
+        onClose={() => setIsOpenDsCapSoLuuTru(false)}
+      />
+      <DialogCapNhatViTri
+        open={isOpenCapNhatViTri}
+        onClose={() => setIsOpenCapNhatViTri(false)}
+      />
+      <DialogPhanLoaiLuuTru
+        open={isOpenPhanLoaiLuuTru}
+        onClose={() => setIsOpenPhanLoaiLuuTru(false)}
+      />
     </Box>
   );
 }
