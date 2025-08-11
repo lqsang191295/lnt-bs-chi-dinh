@@ -344,7 +344,6 @@ const columns: GridColDef[] = [
     event:
       | React.ChangeEvent<HTMLInputElement>
       | React.ChangeEvent<{ value: unknown }>
-      | any
   ) => {
     setRowsPerPage(parseInt(event.target.value as string, 10));
     setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang

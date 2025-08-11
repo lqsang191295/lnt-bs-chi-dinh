@@ -85,7 +85,7 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
       </ListItemButton>
 
       {hasChildren && (
-        <Collapse in={open} timeout="auto" unmountOnExit>
+        <Collapse in={true} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {item.children!.map((child) => (
               <Link key={child.cid} href={child.clink || ""} passHref>
