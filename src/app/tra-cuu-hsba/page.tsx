@@ -14,8 +14,8 @@ import {
   Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
@@ -26,41 +26,40 @@ import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 
 export default function tracuuhsbaPage() {
- const columns: GridColDef[] = [
+  const columns: GridColDef[] = [
     { field: "ID", headerName: "ID", width: 60 },
     {
       field: "TrangThaiBA",
       headerName: "Trạng thái",
       width: 100,
       renderCell: (params) => (
-       <Box
-      sx={{
-        backgroundColor: "transparent",
-        color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
-        padding: "4px 8px",
-        borderRadius: "4px",
-        fontSize: "12px",
-        fontWeight: "bold",
-        textAlign: "center",
-        minWidth: "60px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "4px"
-      }}
-    >
-      {params.value === "MO" ? (
-        <>
-          <LockOpenIcon sx={{ fontSize: "14px" }} />
-          Mở
-        </>
-      ) : (
-        <>
-          <LockOutlinedIcon sx={{ fontSize: "14px" }} />
-          Đóng
-        </>
-      )}
-    </Box>
+        <Box
+          sx={{
+            backgroundColor: "transparent",
+            color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            fontWeight: "bold",
+            textAlign: "center",
+            minWidth: "60px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "4px",
+          }}>
+          {params.value === "MO" ? (
+            <>
+              <LockOpenIcon sx={{ fontSize: "14px" }} />
+              Mở
+            </>
+          ) : (
+            <>
+              <LockOutlinedIcon sx={{ fontSize: "14px" }} />
+              Đóng
+            </>
+          )}
+        </Box>
       ),
     },
     { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
@@ -250,14 +249,15 @@ export default function tracuuhsbaPage() {
           </Box>
         </Box>
 
-        <Box className="w-full h-full">
+        <Box className="w-full h-full overflow-hidden">
           <DataGrid
             rows={rows}
             columns={columns}
             pagination
             checkboxSelection
             disableRowSelectionOnClick
-            density="compact" 
+            density="compact"
+            className="overflow-hidden"
             sx={{
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
