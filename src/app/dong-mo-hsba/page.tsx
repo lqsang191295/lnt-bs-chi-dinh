@@ -10,77 +10,77 @@ import {
   Button,
   MenuItem,
   Select,
-  TextField,
-  Typography, 
+  Typography,
 } from "@mui/material";
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Grid from "@mui/material/Grid";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import React, { useEffect, useState } from "react";
 import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
-import { getHosobenhan, capnhathosobenhan} from "@/actions/emr_hosobenhan";
+import { getHosobenhan, capnhathosobenhan } from "@/actions/emr_hosobenhan";
 import { useUserStore } from "@/store/user";
-import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
+import { getClaimsFromToken } from "@/utils/auth";
+import DataLoading from "@/components/DataLoading";
 
-export default function dongmohsbaPage() {
-  const columns: GridColDef[] = [
-    { field: "ID", headerName: "ID", width: 60 },
-    {
-      field: "TrangThaiBA",
-      headerName: "Trạng thái",
-      width: 100,
-      renderCell: (params) => (
-       <Box
-      sx={{
-        backgroundColor: "transparent",
-        color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
-        padding: "4px 8px",
-        borderRadius: "4px",
-        fontSize: "12px",
-        fontWeight: "bold",
-        textAlign: "center",
-        minWidth: "60px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "4px"
-      }}
-    >
-      {params.value === "MO" ? (
-        <>
-          <LockOpenIcon sx={{ fontSize: "14px" }} />
-          Mở
-        </>
-      ) : (
-        <>
-          <LockOutlinedIcon sx={{ fontSize: "14px" }} />
-          Đóng
-        </>
-      )}
-    </Box>
-      ),
-    },
-    { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
-    { field: "Hoten", headerName: "Họ và tên", width: 200 },
-    { field: "MaBN", headerName: "Mã BN", width: 130 },
-    { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-    { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-    { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-    { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-    { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
-    { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
-    { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
-    { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
-    { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
-    { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
-    { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
-    { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
-    { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
-  ];
-  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(    []  );
+const columns: GridColDef[] = [
+  { field: "ID", headerName: "ID", width: 60 },
+  {
+    field: "TrangThaiBA",
+    headerName: "Trạng thái",
+    width: 100,
+    renderCell: (params) => (
+      <Box
+        sx={{
+          backgroundColor: "transparent",
+          color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
+          padding: "4px 8px",
+          borderRadius: "4px",
+          fontSize: "12px",
+          fontWeight: "bold",
+          textAlign: "center",
+          minWidth: "60px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "4px",
+        }}>
+        {params.value === "MO" ? (
+          <>
+            <LockOpenIcon sx={{ fontSize: "14px" }} />
+            Mở
+          </>
+        ) : (
+          <>
+            <LockOutlinedIcon sx={{ fontSize: "14px" }} />
+            Đóng
+          </>
+        )}
+      </Box>
+    ),
+  },
+  { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
+  { field: "Hoten", headerName: "Họ và tên", width: 200 },
+  { field: "MaBN", headerName: "Mã BN", width: 130 },
+  { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+  { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
+  { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
+  { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
+  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+  { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+  { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
+  { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
+  { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
+  { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
+  { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
+  { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
+  { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+];
+export default function DongMoHsbaPage() {
+  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(
+    []
+  );
   const [selectedKhoa, setSelectedKhoa] = useState("all");
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
@@ -88,6 +88,7 @@ export default function dongmohsbaPage() {
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const { data: loginedUser, setUserData } = useUserStore();
+  const { searchingData, setSearchingData } = useState<bool>(false);
 
   // Fetch khoa list from API
   useEffect(() => {
@@ -135,17 +136,21 @@ export default function dongmohsbaPage() {
       const promises = danhSachHSBA.map(async (hsba) => {
         const updatedHsba = {
           ...hsba,
-          TrangThaiBA: loai === "DONG" ? "DONG" : "MO"
+          TrangThaiBA: loai === "DONG" ? "DONG" : "MO",
         };
         return await capnhathosobenhan(loginedUser.ctaikhoan, "4", updatedHsba);
       });
 
       await Promise.all(promises);
-      
+
       // Refresh data after update
       await handleSearch();
-      
-      alert(`${loai === "DONG" ? "Đóng" : "Mở"} HSBA thành công cho ${danhSachHSBA.length} hồ sơ!`);
+
+      alert(
+        `${loai === "DONG" ? "Đóng" : "Mở"} HSBA thành công cho ${
+          danhSachHSBA.length
+        } hồ sơ!`
+      );
     } catch (error) {
       console.error("Error updating HSBA:", error);
       alert(`Có lỗi xảy ra khi ${loai === "DONG" ? "đóng" : "mở"} HSBA!`);
@@ -153,56 +158,68 @@ export default function dongmohsbaPage() {
   };
 
   // Hàm xử lý khi chọn rows trong DataGrid
-const handleRowSelectionChange = (selectionModel: any) => {
-  let selectionArray: any[] = [];
-  
-  console.log("selectionModel:", selectionModel); // For debugging
-  //console.log("rows:", rows); // For debugging
-   // Check if selectionModel has ids property (new DataGrid format)
-  if (selectionModel && selectionModel.ids) {
-    selectionArray = Array.from(selectionModel.ids);
-  } else if (Array.isArray(selectionModel)) {
-    selectionArray = selectionModel;
-  } else if (selectionModel && typeof selectionModel[Symbol.iterator] === 'function') {
-    // If it's iterable (like Set), convert to array
-    selectionArray = [...selectionModel];
-  }
-  const selectedRowsData = rows.filter((row) => 
-    selectionArray.includes(row.id)
-  );
-  setSelectedRows(selectedRowsData);
-  console.log("Selected rows:", selectedRowsData); // For debugging
-};
+  const handleRowSelectionChange = (selectionModel: any) => {
+    let selectionArray: any[] = [];
+
+    console.log("selectionModel:", selectionModel); // For debugging
+    //console.log("rows:", rows); // For debugging
+    // Check if selectionModel has ids property (new DataGrid format)
+    if (selectionModel && selectionModel.ids) {
+      selectionArray = Array.from(selectionModel.ids);
+    } else if (Array.isArray(selectionModel)) {
+      selectionArray = selectionModel;
+    } else if (
+      selectionModel &&
+      typeof selectionModel[Symbol.iterator] === "function"
+    ) {
+      // If it's iterable (like Set), convert to array
+      selectionArray = [...selectionModel];
+    }
+    const selectedRowsData = rows.filter((row) =>
+      selectionArray.includes(row.id)
+    );
+    setSelectedRows(selectedRowsData);
+    console.log("Selected rows:", selectedRowsData); // For debugging
+  };
 
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
-    if (!tuNgay || !denNgay) return;
-    const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    };
-    const data = await getHosobenhan(
-      loginedUser.ctaikhoan,
-      popt,
-      selectedKhoa,
-      formatDate(tuNgay),
-      formatDate(denNgay)
-    );
+    try {
+      if (!tuNgay || !denNgay) return;
 
-    setRows(
-      (data || []).map((item: any) => ({
-        id: item.ID, // Use ID or index as row ID
-        ...item,
-      }))
-    );
-    //console.log("Search results:", data);
+      setSearchingData(true);
+
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+      const data = await getHosobenhan(
+        loginedUser.ctaikhoan,
+        popt,
+        selectedKhoa,
+        formatDate(tuNgay),
+        formatDate(denNgay)
+      );
+
+      setRows(
+        (data || []).map((item: any) => ({
+          id: item.ID, // Use ID or index as row ID
+          ...item,
+        }))
+      );
+      //console.log("Search results:", data);
+    } catch (error) {
+      console.error("Error fetching HSBA data:", error);
+    } finally {
+      setSearchingData(false);
+    }
   };
   // Render component
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box p={2} className="w-full h-full flex flex-col">
+      <Box p={2} className="w-full h-full flex flex-col overflow-hidden">
         <Typography
           variant="h6"
           gutterBottom
@@ -298,31 +315,30 @@ const handleRowSelectionChange = (selectionModel: any) => {
             </Button>
           </Box>
           <Box flex={1}>
-            <Button 
-              fullWidth 
-              variant="contained" 
+            <Button
+              fullWidth
+              variant="contained"
               color="error"
               onClick={() => dongmohsba("DONG", selectedRows)}
-              disabled={selectedRows.length === 0}
-            >
+              disabled={selectedRows.length === 0}>
               Đóng HSBA
             </Button>
           </Box>
           <Box flex={1}>
-            <Button 
-              fullWidth 
-              variant="contained" 
+            <Button
+              fullWidth
+              variant="contained"
               color="success"
               onClick={() => dongmohsba("MO", selectedRows)}
-              disabled={selectedRows.length === 0}
-            >
+              disabled={selectedRows.length === 0}>
               Mở HSBA
             </Button>
           </Box>
         </Box>
 
-        <Box className="w-full h-full">
-          <DataGrid
+        <Box className="w-full h-full overflow-hidden">
+          {searchingData && <DataLoading />}
+          {!searchingData && <DataGrid
             rows={rows}
             columns={columns}
             pagination
@@ -348,7 +364,7 @@ const handleRowSelectionChange = (selectionModel: any) => {
                 backgroundColor: "#e3f2fd !important",
               },
             }}
-          />
+          />}
         </Box>
       </Box>
     </LocalizationProvider>
