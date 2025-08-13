@@ -1,27 +1,28 @@
 // src/app/login/page.tsx
 "use client";
-import * as React from "react";
+import { login } from "@/actions/emr_tnguoidung";
+import { FacebookIcon, GoogleIcon } from "@/components/CustomIcons";
+import Spinner from "@/components/spinner";
+import { useUserStore } from "@/store/user";
+import { getClaimsFromToken, sha256 } from "@/utils/auth";
+import { ToastError, ToastSuccess } from "@/utils/toast";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import MuiCard from "@mui/material/Card";
 import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Divider from "@mui/material/Divider";
-import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormLabel from "@mui/material/FormLabel";
 import Link from "@mui/material/Link";
+import Stack from "@mui/material/Stack";
+import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import MuiCard from "@mui/material/Card";
-import { styled } from "@mui/material/styles";
-import { useRouter } from "next/navigation";
-import { login } from "@/actions/emr_tnguoidung";
-import { getClaimsFromToken, sha256 } from "@/utils/auth";
-import { GoogleIcon, FacebookIcon } from "@/components/CustomIcons";
 import Cookies from "js-cookie";
-import Spinner from "@/components/spinner";
-import { ToastSuccess, ToastError } from "@/utils/toast";
-import { useUserStore } from "@/store/user";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -65,7 +66,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
+export default function SignIn() {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
@@ -114,7 +115,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   return (
     <SignInContainer direction="column" justifyContent="space-between">
       <Card variant="outlined">
-        <img src="/logo.png" alt="Logo" style={{ height: 32, width: 32 }} />
+        <Image src="/logo.png" alt="Logo" width={32} height={32} />
         <Typography
           component="h1"
           variant="h4"

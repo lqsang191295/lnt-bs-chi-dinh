@@ -1,18 +1,12 @@
 "use client";
-import * as React from "react";
-import { styled } from "@mui/material/styles";
-import Avatar from "@mui/material/Avatar";
-import MuiDrawer, { drawerClasses } from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import SelectContent from "./SelectContent";
-import MenuContent from "./MenuContent";
+import MuiDrawer, { drawerClasses } from "@mui/material/Drawer";
+import { styled } from "@mui/material/styles";
+import * as React from "react";
 import CardAlert from "./CardAlert";
-import OptionsMenu from "./OptionsMenu";
-import { Button } from "@mui/material";
-import { useRouter } from "next/navigation";
+import MenuContent from "./MenuContent";
+import SelectContent from "./SelectContent";
 
 const drawerWidth = 320;
 
@@ -54,7 +48,6 @@ const Logged = () => {
 };
 
 export default function SideMenu() {
-  const router = useRouter();
   const [user] = React.useState(false);
 
   if (!user) {

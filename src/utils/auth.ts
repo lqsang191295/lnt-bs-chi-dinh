@@ -1,5 +1,4 @@
 // src/utils/auth.ts
-import { useEffect } from "react";
 import Cookies from "js-cookie";
 
 // Hàm giải mã base64url an toàn với Unicode

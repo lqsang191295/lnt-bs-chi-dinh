@@ -1,44 +1,11 @@
 "use client";
-import * as React from "react";
-import MuiAvatar from "@mui/material/Avatar";
-import MuiListItemAvatar from "@mui/material/ListItemAvatar";
-import MenuItem from "@mui/material/MenuItem";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListSubheader from "@mui/material/ListSubheader";
-import Select, { SelectChangeEvent, selectClasses } from "@mui/material/Select";
-import Divider from "@mui/material/Divider";
-import { styled } from "@mui/material/styles";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import DevicesRoundedIcon from "@mui/icons-material/DevicesRounded";
-import SmartphoneRoundedIcon from "@mui/icons-material/SmartphoneRounded";
-import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
-import Typography from "@mui/material/Typography";
 import { Stack } from "@mui/material";
-
-const Avatar = styled(MuiAvatar)(({ theme }) => ({
-  width: 28,
-  height: 28,
-  backgroundColor: (theme.vars || theme).palette.background.paper,
-  color: (theme.vars || theme).palette.text.secondary,
-  border: `1px solid ${(theme.vars || theme).palette.divider}`,
-}));
-
-const ListItemAvatar = styled(MuiListItemAvatar)({
-  minWidth: 0,
-  marginRight: 12,
-});
+import Image from "next/image";
 
 export default function SelectContent() {
-  const [company, setCompany] = React.useState("");
-
-  const handleChange = (event: SelectChangeEvent) => {
-    setCompany(event.target.value as string);
-  };
-
   return (
     <div className="flex items-center">
-      <img src="/logo.png" alt="Logo" style={{ height: 32, marginRight: 8 }} />
+      <Image src="/logo.png" alt="Logo" width={32} height={32} />
       <Stack spacing={1}>
         <span className="font-bold text-xs">
           BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG

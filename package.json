@@ -16,9 +16,7 @@
     "@mui/material": "^7.2.0",
     "@mui/x-data-grid": "^8.9.2",
     "@mui/x-date-pickers": "^8.9.2",
-    "@tensorflow/tfjs-node": "^4.22.0",
     "@types/js-cookie": "^3.0.6",
-    "@vladmandic/face-api": "^1.7.15",
     "canvas": "^3.1.2",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
@@ -42,6 +40,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
+    "eslint-plugin-import": "^2.32.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

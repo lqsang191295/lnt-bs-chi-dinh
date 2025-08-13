@@ -1,20 +1,18 @@
 "use client";
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Box } from "@mui/material";
-import SideMenu from "@/components/SideMenu";
-import AppNavbar from "@/components/AppNavbar";
-import AppBarTop from "@/components/AppBarTop";
-import { useEffect } from "react";
 import { getMenuItems } from "@/actions/menu";
+import AppBarTop from "@/components/AppBarTop";
+import SideMenu from "@/components/SideMenu";
 import { useMenuStore } from "@/store/menu";
 import { useUserStore } from "@/store/user";
+import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
+import { Box } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
-import { Toaster } from "sonner";
+import { Geist, Geist_Mono } from "next/font/google";
 import { usePathname } from "next/navigation"; // Cho App Router (Next.js 13+)
+import { useEffect } from "react";
+import { Toaster } from "sonner";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

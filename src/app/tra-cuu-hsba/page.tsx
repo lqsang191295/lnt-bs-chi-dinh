@@ -1,128 +1,121 @@
 // app/dong-mo-hsba/page.tsx
 "use client";
-import {
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
-  Box,
-  Button,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-} from "@mui/material";
-import Grid from "@mui/material/Grid";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import React, { useEffect, useState } from "react";
-import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
 import { getHosobenhan } from "@/actions/emr_hosobenhan";
+import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
-
-export default function tracuuhsbaPage() {
-  const columns: GridColDef[] = [
-    { field: "ID", headerName: "ID", width: 60 },
-    {
-      field: "TrangThaiBA",
-      headerName: "Trạng thái",
-      width: 100,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            backgroundColor: "transparent",
-            color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontWeight: "bold",
-            textAlign: "center",
-            minWidth: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "4px",
-          }}>
-          {params.value === "MO" ? (
-            <>
-              <LockOpenIcon sx={{ fontSize: "14px" }} />
-              Mở
-            </>
-          ) : (
-            <>
-              <LockOutlinedIcon sx={{ fontSize: "14px" }} />
-              Đóng
-            </>
-          )}
-        </Box>
-      ),
-    },
-    { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
-    { field: "Hoten", headerName: "Họ và tên", width: 200 },
-    { field: "MaBN", headerName: "Mã BN", width: 130 },
-    { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-    { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-    { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-    { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-    { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
-    { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
-    { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
-    { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
-    { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
-    { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
-    { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
-    { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
-    { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
-  ];
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import {
+  Box,
+  Button,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  MenuItem,
+  Radio,
+  RadioGroup,
+  Select,
+  Typography,
+} from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { useCallback, useEffect, useState } from "react";
+const columns: GridColDef[] = [
+  { field: "ID", headerName: "ID", width: 60 },
+  {
+    field: "TrangThaiBA",
+    headerName: "Trạng thái",
+    width: 100,
+    renderCell: (params) => (
+      <Box
+        sx={{
+          backgroundColor: "transparent",
+          color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
+          padding: "4px 8px",
+          borderRadius: "4px",
+          fontSize: "12px",
+          fontWeight: "bold",
+          textAlign: "center",
+          minWidth: "60px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "4px",
+        }}>
+        {params.value === "MO" ? (
+          <>
+            <LockOpenIcon sx={{ fontSize: "14px" }} />
+            Mở
+          </>
+        ) : (
+          <>
+            <LockOutlinedIcon sx={{ fontSize: "14px" }} />
+            Đóng
+          </>
+        )}
+      </Box>
+    ),
+  },
+  { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
+  { field: "Hoten", headerName: "Họ và tên", width: 200 },
+  { field: "MaBN", headerName: "Mã BN", width: 130 },
+  { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+  { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
+  { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
+  { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
+  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+  { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+  { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
+  { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
+  { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
+  { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
+  { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
+  { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
+  { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+];
+export default function TracuuhsbaPage() {
   const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(
     []
   );
   const [selectedKhoa, setSelectedKhoa] = useState("all");
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   const { data: loginedUser, setUserData } = useUserStore();
-  // Fetch khoa list from API
+
+  const fetchKhoaList = useCallback(async () => {
+    try {
+      const result = await gettDMKhoaPhongs();
+      // console.log("Khoa Phongs fetched:", result);
+      if (Array.isArray(result)) {
+        const mapped = result.map((item) => ({
+          value: item.cmakhoa,
+          label: item.ckyhieu + " - " + item.ctenkhoa,
+        }));
+        setKhoaList([{ value: "all", label: "Tất cả" }, ...mapped]);
+      } else {
+        setKhoaList([{ value: "all", label: "Tất cả" }]);
+      }
+    } catch (error) {
+      console.error("Error fetching khoa list:", error);
+      setKhoaList([{ value: "all", label: "Tất cả" }]);
+    }
+  }, []);
+
   useEffect(() => {
-    // if (!loginedUser || !loginedUser.ctaikhoan) {
-    //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
-    //   return;
-    // }
     const claims = getClaimsFromToken();
     if (claims) {
       setUserData(claims);
-      // Log or handle the claims as needed
-      //console.log("User claims:", claims);
-      // You can set user claims in a global state or context if needed
     } else {
       console.warn("No valid claims found in token");
     }
-    async function fetchKhoaList() {
-      try {
-        const result = await gettDMKhoaPhongs();
-        // console.log("Khoa Phongs fetched:", result);
-        if (Array.isArray(result)) {
-          const mapped = result.map((item: any) => ({
-            value: item.cmakhoa,
-            label: item.ckyhieu + " - " + item.ctenkhoa,
-          }));
-          setKhoaList([{ value: "all", label: "Tất cả" }, ...mapped]);
-        } else {
-          setKhoaList([{ value: "all", label: "Tất cả" }]);
-        }
-      } catch (error) {
-        setKhoaList([{ value: "all", label: "Tất cả" }]);
-      }
-    }
+
     fetchKhoaList();
-  }, []);
+  }, [fetchKhoaList, setUserData]);
 
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
@@ -142,7 +135,7 @@ export default function tracuuhsbaPage() {
     );
 
     setRows(
-      (data || []).map((item: any, idx: number) => ({
+      (data || []).map((item: Record<string, string>, idx: number) => ({
         id: idx + 1,
         ...item,
       }))
