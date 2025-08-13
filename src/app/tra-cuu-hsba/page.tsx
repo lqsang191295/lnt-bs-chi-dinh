@@ -12,16 +12,23 @@ import {
   Select,
   TextField,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import CloseIcon from '@mui/icons-material/Close';
+import PrintIcon from '@mui/icons-material/Print';
+import DescriptionIcon from '@mui/icons-material/Description';
+import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import React, { useEffect, useState } from "react";
 import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
-import { getHosobenhan } from "@/actions/emr_hosobenhan";
+import { getHosobenhan, getChiTietHSBA } from "@/actions/emr_hosobenhan";
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 
@@ -89,7 +96,142 @@ export default function tracuuhsbaPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
+  // State cho dialog chi tiết
+  const [openDetailDialog, setOpenDetailDialog] = useState(false);
+  const [selectedHsbaForDetail, setSelectedHsbaForDetail] = useState<any>(null);
+  const [phieuList, setPhieuList] = useState<any[]>([]);
+  const [pdfUrl, setPdfUrl] = useState<string>("");  
+  const [currentBlobUrl, setCurrentBlobUrl] = useState<string>(""); // Thêm state để track blob URL
+  const [xmlContent, setXmlContent] = useState<string>("");
   const { data: loginedUser, setUserData } = useUserStore();
+
+
+  // Columns cho lưới chi tiết phiếu
+  const phieuColumns: GridColDef[] = [
+    { field: 'ID', headerName: 'STT', width: 60 },
+    { field: 'TenPhieu', headerName: 'Loại Phiếu', width: 250 },
+    { field: 'NgayTaoPhieu', headerName: 'Ngày Tạo', width: 150 },
+    { field: 'NgayKySo', headerName: 'Ngày Ký', width: 150 },
+  ];
+
+ // Hàm chuyển đổi base64 thành Blob URL
+  const createPdfBlobUrl = (base64Data: string): string => {
+    try {
+      // Xóa prefix nếu có
+      const cleanBase64 = base64Data.replace(/^data:application\/pdf;base64,/, '');
+      
+      // Chuyển đổi base64 thành binary
+      const binaryString = atob(cleanBase64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      // Tạo Blob
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      
+      // Tạo Blob URL
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error("Error creating PDF blob:", error);
+      return "";
+    }
+  };
+
+  // Hàm dọn dẹp Blob URL
+  const cleanupBlobUrl = (url: string) => {
+    if (url && url.startsWith('blob:')) {
+      URL.revokeObjectURL(url);
+    }
+  };
+
+
+  // Hàm xử lý double click trên lưới chính
+  const handleRowDoubleClick = async (params: GridRowParams) => {
+    const hsba = params.row;
+    //console.log("Selected HSBA for detail:", hsba);
+    setSelectedHsbaForDetail(hsba);
+    
+    try {
+      // Gọi API để lấy danh sách phiếu chi tiết
+      const chiTietData = await getChiTietHSBA(loginedUser.ctaikhoan,popt,hsba.ID); // Cần có hàm này trong actions
+      const mappedData = (chiTietData || []).map((item: any, index: number) => ({
+        id: item.ID || index + 1, // Sử dụng ID từ data hoặc index làm id
+        ...item
+      }));
+
+        setPhieuList(mappedData);
+      if (mappedData && mappedData.length > 0) {
+        const base64Data = mappedData[0].FilePdfKySo;
+        if (base64Data) {
+          // Dọn dẹp URL cũ trước khi tạo mới
+          if (currentBlobUrl) {
+            cleanupBlobUrl(currentBlobUrl);
+          }
+          
+          const blobUrl = createPdfBlobUrl(base64Data);
+          setPdfUrl(blobUrl);
+          setCurrentBlobUrl(blobUrl);
+        } else {
+          setPdfUrl("");
+          setCurrentBlobUrl("");
+        }
+      } else {
+        setPdfUrl("");
+        setCurrentBlobUrl("");
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết HSBA:", error);
+      setPhieuList([]);
+      setPdfUrl("");
+      setCurrentBlobUrl("");
+    }
+    
+    setOpenDetailDialog(true);
+  };
+ 
+
+ // Hàm xử lý khi click vào một phiếu trong lưới chi tiết
+  const handlePhieuRowClick = (params: GridRowParams) => {
+    const base64Data = params.row.FilePdfKySo;
+    if (base64Data) {
+      // Dọn dẹp URL cũ trước khi tạo mới
+      if (currentBlobUrl) {
+        cleanupBlobUrl(currentBlobUrl);
+      }
+      
+      const blobUrl = createPdfBlobUrl(base64Data);
+      setPdfUrl(blobUrl);
+      setCurrentBlobUrl(blobUrl);
+    } else {
+      setPdfUrl("");
+      setCurrentBlobUrl("");
+    }
+  };
+
+  // Hàm đóng dialog chi tiết
+  const handleCloseDetailDialog = () => {
+    // Dọn dẹp Blob URL khi đóng dialog
+    if (currentBlobUrl) {
+      cleanupBlobUrl(currentBlobUrl);
+    }
+    
+    setOpenDetailDialog(false);
+    setSelectedHsbaForDetail(null);
+    setPhieuList([]);
+    setPdfUrl("");
+    setCurrentBlobUrl("");
+  };
+  
+  // Cleanup khi component unmount
+  useEffect(() => {
+    return () => {
+      if (currentBlobUrl) {
+        cleanupBlobUrl(currentBlobUrl);
+      }
+    };
+  }, [currentBlobUrl]);
+
   // Fetch khoa list from API
   useEffect(() => {
     // if (!loginedUser || !loginedUser.ctaikhoan) {
@@ -166,7 +308,9 @@ export default function tracuuhsbaPage() {
               fullWidth
               value={selectedKhoa}
               size="small"
-              onChange={(e) => setSelectedKhoa(e.target.value)}>
+              onChange={(e) => setSelectedKhoa(e.target.value)}
+              displayEmpty
+              >
               {khoaList.map((item) => (
                 <MenuItem key={item.value} value={item.value}>
                   {item.label}
@@ -250,7 +394,7 @@ export default function tracuuhsbaPage() {
           </Box>
         </Box>
 
-        <Box className="w-full h-full">
+        <Box className="w-full" sx={{ height: 'calc(100vh - 200px)' }}>
           <DataGrid
             rows={rows}
             columns={columns}
@@ -258,6 +402,7 @@ export default function tracuuhsbaPage() {
             checkboxSelection
             disableRowSelectionOnClick
             density="compact" 
+            onRowDoubleClick={handleRowDoubleClick} // Thêm sự kiện double click
             sx={{
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
@@ -278,7 +423,102 @@ export default function tracuuhsbaPage() {
             }}
           />
         </Box>
+        
       </Box>
+      
+      {/* Dialog Chi tiết HSBA */}
+      <Dialog 
+        open={openDetailDialog} 
+        onClose={handleCloseDetailDialog} 
+        fullWidth 
+        maxWidth="xl"
+      >
+        <DialogTitle sx={{ 
+          fontWeight: 'bold', 
+          backgroundColor: '#1976d2', 
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          CHI TIẾT HỒ SƠ BỆNH ÁN: {selectedHsbaForDetail?.Hoten} - {selectedHsbaForDetail?.MaBN}
+          <IconButton onClick={handleCloseDetailDialog} sx={{ color: 'white' }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0, m: 0, height: '80vh', display: 'flex', flexDirection: 'column' }}>
+          {/* Vùng 1: Các nút chức năng */}
+          <Box sx={{ p: 1, borderBottom: '1px solid #e0e0e0', display: 'flex', gap: 1 }}>
+            <Button variant="contained" startIcon={<PrintIcon />}>In HSBA</Button>
+            <Button variant="contained" startIcon={<DescriptionIcon />}>Xuất XML</Button>
+          </Box>
+
+          {/* Vùng 2: Lưới chi tiết và PDF viewer */}
+          <Grid container sx={{ flex: 1, overflow: 'hidden' }}>
+            {/* Vùng trái: Lưới chi tiết phiếu */}
+             <Grid xs={5} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>  
+              <Box sx={{ flex: 1, height: '100%' }}>
+                <DataGrid
+                  rows={phieuList}
+                  columns={phieuColumns}
+                  density="compact"
+                  onRowClick={handlePhieuRowClick}
+                  hideFooter
+                />
+              </Box>
+              </Grid>  
+
+            {/* Vùng phải: Hiển thị PDF */}
+             <Grid xs={7} sx={{ 
+              borderLeft: '1px solid #e0e0e0', 
+              height: '100%', 
+              display: 'flex',
+              // width: '100%',
+              // flexDirection: 'column'
+            }}> 
+              {pdfUrl ? (
+                <Box sx={{ 
+                  flex: 1, 
+                  width: '100%', 
+                  height: '100%',
+                  '& object': {
+                    width: '100%',
+                    height: '100%'
+                  }
+                }}>
+                  <object
+                    data={pdfUrl}
+                    type="application/pdf" 
+                    style={{ border: 'none', width: '100%', height: '100%' }}
+                  >
+                    {/* <iframe
+                      src={pdfUrl}
+                      style={{ 
+                        border: 'none',
+                        width: '100%',
+                        height: '100%'
+                      }}
+                      title="PDF Viewer"
+                    /> */}
+                  </object>
+                </Box>
+              ) : (
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  height: '100%',
+                  backgroundColor: '#f5f5f5'
+                }}>
+                  <Typography variant="h6" color="text.secondary">
+                    Chọn một phiếu để xem chi tiết PDF
+                  </Typography>
+                </Box>
+              )}
+            </Grid>
+          </Grid>
+        </DialogContent>
+      </Dialog>
     </LocalizationProvider>
   );
 }

@@ -28,6 +28,30 @@ export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: str
   }
 };
 
+export const getChiTietHSBA = async (pUser: string, pOpt: string, ID: string) => {
+  try {
+    //console.log("Fetching HoSoBenhAn...");
+    // Gọi API để lấy danh sách hồ sơ bệnh án
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_hosobenhan_chitiet",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "ID", paraValue: ID },
+      ],
+    });
+
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
 ///
 /// Cập nhật hồ sơ bệnh án
 /// popt: 
