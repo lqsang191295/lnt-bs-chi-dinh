@@ -1,6 +1,7 @@
 // app/dong-mo-hsba/page.tsx
 "use client";
 import { getChiTietHSBA, getHosobenhan } from "@/actions/emr_hosobenhan";
+import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 import CloseIcon from "@mui/icons-material/Close";
@@ -90,7 +91,7 @@ export default function tracuuhsbaPage() {
   const [selectedKhoa, setSelectedKhoa] = useState("all");
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
-  const [rows, setRows] = useState<Record<string, string>[]>([]);
+  const [rows, setRows] = useState<any[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   // State cho dialog chi tiết
@@ -237,15 +238,38 @@ export default function tracuuhsbaPage() {
 
   // Fetch khoa list from API
   useEffect(() => {
+    // if (!loginedUser || !loginedUser.ctaikhoan) {
+    //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
+    //   return;
+    // }
     const claims = getClaimsFromToken();
     if (claims) {
       setUserData(claims);
+      // Log or handle the claims as needed
+      //console.log("User claims:", claims);
+      // You can set user claims in a global state or context if needed
     } else {
       console.warn("No valid claims found in token");
     }
-
+    async function fetchKhoaList() {
+      try {
+        const result = await gettDMKhoaPhongs();
+        // console.log("Khoa Phongs fetched:", result);
+        if (Array.isArray(result)) {
+          const mapped = result.map((item: any) => ({
+            value: item.cmakhoa,
+            label: item.ckyhieu + " - " + item.ctenkhoa,
+          }));
+          setKhoaList([{ value: "all", label: "Tất cả" }, ...mapped]);
+        } else {
+          setKhoaList([{ value: "all", label: "Tất cả" }]);
+        }
+      } catch (error) {
+        setKhoaList([{ value: "all", label: "Tất cả" }]);
+      }
+    }
     fetchKhoaList();
-  }, [fetchKhoaList, setUserData]);
+  }, []);
 
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
@@ -265,7 +289,7 @@ export default function tracuuhsbaPage() {
     );
 
     setRows(
-      (data || []).map((item: Record<string, string>, idx: number) => ({
+      (data || []).map((item: any, idx: number) => ({
         id: idx + 1,
         ...item,
       }))
@@ -454,7 +478,6 @@ export default function tracuuhsbaPage() {
           <Grid container sx={{ flex: 1, overflow: "hidden" }}>
             {/* Vùng trái: Lưới chi tiết phiếu */}
             <Grid
-              xs={5}
               sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
               <Box sx={{ flex: 1, height: "100%" }}>
                 <DataGrid
@@ -469,13 +492,11 @@ export default function tracuuhsbaPage() {
 
             {/* Vùng phải: Hiển thị PDF */}
             <Grid
-              xs={7}
               sx={{
                 borderLeft: "1px solid #e0e0e0",
                 height: "100%",
                 display: "flex",
-                // width: '100%',
-                // flexDirection: 'column'
+                flex: 1,
               }}>
               {pdfUrl ? (
                 <Box

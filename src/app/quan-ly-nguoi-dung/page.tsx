@@ -66,7 +66,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 // Wrapper cho DialogContent để resize
 const ResizablePaper = React.forwardRef(function ResizablePaper(
-  props: Record<string, unknown>,
+  props: any,
   ref
 ) {
   return (
@@ -99,15 +99,19 @@ function TabPanel(props: {
   );
 }
 
-export default function QuanlynguoidungPage() {
+export default function quanlynguoidungPage() {
   const router = useRouter();
   const [users, setUsers] = useState<IUserItem[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);
   const { data: loginedUser, setUserData } = useUserStore();
   const [token, setToken] = useState<string | null>(null);
-  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<{value: string; label: string}[]>([]);
+  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<
+    { value: string; label: string }[]
+  >([]);
   const [selectedNhomNguoiDung, setSelectedNhomNguoiDung] = useState("");
-  const [khoaList, setKhoaList] = useState<{value: string; label: string}[]>([]);
+  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(
+    []
+  );
   const [selectedKhoa, setSelectedKhoa] = useState("");
   const [page, setPage] = useState(0);
   const [newUserStatus, setNewUserStatus] = useState(0);
@@ -162,7 +166,7 @@ export default function QuanlynguoidungPage() {
   const handleCheckMenu = (
     cid: string,
     checked: boolean,
-    newMenuList: Record<string, unknown>[]
+    newMenuList: any[]
   ) => {
     setDsMenu(newMenuList);
   };
@@ -206,18 +210,11 @@ export default function QuanlynguoidungPage() {
     menuList,
     onCheck,
   }: {
-    menuList: Record<string, unknown>[];
-    onCheck: (
-      cid: string,
-      checked: boolean,
-      newMenuList: Record<string, unknown>[]
-    ) => void;
+    menuList: any[];
+    onCheck: (cid: string, checked: boolean, newMenuList: any[]) => void;
   }) {
     // Tạo cây từ danh sách phẳng, menu gốc có cidcha = "" hoặc "0"
-    const buildTree = (
-      list: Record<string, unknown>[],
-      parentId: number
-    ): Record<string, unknown>[] =>
+    const buildTree = (list: any[], parentId: number): any[] =>
       list
         .filter((item) => item.cidcha === parentId)
         .sort((a, b) => Number(a.cthutu) - Number(b.cthutu))
@@ -230,10 +227,10 @@ export default function QuanlynguoidungPage() {
 
     // Hàm cập nhật trạng thái cho node và các con
     const updateNodeCheck = (
-      nodes: Record<string, unknown>[],
+      nodes: any[],
       cid: string,
       checked: boolean
-    ): Record<string, unknown>[] =>
+    ): any[] =>
       nodes.map((node) => {
         if (node.cid === cid) {
           return {
@@ -253,10 +250,7 @@ export default function QuanlynguoidungPage() {
       });
 
     // Hàm cập nhật tất cả các con
-    const updateAllChildren = (
-      nodes: Record<string, unknown>[],
-      checked: boolean
-    ): Record<string, unknown>[] =>
+    const updateAllChildren = (nodes: any[], checked: boolean): any[] =>
       nodes.map((node) => ({
         ...node,
         ctrangthai: checked ? 1 : 0,
@@ -269,9 +263,7 @@ export default function QuanlynguoidungPage() {
     const handleCheck = (cid: string, checked: boolean) => {
       const newTree = updateNodeCheck(tree, cid, checked);
       // Flatten tree về lại mảng phẳng để cập nhật dsMenu
-      const flatten = (
-        nodes: Record<string, unknown>[]
-      ): Record<string, unknown>[] =>
+      const flatten = (nodes: any[]): any[] =>
         nodes.reduce(
           (acc, node) => [
             ...acc,
@@ -295,7 +287,7 @@ export default function QuanlynguoidungPage() {
     };
 
     // Render node
-    const renderNode = (node: Record<string, unknown>, level: number = 0) => (
+    const renderNode = (node: any, level: number = 0) => (
       <Box
         key={node.cid}
         sx={{
@@ -326,10 +318,10 @@ export default function QuanlynguoidungPage() {
           </span>
         </Box>
         {node.children && node.children.length > 0 && (
-          //  <Box sx={{  display: "flex", flexDirection: "column", width: "78%" }}>
-          <span style={{ width: "78%" }}>
-            {node.children.map((child: any) => renderNode(child, level + 1))}
-          </span>
+          <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
+            <span style={{ width: "100%" }}>
+              {node.children.map((child: any) => renderNode(child, level + 1))}
+            </span>
           </Box>
         )}
       </Box>
@@ -367,10 +359,7 @@ export default function QuanlynguoidungPage() {
   const [phanQuyenKhoaChecked, setPhanQuyenKhoaChecked] = useState<string[]>(
     []
   );
-  const handleTabChange = async (
-    _: Record<string, unknown>,
-    newIndex: number
-  ) => {
+  const handleTabChange = async (_: any, newIndex: number) => {
     setTabIndex(newIndex);
     if (newIndex === 0 && selectedUser) {
       // Gọi API lấy danh sách menu phân quyền cho user
@@ -378,7 +367,7 @@ export default function QuanlynguoidungPage() {
         loginedUser.ctaikhoan,
         "1",
         selectedUser.ctaikhoan
-      ); 
+      );
       //console.log("dsMenu phan quyen user", result);
       if (Array.isArray(result)) setDsMenu(result);
       else setDsMenu([]);
@@ -392,7 +381,7 @@ export default function QuanlynguoidungPage() {
         loginedUser.ctaikhoan,
         "1",
         selectedUser.ctaikhoan
-      ); 
+      );
       if (Array.isArray(result)) setDsQuyenKhoa(result);
       else setDsQuyenKhoa([]);
     }
@@ -485,7 +474,7 @@ export default function QuanlynguoidungPage() {
       try {
         const result = await gettnhomnguoidung(loginedUser.ctaikhoan, "1");
         if (Array.isArray(result)) {
-          const mapped = result.map((item: IUserItem) => ({
+          const mapped = result.map((item: any) => ({
             value: item.cid,
             label: item.ctennhom,
           }));
@@ -506,7 +495,7 @@ export default function QuanlynguoidungPage() {
       try {
         const result = await gettDMKhoaPhongs();
         if (Array.isArray(result)) {
-          const mapped = result.map((item: Record<string, unknown>) => ({
+          const mapped = result.map((item: any) => ({
             value: item.cid,
             label: item.ckyhieu + " - " + item.ctenkhoa,
           }));
@@ -521,15 +510,24 @@ export default function QuanlynguoidungPage() {
     fetchKhoaList();
   }, []);
 
-  const handleRowClick = (user: Record<string, unknown>) => {
+  const handleRowClick = (user: any) => {
     setSelectedUser(user);
     // console.log("manhomnguoidung", user.cmanhomnguoidung);
   };
-  const handleChange = (field: string, value: Record<string, unknown>) => {
+  const handleChange = (field: string, value: any) => {
     setSelectedUser((prev) => {
       if (!prev) return prev;
       return { ...prev, [field]: value } as IUserItem;
     });
+  };
+  const onchangeKhoa = (o: any) => {
+    handleChange("cmadonvi", o);
+    setSelectedKhoa(o);
+  };
+
+  const onchangeNhom = (o: any) => {
+    handleChange("cmanhomnguoidung", o);
+    setSelectedNhomNguoiDung(o);
   };
 
   const handleThem = async () => {
@@ -704,7 +702,7 @@ export default function QuanlynguoidungPage() {
                   <TableCell>Họ tên</TableCell>
                   <TableCell>Ngày sinh</TableCell>
                   <TableCell>SĐT</TableCell>
-                </TableRow>               
+                </TableRow>
               </TableHead>
               <TableBody>
                 {users.map((user, idx) => (
@@ -914,7 +912,7 @@ export default function QuanlynguoidungPage() {
           slots={{ paper: ResizablePaper }}
           slotProps={{
             paper: {
-              component: (props: Record<string, unknown>) => (
+              component: (props: any) => (
                 <Draggable
                   handle="#draggable-dialog-title"
                   cancel={'[class*="MuiDialogContent-root"]'}>
