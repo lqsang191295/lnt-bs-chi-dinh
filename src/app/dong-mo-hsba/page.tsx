@@ -1,28 +1,29 @@
 // app/dong-mo-hsba/page.tsx
 "use client";
+import { capnhathosobenhan, getHosobenhan } from "@/actions/emr_hosobenhan";
+import { IHoSoBenhAn } from "@/model/thosobenhan";
+import { ISelectOption } from "@/model/ui";
+import { DataManager } from "@/services/DataManager";
+import { useUserStore } from "@/store/user";
+import { ToastError, ToastSuccess } from "@/utils/toast";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
   Box,
   Button,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
   MenuItem,
+  Radio,
+  RadioGroup,
   Select,
   Typography,
 } from "@mui/material";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import React, { useEffect, useState } from "react";
-import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
-import { getHosobenhan, capnhathosobenhan } from "@/actions/emr_hosobenhan";
-import { useUserStore } from "@/store/user";
-import { getClaimsFromToken } from "@/utils/auth";
-import DataLoading from "@/components/DataLoading";
+import { useEffect, useState } from "react";
 
 const columns: GridColDef[] = [
   { field: "ID", headerName: "ID", width: 60 },
@@ -78,55 +79,35 @@ const columns: GridColDef[] = [
   { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
 ];
 export default function DongMoHsbaPage() {
-  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(
-    []
-  );
+  let selectedRows: IHoSoBenhAn[] = [];
+  const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
   const [selectedKhoa, setSelectedKhoa] = useState("all");
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const { data: loginedUser, setUserData } = useUserStore();
-  const { searchingData, setSearchingData } = useState<bool>(false);
+  const { data: loginedUser } = useUserStore();
+  const [searchingData, setSearchingData] = useState<boolean>(false);
 
+  const fetchKhoaList = async () => {
+    try {
+      const dataKhoaPhong = await DataManager.getDmKhoaPhong();
+      setKhoaList(dataKhoaPhong);
+    } catch (error) {
+      console.error("Error fetching khoa list:", error);
+      setKhoaList([{ value: "all", label: "Tất cả" }]);
+    }
+  };
   // Fetch khoa list from API
   useEffect(() => {
-    // if (!loginedUser || !loginedUser.ctaikhoan) {
-    //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
-    //   return;
-    // }
-    const claims = getClaimsFromToken();
-    if (claims) {
-      setUserData(claims);
-      // Log or handle the claims as needed
-      //console.log("User claims:", claims);
-      // You can set user claims in a global state or context if needed
-    } else {
-      console.warn("No valid claims found in token");
-    }
-    async function fetchKhoaList() {
-      try {
-        const result = await gettDMKhoaPhongs();
-        // console.log("Khoa Phongs fetched:", result);
-        if (Array.isArray(result)) {
-          const mapped = result.map((item: any) => ({
-            value: item.cmakhoa,
-            label: item.ckyhieu + " - " + item.ctenkhoa,
-          }));
-          setKhoaList([{ value: "all", label: "Tất cả" }, ...mapped]);
-        } else {
-          setKhoaList([{ value: "all", label: "Tất cả" }]);
-        }
-      } catch (error) {
-        setKhoaList([{ value: "all", label: "Tất cả" }]);
-      }
-    }
     fetchKhoaList();
   }, []);
 
   // Hàm xử lý đóng/mở HSBA
-  const dongmohsba = async (loai: "DONG" | "MO", danhSachHSBA: any[]) => {
+  const dongmohsba = async (
+    loai: "DONG" | "MO",
+    danhSachHSBA: IHoSoBenhAn[]
+  ) => {
     if (!danhSachHSBA || danhSachHSBA.length === 0) {
       alert("Vui lòng chọn ít nhất một hồ sơ bệnh án!");
       return;
@@ -146,40 +127,32 @@ export default function DongMoHsbaPage() {
       // Refresh data after update
       await handleSearch();
 
-      alert(
+      ToastSuccess(
         `${loai === "DONG" ? "Đóng" : "Mở"} HSBA thành công cho ${
           danhSachHSBA.length
         } hồ sơ!`
       );
     } catch (error) {
       console.error("Error updating HSBA:", error);
-      alert(`Có lỗi xảy ra khi ${loai === "DONG" ? "đóng" : "mở"} HSBA!`);
+      ToastError(`Có lỗi xảy ra khi ${loai === "DONG" ? "đóng" : "mở"} HSBA!`);
     }
   };
 
   // Hàm xử lý khi chọn rows trong DataGrid
-  const handleRowSelectionChange = (selectionModel: any) => {
-    let selectionArray: any[] = [];
+  const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
+    let selectionArray: unknown[] = [];
 
-    console.log("selectionModel:", selectionModel); // For debugging
-    //console.log("rows:", rows); // For debugging
-    // Check if selectionModel has ids property (new DataGrid format)
     if (selectionModel && selectionModel.ids) {
       selectionArray = Array.from(selectionModel.ids);
     } else if (Array.isArray(selectionModel)) {
       selectionArray = selectionModel;
-    } else if (
-      selectionModel &&
-      typeof selectionModel[Symbol.iterator] === "function"
-    ) {
-      // If it's iterable (like Set), convert to array
-      selectionArray = [...selectionModel];
     }
+
     const selectedRowsData = rows.filter((row) =>
-      selectionArray.includes(row.id)
+      selectionArray.includes(row.ID)
     );
-    setSelectedRows(selectedRowsData);
-    console.log("Selected rows:", selectedRowsData); // For debugging
+
+    selectedRows = selectedRowsData;
   };
 
   // Hàm tìm kiếm hồ sơ bệnh án
@@ -202,9 +175,9 @@ export default function DongMoHsbaPage() {
         formatDate(tuNgay),
         formatDate(denNgay)
       );
-
+      console.log("Fetched HSBA data:", data); // For debugging
       setRows(
-        (data || []).map((item: any) => ({
+        (data || []).map((item: IHoSoBenhAn) => ({
           id: item.ID, // Use ID or index as row ID
           ...item,
         }))
@@ -337,10 +310,10 @@ export default function DongMoHsbaPage() {
         </Box>
 
         <Box className="w-full h-full overflow-hidden">
-          {searchingData && <DataLoading />}
-          {!searchingData && <DataGrid
+          <DataGrid
             rows={rows}
             columns={columns}
+            loading={searchingData}
             pagination
             checkboxSelection
             disableRowSelectionOnClick
@@ -364,7 +337,7 @@ export default function DongMoHsbaPage() {
                 backgroundColor: "#e3f2fd !important",
               },
             }}
-          />}
+          />
         </Box>
       </Box>
     </LocalizationProvider>

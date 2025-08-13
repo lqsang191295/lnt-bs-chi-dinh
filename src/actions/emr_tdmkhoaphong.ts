@@ -1,9 +1,8 @@
 import { post } from "@/api/client";
+import { IDmKhoaPhong } from "@/model/tdmkhoaphong";
 
-export const gettDMKhoaPhongs = async () => {
+export const gettDMKhoaPhongs = async (): Promise<IDmKhoaPhong[]> => {
   try {
-    //console.log("Fetching tDMKhoaPhongs...");
-    // Gọi API để lấy danh sách khoa phòng
     const response = await post(`/api/callService`, {
       userId: "",
       option: "",
