@@ -69,7 +69,7 @@ export default function tracuuhsbaPage() {
         </Box>
       ),
     },
-    { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
+    // { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
     { field: "Hoten", headerName: "Họ và tên", width: 200 },
     { field: "MaBN", headerName: "Mã BN", width: 130 },
     { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
@@ -107,7 +107,7 @@ export default function tracuuhsbaPage() {
 
   // Columns cho lưới chi tiết phiếu
   const phieuColumns: GridColDef[] = [
-    { field: 'ID', headerName: 'STT', width: 60 },
+    { field: 'Stt', headerName: 'STT', width: 60 },
     { field: 'TenPhieu', headerName: 'Loại Phiếu', width: 250 },
     { field: 'NgayTaoPhieu', headerName: 'Ngày Tạo', width: 150 },
     { field: 'NgayKySo', headerName: 'Ngày Ký', width: 150 },

@@ -109,13 +109,9 @@ export default function quanlynguoidungPage() {
   const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);
   const { data: loginedUser, setUserData } = useUserStore();
   const [token, setToken] = useState<string | null>(null);
-  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<
-    { value: string; label: string }[]
-  >([]);
+  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<{value: string; label: string}[]>([]);
   const [selectedNhomNguoiDung, setSelectedNhomNguoiDung] = useState("");
-  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(
-    []
-  );
+  const [khoaList, setKhoaList] = useState<{value: string; label: string}[]>([]);
   const [selectedKhoa, setSelectedKhoa] = useState("");
   const [page, setPage] = useState(0);
   const [newUserStatus, setNewUserStatus] = useState(0);
@@ -305,7 +301,7 @@ export default function quanlynguoidungPage() {
           bgcolor: "transparent",
         }}>
         {/* Checkbox cho node */}
-        <Box sx={{ alignItems: "center", mr: 1, width: "8%" }}>
+        <Box sx={{ alignItems: "center", mr: 1, width: "100%" }}>
           <input
             type="checkbox"
             checked={node.ctrangthai === 1}
@@ -313,20 +309,20 @@ export default function quanlynguoidungPage() {
             style={{ marginRight: 8, alignItems: "left", verticalAlign: "top" }}
           />
           {renderIcon(node.cicon)}
+          <span
+            style={{
+              fontWeight: node.ccap === 1 ? "bold" : "normal",
+              width: node.ccap === 1 ? "100%" : "100%",
+            }}>
+            {node.ctenmenu}
+          </span>
         </Box>
-        <span
-          style={{
-            fontWeight: node.ccap === 1 ? "bold" : "normal",
-            width: node.ccap === 1 ? "14%" : "78%",
-          }}>
-          {node.ctenmenu}
-        </span>
         {node.children && node.children.length > 0 && (
-          //  <Box sx={{  display: "flex", flexDirection: "column", width: "78%" }}>
-          <span style={{ width: "78%" }}>
+          <Box sx={{  display: "flex", flexDirection: "column", width: "100%" }}>
+          <span style={{ width: "100%" }}>
             {node.children.map((child: any) => renderNode(child, level + 1))}
           </span>
-          //  </Box>
+          </Box>
         )}
       </Box>
     );
@@ -371,7 +367,7 @@ export default function quanlynguoidungPage() {
         loginedUser.ctaikhoan,
         "1",
         selectedUser.ctaikhoan
-      ); // Viết hàm này theo API của bạn
+      ); 
       //console.log("dsMenu phan quyen user", result);
       if (Array.isArray(result)) setDsMenu(result);
       else setDsMenu([]);
@@ -385,7 +381,7 @@ export default function quanlynguoidungPage() {
         loginedUser.ctaikhoan,
         "1",
         selectedUser.ctaikhoan
-      ); // Hàm này bạn tự viết
+      ); 
       if (Array.isArray(result)) setDsQuyenKhoa(result);
       else setDsQuyenKhoa([]);
     }
@@ -467,6 +463,7 @@ export default function quanlynguoidungPage() {
     }
 
     async function fetchUsers() {
+      if (!loginedUser || !loginedUser.ctaikhoan) return;
       const result = await gettnguoidung(loginedUser.ctaikhoan, "1");
       if (Array.isArray(result)) {
         setUsers(result as IUserItem[]);
@@ -694,7 +691,6 @@ export default function quanlynguoidungPage() {
               size="small"
               aria-label="customized table"
               sx={{
-                // border: "1px solid #ccc",
                 "& td, & th": {
                   border: "1px solid #ccc",
                 },
@@ -707,19 +703,7 @@ export default function quanlynguoidungPage() {
                   <TableCell>Họ tên</TableCell>
                   <TableCell>Ngày sinh</TableCell>
                   <TableCell>SĐT</TableCell>
-                </TableRow>
-                {/* <TableRow className="bg-gray-200">
-                {[...Array(5)].map((_, idx) => (
-                  <TableCell key={idx}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label={`Search`}
-                      type={"text"}
-                    />
-                  </TableCell>
-                ))}
-              </TableRow> */}
+                </TableRow>               
               </TableHead>
               <TableBody>
                 {users.map((user, idx) => (
