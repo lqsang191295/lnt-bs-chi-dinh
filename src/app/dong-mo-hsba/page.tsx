@@ -79,14 +79,14 @@ const columns: GridColDef[] = [
   { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
 ];
 export default function DongMoHsbaPage() {
-  let selectedRows: IHoSoBenhAn[] = [];
+  const [selectedRows, setSelectedRows] = useState<IHoSoBenhAn[]>([]);
   const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
   const [selectedKhoa, setSelectedKhoa] = useState("all");
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
-  const { data: loginedUser } = useUserStore();
+  const {data: loginedUser } = useUserStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
 
   const fetchKhoaList = async () => {
@@ -142,17 +142,18 @@ export default function DongMoHsbaPage() {
   const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
     let selectionArray: unknown[] = [];
 
+    console.log("Selected rows for update:", selectionModel);
     if (selectionModel && selectionModel.ids) {
       selectionArray = Array.from(selectionModel.ids);
     } else if (Array.isArray(selectionModel)) {
       selectionArray = selectionModel;
     }
-
+    console.log("Selection array:", selectionArray);
     const selectedRowsData = rows.filter((row) =>
       selectionArray.includes(row.ID)
     );
-
-    selectedRows = selectedRowsData;
+    console.log("Selected rows data:", selectedRowsData);
+    setSelectedRows(selectedRowsData);
   };
 
   // Hàm tìm kiếm hồ sơ bệnh án
@@ -283,32 +284,32 @@ export default function DongMoHsbaPage() {
             />
           </Box>
           <Box flex={1}>
-            <Button fullWidth variant="contained" onClick={handleSearch}>
+            <Button fullWidth variant="contained" size="small" onClick={handleSearch}>
               Tìm kiếm
             </Button>
-          </Box>
-          <Box flex={1}>
-            <Button
-              fullWidth
+          </Box>          
+        </Box>
+ {/* Tab Navigation */}
+      <Box className="bg-white flex gap-2 p-2">
+        <Button
+              startIcon={<LockOutlinedIcon />}
               variant="contained"
               color="error"
+              size="small" 
               onClick={() => dongmohsba("DONG", selectedRows)}
               disabled={selectedRows.length === 0}>
               Đóng HSBA
             </Button>
-          </Box>
-          <Box flex={1}>
-            <Button
-              fullWidth
+        <Button
+              startIcon={<LockOpenIcon />}
               variant="contained"
               color="success"
+              size="small" 
               onClick={() => dongmohsba("MO", selectedRows)}
               disabled={selectedRows.length === 0}>
               Mở HSBA
-            </Button>
-          </Box>
-        </Box>
-
+            </Button> 
+      </Box>
         <Box className="w-full h-full overflow-hidden">
           <DataGrid
             rows={rows}

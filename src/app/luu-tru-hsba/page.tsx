@@ -26,6 +26,7 @@ import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import SaveAltIcon from '@mui/icons-material/SaveAlt';
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import {
   DatePicker,
@@ -354,7 +355,7 @@ export default function luutruhsbaPage() {
           variant="h6"
           gutterBottom
           sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
-          TỔNG HỢP LƯU TRỮ HSBA
+          QUẢN LÝ LƯU TRỮ HSBA
         </Typography>
         {/* Search Bar */}
         <Box display="flex" gap={2} mb={2}>
@@ -451,7 +452,7 @@ export default function luutruhsbaPage() {
         {/* Tab Navigation */}
         <Box className="bg-white flex gap-2 p-2">
           <Button
-            fullWidth
+            startIcon={<SaveAltIcon />}
             variant="contained"
             color="primary"
             onClick={handleOpenDialog}
