@@ -1,9 +1,11 @@
 // app/dong-mo-hsba/page.tsx
 "use client";
 import { getChiTietHSBA, getHosobenhan } from "@/actions/emr_hosobenhan";
-import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
+import { IHoSoBenhAn } from "@/model/thosobenhan";
+import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
+import { ISelectOption } from "@/model/ui";
+import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
-import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 import CloseIcon from "@mui/icons-material/Close";
 import DescriptionIcon from "@mui/icons-material/Description";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
@@ -30,78 +32,77 @@ import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useEffect, useState } from "react";
-
-export default function tracuuhsbaPage() {
-  const columns: GridColDef[] = [
-    { field: "ID", headerName: "ID", width: 60 },
-    {
-      field: "TrangThaiBA",
-      headerName: "Trạng thái",
-      width: 100,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            backgroundColor: "transparent",
-            color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontWeight: "bold",
-            textAlign: "center",
-            minWidth: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "4px",
-          }}>
-          {params.value === "MO" ? (
-            <>
-              <LockOpenIcon sx={{ fontSize: "14px" }} />
-              Mở
-            </>
-          ) : (
-            <>
-              <LockOutlinedIcon sx={{ fontSize: "14px" }} />
-              Đóng
-            </>
-          )}
-        </Box>
-      ),
-    },
-    // { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
-    { field: "Hoten", headerName: "Họ và tên", width: 200 },
-    { field: "MaBN", headerName: "Mã BN", width: 130 },
-    { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-    { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-    { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-    { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-    { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
-    { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
-    { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
-    { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
-    { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
-    { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
-    { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
-    { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
-    { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
-  ];
-  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(
-    []
-  );
+const columns: GridColDef[] = [
+  { field: "ID", headerName: "ID", width: 60 },
+  {
+    field: "TrangThaiBA",
+    headerName: "Trạng thái",
+    width: 100,
+    renderCell: (params) => (
+      <Box
+        sx={{
+          backgroundColor: "transparent",
+          color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
+          padding: "4px 8px",
+          borderRadius: "4px",
+          fontSize: "12px",
+          fontWeight: "bold",
+          textAlign: "center",
+          minWidth: "60px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "4px",
+        }}>
+        {params.value === "MO" ? (
+          <>
+            <LockOpenIcon sx={{ fontSize: "14px" }} />
+            Mở
+          </>
+        ) : (
+          <>
+            <LockOutlinedIcon sx={{ fontSize: "14px" }} />
+            Đóng
+          </>
+        )}
+      </Box>
+    ),
+  },
+  // { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
+  { field: "Hoten", headerName: "Họ và tên", width: 200 },
+  { field: "MaBN", headerName: "Mã BN", width: 130 },
+  { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+  { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
+  { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
+  { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
+  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+  { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+  { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
+  { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
+  { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
+  { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
+  { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
+  { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
+  { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+];
+export default function TraCuuHsbaPage() {
+  const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
   const [selectedKhoa, setSelectedKhoa] = useState("all");
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   // State cho dialog chi tiết
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
-  const [selectedHsbaForDetail, setSelectedHsbaForDetail] = useState<any>(null);
-  const [phieuList, setPhieuList] = useState<any[]>([]);
+  const [selectedHsbaForDetail, setSelectedHsbaForDetail] =
+    useState<IHoSoBenhAn | null>(null);
+  const [phieuList, setPhieuList] = useState<IHoSoBenhAnChiTiet[]>([]);
   const [pdfUrl, setPdfUrl] = useState<string>("");
   const [currentBlobUrl, setCurrentBlobUrl] = useState<string>(""); // Thêm state để track blob URL
   const [xmlContent, setXmlContent] = useState<string>("");
-  const { data: loginedUser, setUserData } = useUserStore();
+  const { data: loginedUser } = useUserStore();
+  const [searchingData, setSearchingData] = useState<boolean>(false);
 
   // Columns cho lưới chi tiết phiếu
   const phieuColumns: GridColDef[] = [
@@ -159,7 +160,7 @@ export default function tracuuhsbaPage() {
         hsba.ID
       ); // Cần có hàm này trong actions
       const mappedData = (chiTietData || []).map(
-        (item: any, index: number) => ({
+        (item: IHoSoBenhAnChiTiet, index: number) => ({
           id: item.ID || index + 1, // Sử dụng ID từ data hoặc index làm id
           ...item,
         })
@@ -236,65 +237,53 @@ export default function tracuuhsbaPage() {
     };
   }, [currentBlobUrl]);
 
+  const fetchKhoaList = async () => {
+    try {
+      const dataKhoaPhong = await DataManager.getDmKhoaPhong();
+      setKhoaList(dataKhoaPhong);
+    } catch (error) {
+      console.error("Error fetching khoa list:", error);
+      setKhoaList([{ value: "all", label: "Tất cả" }]);
+    }
+  };
   // Fetch khoa list from API
   useEffect(() => {
-    // if (!loginedUser || !loginedUser.ctaikhoan) {
-    //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
-    //   return;
-    // }
-    const claims = getClaimsFromToken();
-    if (claims) {
-      setUserData(claims);
-      // Log or handle the claims as needed
-      //console.log("User claims:", claims);
-      // You can set user claims in a global state or context if needed
-    } else {
-      console.warn("No valid claims found in token");
-    }
-    async function fetchKhoaList() {
-      try {
-        const result = await gettDMKhoaPhongs();
-        // console.log("Khoa Phongs fetched:", result);
-        if (Array.isArray(result)) {
-          const mapped = result.map((item: any) => ({
-            value: item.cmakhoa,
-            label: item.ckyhieu + " - " + item.ctenkhoa,
-          }));
-          setKhoaList([{ value: "all", label: "Tất cả" }, ...mapped]);
-        } else {
-          setKhoaList([{ value: "all", label: "Tất cả" }]);
-        }
-      } catch (error) {
-        setKhoaList([{ value: "all", label: "Tất cả" }]);
-      }
-    }
     fetchKhoaList();
   }, []);
 
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
-    if (!tuNgay || !denNgay) return;
-    const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    };
-    const data = await getHosobenhan(
-      loginedUser.ctaikhoan,
-      popt,
-      selectedKhoa,
-      formatDate(tuNgay),
-      formatDate(denNgay)
-    );
+    try {
+      if (!tuNgay || !denNgay) return;
 
-    setRows(
-      (data || []).map((item: any, idx: number) => ({
-        id: idx + 1,
-        ...item,
-      }))
-    );
-    //console.log("Search results:", data);
+      setSearchingData(true);
+
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+      const data = await getHosobenhan(
+        loginedUser.ctaikhoan,
+        popt,
+        selectedKhoa,
+        formatDate(tuNgay),
+        formatDate(denNgay)
+      );
+
+      setRows(
+        (data || []).map((item: IHoSoBenhAn, idx: number) => ({
+          id: idx + 1,
+          ...item,
+        }))
+      );
+      //console.log("Search results:", data);
+    } catch (error) {
+      console.error("Error fetching HSBA data:", error);
+    } finally {
+      setSearchingData(false);
+    }
   };
   // Render component
   return (
@@ -424,6 +413,7 @@ export default function tracuuhsbaPage() {
                 backgroundColor: "#e3f2fd !important",
               },
             }}
+            loading={searchingData}
           />
         </Box>
       </Box>
