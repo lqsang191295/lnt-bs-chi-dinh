@@ -280,7 +280,7 @@ export default function TraCuuHsbaPage() {
           </Box>
         </Box>
 
-        <Box className="w-full" sx={{ height: "calc(100vh - 200px)" }}>
+        <Box className="w-full h-full overflow-hidden">
           <DataGrid
             rows={rows}
             columns={columns}

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-// import { jwtVerify } from "jose";
+import { NextResponse } from "next/server";
+import { getClaimsFromToken } from "./utils/auth";
 
 export async function middleware(request: NextRequest) {
   try {
@@ -9,12 +9,21 @@ export async function middleware(request: NextRequest) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-    // Verify JWT
-    // const { payload } = await jwtVerify(
-    //   token,
-    //   new TextEncoder().encode(process.env.JWT_SECRET!)
-    // );
-    // console.log("payload ==== ", payload);
+
+    const payload = getClaimsFromToken(token);
+
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      const response = NextResponse.redirect(new URL("/login", request.url));
+
+      response.cookies.set({
+        name: "authToken",
+        value: "",
+        path: "/",
+        expires: new Date(0),
+      });
+
+      return response;
+    }
 
     return NextResponse.next();
   } catch (error) {

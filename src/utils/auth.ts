@@ -16,9 +16,13 @@ export function b64DecodeUnicode(str: string) {
   );
 }
 
-export function getClaimsFromToken() {
-  const token = Cookies.get("authToken");
+export function getClaimsFromToken(token?: string) {
+  if (!token) {
+    token = Cookies.get("authToken");
+  }
+
   if (!token) return null;
+
   try {
     const payload = token.split(".")[1];
     const decoded = JSON.parse(b64DecodeUnicode(payload));
