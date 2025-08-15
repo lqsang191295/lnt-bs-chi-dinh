@@ -46,9 +46,9 @@ import {
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { getChiTietHSBA, getHosobenhan } from "@/actions/emr_hosobenhan";
+import { getChiTietHSBA, getHosobenhan, getmuontraHSBA } from "@/actions/emr_hosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
-import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
+import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
@@ -57,6 +57,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import DsMuonHsba from "./components/ds-muon-hsba";
 import LsMuonTraHsba from "./components/ls-muon-tra-hsba";
 import DsTraHsba from "./components/ds-tra-hsba";
+import { se } from "date-fns/locale";
 
 // Dữ liệu cứng cho bảng
 interface DataRow {
@@ -130,8 +131,7 @@ const columns: GridColDef[] = [
 ];
 export default function muontrahsbaPage() {
   
-  const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
-  const [selectedKhoa, setSelectedKhoa] = useState("all");
+  const [khoaList, setKhoaList] = useState<ISelectOption[]>([]); 
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
@@ -153,8 +153,9 @@ export default function muontrahsbaPage() {
   const [isOpenDsMuonHsba, setIsOpenDsMuonHsba] = useState(false);
   const [isOpenLsMuonTraHsba, setIsOpenLsMuonTraHsba] = useState(false);
   const [isOpenDsTraHsba, setIsOpenDsTraHsba] = useState(false);
-
-  
+  const [selectedHsbaForDetail, setSelectedHsbaForDetail] = useState<IHoSoBenhAn | null>(null);
+  const [phieumuontraHSBA, setPhieumuontraHSBA] = useState<ITMuonTraHSBA | null>(null);
+  const [selectedKhoa, setSelectedKhoa] = useState("all"); // Trạng thái chọn khoa
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setCurrentTab(newValue);
   };
@@ -203,6 +204,54 @@ export default function muontrahsbaPage() {
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
   };
+  // Hàm xử lý khi chọn rows trong DataGrid
+  const handleRowSelectionChange = async (selectionModel: any) => {
+    console.log("Selection model:", selectionModel);
+  
+    if (selectionModel.length > 0) {
+      // selectionModel là array của ID, lấy ID đầu tiên
+      const selectedId = selectionModel[0];
+      
+      // Tìm row data từ rows array dựa trên ID
+      const selectedRowData = rows.find(row => row.ID === selectedId);
+      
+      console.log("Selected row data:", selectedRowData);
+      
+      if (selectedRowData) {
+        const result = await getmuontraHSBA(
+          loginedUser.ctaikhoan,
+          "1", 
+          selectedRowData.ID.toString() || "",
+          "",
+          ""
+        );
+        console.log("Phieu muon tra:", result);
+        
+        if (result) {
+          setPhieumuontraHSBA(result);
+        } else {
+          setPhieumuontraHSBA(null);
+        }
+        setSelectedHsbaForDetail(selectedRowData);
+      }
+    } else {
+      // Không có row nào được chọn
+      setPhieumuontraHSBA(null);
+      setSelectedHsbaForDetail(null);
+    }
+  };
+  
+  // Hàm xử lý double click
+  const handleRowDoubleClick = (params: GridRowParams) => {
+    console.log("Row double clicked:", params.row);
+    
+    // Gọi handleRowSelectionChange với array chứa ID của row được double click
+    handleRowSelectionChange([params.row.id]);
+    
+    // Mở dialog mượn HSBA
+    setIsOpenDsMuonHsba(true);
+  };
+
   // Fetch khoa list from API
   useEffect(() => {
     fetchKhoaList();
@@ -401,11 +450,10 @@ export default function muontrahsbaPage() {
           columns={columns}
           pagination
           checkboxSelection
-          disableRowSelectionOnClick
-          density="compact"
-          onRowDoubleClick={(row) => {
-            setIsOpenDsMuonHsba(true);
-          }}
+            disableMultipleRowSelection            
+            density="compact"
+            onRowSelectionModelChange={handleRowSelectionChange}
+          onRowDoubleClick={handleRowDoubleClick}
           sx={{
             "& .MuiDataGrid-columnHeaders": {
               backgroundColor: "#f5f5f5",
@@ -416,8 +464,11 @@ export default function muontrahsbaPage() {
       </Box>
 
       <DsMuonHsba
+        loai= {phieumuontraHSBA ? "TRA" : "MUON"}
+        phieumuon={phieumuontraHSBA}
         open={isOpenDsMuonHsba}
         onClose={() => setIsOpenDsMuonHsba(false)}
+        selectedHsbaForDetail={selectedHsbaForDetail} 
       />
       <LsMuonTraHsba
         open={isOpenLsMuonTraHsba}

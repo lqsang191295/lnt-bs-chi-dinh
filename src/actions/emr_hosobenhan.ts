@@ -154,7 +154,10 @@ export const themmuontraHSBA = async (pUser: string, pOpt: string, hsba: ITMuonT
 
 ///
 /// Lấy lịch sử phiếu mượn - trả hồ sơ bệnh án
-/// popt: "1" - Lấy danh sách phiếu mượn - trả hồ sơ bệnh án 
+/// popt: 
+// "1" - Lấy danh sách phiếu mượn - trả hồ sơ bệnh án theo mã bệnh án
+// "2" - Lấy danh sách phiếu mượn - trả hồ sơ bệnh án theo ngày
+//  cmaba: Mã bệnh án
 //  ctungay: Ngày bắt đầu,
 //  cdenngay: Ngày kết thúc
 export const getmuontraHSBA = async (pUser: string, pOpt: string, cmaba: string, ctungay: string, cdenngay: string) => {
@@ -182,3 +185,4 @@ export const getmuontraHSBA = async (pUser: string, pOpt: string, cmaba: string,
     return [];
   }
 };
+ 

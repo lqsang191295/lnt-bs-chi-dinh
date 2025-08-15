@@ -90,8 +90,7 @@ export default function TraCuuHsbaPage() {
 
   // State cho dialog chi tiết
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
-  const [selectedHsbaForDetail, setSelectedHsbaForDetail] =
-    useState<IHoSoBenhAn | null>(null);
+  const [selectedHsbaForDetail, setSelectedHsbaForDetail] = useState<IHoSoBenhAn | null>(null);
   const [phieuList, setPhieuList] = useState<IHoSoBenhAnChiTiet[]>([]);
   const { data: loginedUser } = useUserStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
@@ -99,7 +98,7 @@ export default function TraCuuHsbaPage() {
   const handleRowDoubleClick = async (params: GridRowParams) => {
     const hsba = params.row;
 
-    console.log("Selected HSBA for detail:", hsba);
+    // console.log("Selected HSBA for detail:", hsba);
     setSelectedHsbaForDetail(hsba);
 
     try {
