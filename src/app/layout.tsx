@@ -10,7 +10,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import { usePathname } from "next/navigation"; // Cho App Router (Next.js 13+)
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -40,17 +40,9 @@ export default function RootLayout({
     pathname ? pathname.startsWith(path) : false
   );
   const { setData } = useMenuStore();
-  const { data: userData, setUserData } = useUserStore();
+  const { setUserData } = useUserStore();
 
-  useEffect(() => {
-    initUser();
-  }, []);
-
-  useEffect(() => {
-    initMenu();
-  }, [userData]);
-
-  const initMenu = async () => {
+  const initMenu = useCallback(async () => {
     try {
       const menu = await getMenuItems();
       //console.log("Menu items fetched:", menu);
@@ -58,12 +50,12 @@ export default function RootLayout({
     } catch (error) {
       console.error("Error fetching menu items:", error);
     }
-  };
+  }, [setData]);
 
-  const initUser = async () => {
+  const initUser = useCallback(async () => {
     try {
       const claims = getClaimsFromToken();
-      //console.log("Claims fetched:", claims);
+      console.log("Claims fetched 1111111111111111111:", claims);
       if (claims) {
         setUserData(claims);
       } else {
@@ -72,7 +64,15 @@ export default function RootLayout({
     } catch (error) {
       console.error("Error initializing user data:", error);
     }
-  };
+  }, [setUserData]);
+
+  useEffect(() => {
+    initUser();
+  }, [initUser]);
+
+  useEffect(() => {
+    initMenu();
+  }, [initMenu]);
 
   if (useNoLayout) {
     return (
