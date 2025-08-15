@@ -1,8 +1,9 @@
 export interface ITMuonTraHSBA {
   cid: number;
   cmabenhan?: string | null;
-  cthaotac?: string | null;
+  cthaotac?: string | null; //  -- 'MUON','TRA'
   cngaythaotac?: string | null;
   cnguoithaotac?: string | null;
-  cngaydukien?: string | null;
+  cngaytradukien?: string | null;
+  cnguoimuon?: string | null;
 }

@@ -1,5 +1,7 @@
 import { post } from "@/api/client";
-import { IHoSoBenhAn } from "@/model/thosobenhan";
+import { IHoSoBenhAn} from "@/model/thosobenhan";
+import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
+import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 
 export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: string, TuNgay: string, DenNgay: string) => {
   try {
@@ -99,6 +101,75 @@ export const capnhathosobenhan = async (pUser: string, pOpt: string, hsba: IHoSo
         { paraName: "ViTriLuuTru", paraValue: hsba.ViTriLuuTru },
         { paraName: "LoaiLuuTru", paraValue: hsba.LoaiLuuTru },
         { paraName: "NgayLuuTru", paraValue: hsba.NgayLuuTru },
+      ],
+    });
+
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+///
+/// Thêm phiếu mượn - trả hồ sơ bệnh án
+/// popt: 
+//  "1" - Thêm mới, 
+//  "2" - Cập nhật, 
+//  hsba.cthaotac: - THAO TÁC MƯỢN TRẢ
+//  "MUON" - mượn hsba
+//  "TRA" - trả hsba
+export const themmuontraHSBA = async (pUser: string, pOpt: string, hsba: ITMuonTraHSBA) => {
+  try {
+    // Gọi API để them phiếu mượn - trả hồ sơ bệnh án
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pins_tmuontrahsba",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "cid", paraValue: hsba.cid },
+        { paraName: "cmabenhan", paraValue: hsba.cmabenhan },
+        { paraName: "cthaotac", paraValue: hsba.cthaotac },
+        { paraName: "cnguoithaotac", paraValue: hsba.cnguoithaotac },
+        { paraName: "cngaytradukien", paraValue: hsba.cngaytradukien },
+        { paraName: "cnguoimuon", paraValue: hsba.cnguoimuon },
+      ],
+    });
+
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+
+///
+/// Lấy lịch sử phiếu mượn - trả hồ sơ bệnh án
+/// popt: "1" - Lấy danh sách phiếu mượn - trả hồ sơ bệnh án 
+//  ctungay: Ngày bắt đầu,
+//  cdenngay: Ngày kết thúc
+export const getmuontraHSBA = async (pUser: string, pOpt: string, cmaba: string, ctungay: string, cdenngay: string) => {
+  try {
+    // Gọi API để them phiếu mượn - trả hồ sơ bệnh án
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tmuontrahsba",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "cmaba", paraValue: cmaba },
+        { paraName: "ctungay", paraValue: ctungay },
+        { paraName: "cdenngay", paraValue: cdenngay },
       ],
     });
 
