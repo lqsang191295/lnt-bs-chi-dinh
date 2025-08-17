@@ -1,26 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import CloseIcon from "@mui/icons-material/Close";
+import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import {
+  Box,
   Button,
   Dialog,
   DialogContent,
   DialogTitle,
+  Grid,
   IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Box,
   TextField,
   Typography,
-  Grid,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import EditIcon from "@mui/icons-material/Edit"; // Thêm icon Edit
+import React, { useState } from "react";
 
 // Dữ liệu mock cho bảng thông tin bệnh án
 const patientData = [
@@ -38,7 +38,7 @@ interface CapNhatViTriProps {
   onClose: () => void;
 }
 
-const DialogPhanLoaiLuuTru: React.FC<CapNhatViTriProps> = ({
+const DialogCapNhatSoLuuTru: React.FC<CapNhatViTriProps> = ({
   open,
   onClose,
 }) => {
@@ -49,6 +49,7 @@ const DialogPhanLoaiLuuTru: React.FC<CapNhatViTriProps> = ({
     console.log("Cập nhật vị trí lưu trữ:", {
       viTriLuuTru,
     });
+    // Đóng dialog sau khi xử lý
     onClose();
   };
 
@@ -58,20 +59,18 @@ const DialogPhanLoaiLuuTru: React.FC<CapNhatViTriProps> = ({
         sx={{
           m: 0,
           p: 2,
-          backgroundColor: "#1976d2", // Màu nền xanh đậm
-          color: "white", // Chữ trắng
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
         }}>
-        <Typography variant="h6" component="div" fontWeight="bold">
-          CẬP NHẬT VỊ TRÍ LƯU TRỮ BỆNH ÁN
+        <Typography variant="h6" component="div">
+          DANH SÁCH CẤP SỐ LƯU TRỮ
         </Typography>
         <IconButton
           aria-label="close"
           onClick={onClose}
           sx={{
-            color: "white",
+            color: (theme) => theme.palette.grey[500],
           }}>
           <CloseIcon />
         </IconButton>
@@ -80,7 +79,7 @@ const DialogPhanLoaiLuuTru: React.FC<CapNhatViTriProps> = ({
         <TableContainer component={Paper} elevation={0}>
           <Table sx={{ minWidth: 650 }} size="small">
             <TableHead>
-              <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
+              <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                 <TableCell>Họ và tên</TableCell>
                 <TableCell>Mã bệnh án</TableCell>
                 <TableCell>Ngày vào viện</TableCell>
@@ -103,50 +102,35 @@ const DialogPhanLoaiLuuTru: React.FC<CapNhatViTriProps> = ({
         </TableContainer>
 
         <Box sx={{ mt: 3 }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} alignItems="center">
             <Grid>
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
-                sx={{ color: "#1976d2" }}>
+              <Typography variant="subtitle1" fontWeight="bold">
                 Thời gian:
               </Typography>
-              <TextField
-                value="29/07/2025 14:02:43"
-                fullWidth
-                disabled
-                size="small"
-                sx={{ mt: 1 }}
-              />
             </Grid>
             <Grid>
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
-                sx={{ color: "#1976d2" }}>
+              <Typography variant="subtitle1">29/07/2025 14:02:43</Typography>
+            </Grid>
+            <Grid>
+              <Typography variant="subtitle1" fontWeight="bold">
                 Người xử lý:
               </Typography>
-              <TextField
-                value="Admin Trung tâm Y tế Thành phố Tây Ninh"
-                fullWidth
-                disabled
-                size="small"
-                sx={{ mt: 1 }}
-              />
+            </Grid>
+            <Grid>
+              <Typography variant="subtitle1">
+                Admin Trung tâm Y tế Thành phố Tây Ninh
+              </Typography>
             </Grid>
           </Grid>
         </Box>
 
         <Box sx={{ mt: 2 }}>
-          <Typography
-            variant="subtitle1"
-            fontWeight="bold"
-            sx={{ color: "#1976d2" }}>
+          <Typography variant="subtitle1" fontWeight="bold">
             Vị trí lưu trữ (<span style={{ color: "red" }}>*</span>):
           </Typography>
           <TextField
             multiline
-            rows={3} // Điều chỉnh số dòng
+            rows={4}
             variant="outlined"
             size="small"
             fullWidth
@@ -160,13 +144,12 @@ const DialogPhanLoaiLuuTru: React.FC<CapNhatViTriProps> = ({
           <Button
             variant="contained"
             onClick={handleUpdate}
-            startIcon={<EditIcon />} // Icon Edit
+            startIcon={<DriveFileMoveIcon />}
             sx={{
               backgroundColor: "#1976d2",
               "&:hover": {
                 backgroundColor: "#1565c0",
               },
-              fontWeight: "bold",
               padding: "8px 24px",
             }}>
             CẬP NHẬT VỊ TRÍ LƯU TRỮ
@@ -177,4 +160,4 @@ const DialogPhanLoaiLuuTru: React.FC<CapNhatViTriProps> = ({
   );
 };
 
-export default DialogPhanLoaiLuuTru;
+export default React.memo(DialogCapNhatSoLuuTru);

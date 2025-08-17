@@ -1,26 +1,22 @@
 // app/ket-xuat-hsba/page.tsx
 "use client";
-import React, { useState } from "react";
+import { Download, NoteAdd, Refresh } from "@mui/icons-material";
 import {
   Box,
-  Typography,
   Button,
-  IconButton,
-  Select,
   FormControl,
-  FormLabel,
-  RadioGroup,
   FormControlLabel,
+  FormLabel,
   Radio,
-  TextField,
-  Tabs,
+  RadioGroup,
+  Select,
   Tab,
+  Tabs,
+  Typography,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
-import { DatePicker } from "@mui/x-date-pickers";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Download, NoteAdd, Refresh } from "@mui/icons-material";
+import { DatePicker } from "@mui/x-date-pickers";
+import React, { useState } from "react";
 
 // ----------------- MOCK DATA -----------------
 interface DataRow {
@@ -224,52 +220,51 @@ function a11yProps(index: number) {
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
+// Cột cho DataGrid
+const columns: GridColDef[] = [
+  { field: "id", headerName: "ID", width: 60 },
+  {
+    field: "trangThaiMuon",
+    headerName: "Trạng thái",
+    width: 100,
+    renderCell: (params) => {
+      const isChuaMuon = params.value === "CHƯA MƯỢN";
+      return (
+        <Button
+          variant="contained"
+          size="small"
+          sx={{
+            bgcolor: isChuaMuon ? "#28a745" : "#dc3545",
+            color: "#fff",
+            textTransform: "none",
+            minWidth: "60px",
+            height: "24px",
+            fontSize: "0.7rem",
+            fontWeight: "bold",
+            "&:hover": {
+              bgcolor: isChuaMuon ? "#28a745" : "#dc3545",
+              opacity: 0.9,
+            },
+          }}>
+          {isChuaMuon ? "MƯỢN" : "TRẢ"}
+        </Button>
+      );
+    },
+  },
+  { field: "loaiBaSoTo", headerName: "Số lưu trữ", width: 120 },
+  { field: "maBenhAn", headerName: "Mã BA", width: 150 },
+  { field: "hoVaTen", headerName: "Họ và tên", width: 200 },
+  { field: "tuoi", headerName: "Tuổi", width: 90 },
+  { field: "ngayVaoVien", headerName: "Ngày vào viện", width: 130 },
+  { field: "ngayRaVien", headerName: "Ngày ra viện", width: 130 },
+  { field: "chanDoan", headerName: "Chẩn đoán", width: 200 },
+  { field: "khoa", headerName: "Khoa", width: 250 },
+];
 // ----------------- COMPONENT -----------------
-export default function ketxuathsbaPage() {
+export default function KetXuatHsbaPage() {
   const [currentTab, setCurrentTab] = useState("borrow");
   const [searchTerm, setSearchTerm] = useState("");
   const [value, setValue] = React.useState(0);
-
-  // Cột cho DataGrid
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 60 },
-    {
-      field: "trangThaiMuon",
-      headerName: "Trạng thái",
-      width: 100,
-      renderCell: (params) => {
-        const isChuaMuon = params.value === "CHƯA MƯỢN";
-        return (
-          <Button
-            variant="contained"
-            size="small"
-            sx={{
-              bgcolor: isChuaMuon ? "#28a745" : "#dc3545",
-              color: "#fff",
-              textTransform: "none",
-              minWidth: "60px",
-              height: "24px",
-              fontSize: "0.7rem",
-              fontWeight: "bold",
-              "&:hover": {
-                bgcolor: isChuaMuon ? "#28a745" : "#dc3545",
-                opacity: 0.9,
-              },
-            }}>
-            {isChuaMuon ? "MƯỢN" : "TRẢ"}
-          </Button>
-        );
-      },
-    },
-    { field: "loaiBaSoTo", headerName: "Số lưu trữ", width: 120 },
-    { field: "maBenhAn", headerName: "Mã BA", width: 150 },
-    { field: "hoVaTen", headerName: "Họ và tên", width: 200 },
-    { field: "tuoi", headerName: "Tuổi", width: 90 },
-    { field: "ngayVaoVien", headerName: "Ngày vào viện", width: 130 },
-    { field: "ngayRaVien", headerName: "Ngày ra viện", width: 130 },
-    { field: "chanDoan", headerName: "Chẩn đoán", width: 200 },
-    { field: "khoa", headerName: "Khoa", width: 250 },
-  ];
 
   // Rows: dùng luôn mockData vì đã trùng key với field trong columns
   const rows = mockData;

@@ -1,21 +1,23 @@
 import { post } from "@/api/client";
-import { get } from "@/api/client";
 import { IUserItem } from "@/model/user";
 import { sha256 } from "@/utils/auth";
- 
+
 /** * Hàm thực hiện các thao tác với người dùng
  * @param pUser Tên người dùng thực hiện thao tác
  * @param pOpt Loại thao tác (1 thêm, 2 sửa, 3 xóa, 4 đổi mật khẩu )
- * @param user Thông tin người dùng cần thao tác      
+ * @param user Thông tin người dùng cần thao tác
  * @return Kết quả trả về: popt=1 _ID của dữ liệu được thêm, popt=2,3,4 ROW_COUNT số dòng được cập nhật ;
-  */
-export const instnguoidung = async (pUser: string, pOpt: string, user:IUserItem) => {
-  try {   
+ */
+export const instnguoidung = async (
+  pUser: string,
+  pOpt: string,
+  user: IUserItem
+) => {
+  try {
+    console.log("puser", pUser);
+    console.log("popt", pOpt);
+    console.log("user", user);
 
-      console.log("puser", pUser);
-      console.log("popt", pOpt);
-      console.log("user", user);
-       
     const response = await post(`/api/callService`, {
       userId: "",
       option: "",
@@ -35,7 +37,10 @@ export const instnguoidung = async (pUser: string, pOpt: string, user:IUserItem)
         { paraName: "cemail", paraValue: user.cemail },
         { paraName: "cchucdanh", paraValue: user.cchucdanh },
         { paraName: "cghichu", paraValue: user.cghichu },
-        { paraName: "cmatkhau", paraValue: (await sha256(user.cmatkhau)).toString() },
+        {
+          paraName: "cmatkhau",
+          paraValue: (await sha256(user.cmatkhau)).toString(),
+        },
         { paraName: "cxacthuc2lop", paraValue: user.cxacthuc2lop },
         { paraName: "ctrangthai", paraValue: user.ctrangthai },
       ],
@@ -56,7 +61,7 @@ export const instnguoidung = async (pUser: string, pOpt: string, user:IUserItem)
     //     @cghichu nvarchar(3000),
     //     @cmatkhau nvarchar(3000),
     //     @cxacthuc2lop nvarchar(100),
-    //     @ctrangthai int 
+    //     @ctrangthai int
     if (response.status === "error") {
       return [];
     }
@@ -67,8 +72,11 @@ export const instnguoidung = async (pUser: string, pOpt: string, user:IUserItem)
   }
 };
 
-export const instnguoidungdoimatkhau = async (pUser: string, pOpt: string,
-  user: { userid: string, oldPassword: string, newPassword: string }) => {
+export const instnguoidungdoimatkhau = async (
+  pUser: string,
+  pOpt: string,
+  user: { userid: string; oldPassword: string; newPassword: string }
+) => {
   try {
     // console.log("ctaikhoan:", pUser);
     // console.log("popt:", pOpt);
@@ -85,17 +93,23 @@ export const instnguoidungdoimatkhau = async (pUser: string, pOpt: string,
         { paraName: "puser", paraValue: pUser },
         { paraName: "popt", paraValue: pOpt },
         { paraName: "cid", paraValue: user.userid },
-        { paraName: "cmatkhaucu", paraValue: (await sha256(user.oldPassword)).toString() },
-        { paraName: "cmatkhau", paraValue: (await sha256(user.newPassword)).toString() }
-      ]
-    }); 
+        {
+          paraName: "cmatkhaucu",
+          paraValue: (await sha256(user.oldPassword)).toString(),
+        },
+        {
+          paraName: "cmatkhau",
+          paraValue: (await sha256(user.newPassword)).toString(),
+        },
+      ],
+    });
     if (response.status === "error") {
       return [];
     }
     //console.log("instnguoidungdoimatkhau response:", response);
     return response.message;
   } catch (error) {
-    //console.log("instnguoidungdoimatkhau error:", error); 
+    //console.log("instnguoidungdoimatkhau error:", error);
     return [];
   }
 };
@@ -109,10 +123,10 @@ export const gettnguoidung = async (pUser: string, pOpt: string) => {
       paraData: [
         { paraName: "puser", paraValue: pUser },
         { paraName: "popt", paraValue: pOpt }, // 1: Lấy thông tin người dùng
-        { paraName: "ctaikhoan", paraValue: "0" }, 
-        { paraName: "cmatkhau", paraValue: "0" }, 
+        { paraName: "ctaikhoan", paraValue: "0" },
+        { paraName: "cmatkhau", paraValue: "0" },
       ],
-    }); 
+    });
     if (response.status === "error") {
       return [];
     }
@@ -123,7 +137,12 @@ export const gettnguoidung = async (pUser: string, pOpt: string) => {
   }
 };
 
-export const gettnhatkynguoidung = async (pUser: string, pOpt: string, sTuNgay: string, sDenNgay: string) => {
+export const gettnhatkynguoidung = async (
+  pUser: string,
+  pOpt: string,
+  sTuNgay: string,
+  sDenNgay: string
+) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
@@ -131,11 +150,11 @@ export const gettnhatkynguoidung = async (pUser: string, pOpt: string, sTuNgay: 
       funcName: "dbo.emr_pget_tnhatkynguoidung",
       paraData: [
         { paraName: "puser", paraValue: pUser },
-        { paraName: "popt", paraValue: pOpt }, 
+        { paraName: "popt", paraValue: pOpt },
         { paraName: "tungay", paraValue: sTuNgay },
         { paraName: "denngay", paraValue: sDenNgay },
       ],
-    }); 
+    });
     if (response.status === "error") {
       return [];
     }
@@ -146,7 +165,12 @@ export const gettnhatkynguoidung = async (pUser: string, pOpt: string, sTuNgay: 
   }
 };
 
-export const getnhatkythaotacba = async (pUser: string, pOpt: string, sTuNgay: string, sDenNgay: string) => {
+export const getnhatkythaotacba = async (
+  pUser: string,
+  pOpt: string,
+  sTuNgay: string,
+  sDenNgay: string
+) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
@@ -154,11 +178,11 @@ export const getnhatkythaotacba = async (pUser: string, pOpt: string, sTuNgay: s
       funcName: "dbo.emr_pget_tnhatkythaotacba",
       paraData: [
         { paraName: "puser", paraValue: pUser },
-        { paraName: "popt", paraValue: pOpt }, 
+        { paraName: "popt", paraValue: pOpt },
         { paraName: "tungay", paraValue: sTuNgay },
         { paraName: "denngay", paraValue: sDenNgay },
       ],
-    }); 
+    });
     if (response.status === "error") {
       return [];
     }
@@ -176,9 +200,9 @@ export const gettnhomnguoidung = async (pUser: string, pOpt: string) => {
       funcName: "dbo.emr_pget_tnhomnguoidung",
       paraData: [
         { paraName: "puser", paraValue: pUser },
-        { paraName: "popt", paraValue: pOpt },  
+        { paraName: "popt", paraValue: pOpt },
       ],
-    }); 
+    });
     if (response.status === "error") {
       return [];
     }
@@ -189,7 +213,7 @@ export const gettnhomnguoidung = async (pUser: string, pOpt: string) => {
   }
 };
 /**
- * Hàm đăng nhập  
+ * Hàm đăng nhập
  * @param username Tên đăng nhập
  * @param password Mật khẩu
  * @returns Kết quả đăng nhập
@@ -200,14 +224,22 @@ export const login = async (username: string, password: string) => {
       Username: username,
       Password: password,
     });
-    return  response.token ? { status: "success", token: response.token } : { status: "error", message: response.message }  ;
+    return response.token
+      ? { status: "success", token: response.token }
+      : { status: "error", message: response.message };
   } catch (error) {
-    return { status: "error", message: "Đăng nhập thất bại. Vui lòng thử lại." }; 
+    return {
+      status: "error",
+      message: "Đăng nhập thất bại. Vui lòng thử lại.",
+    };
   }
 };
 
-
-export const getphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan: string) => {
+export const getphanquyenbakhoa = async (
+  pUser: string,
+  pOpt: string,
+  ctaikhoan: string
+) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
@@ -215,10 +247,10 @@ export const getphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan:
       funcName: "dbo.emr_pget_tphanquyenbakhoa",
       paraData: [
         { paraName: "puser", paraValue: pUser },
-        { paraName: "popt", paraValue: pOpt },  
-        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },
       ],
-    }); 
+    });
     if (response.status === "error") {
       return [];
     }
@@ -228,8 +260,13 @@ export const getphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan:
   }
 };
 
-
-export const luuphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan: string, cmakhoa: string, ctrangthai: string) => {
+export const luuphanquyenbakhoa = async (
+  pUser: string,
+  pOpt: string,
+  ctaikhoan: string,
+  cmakhoa: string,
+  ctrangthai: string
+) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
@@ -237,14 +274,14 @@ export const luuphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan:
       funcName: "dbo.emr_pins_tphanquyenbakhoa",
       paraData: [
         { paraName: "puser", paraValue: pUser },
-        { paraName: "popt", paraValue: pOpt },  
-        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
-        { paraName: "cmakhoa", paraValue: cmakhoa },  
-        { paraName: "ctrangthai", paraValue: ctrangthai },  
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },
+        { paraName: "cmakhoa", paraValue: cmakhoa },
+        { paraName: "ctrangthai", paraValue: ctrangthai },
         { paraName: "cnguoitao", paraValue: pUser },
-        { paraName: "cnguoicapnhat", paraValue: pUser }
+        { paraName: "cnguoicapnhat", paraValue: pUser },
       ],
-    }); 
+    });
     if (response.status === "error") {
       return [];
     }
@@ -254,8 +291,11 @@ export const luuphanquyenbakhoa = async (pUser: string, pOpt: string, ctaikhoan:
   }
 };
 
-
-export const getphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: string) => {
+export const getphanquyenmenu = async (
+  pUser: string,
+  pOpt: string,
+  ctaikhoan: string
+) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
@@ -263,10 +303,10 @@ export const getphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: s
       funcName: "dbo.emr_pget_tphanquyenmenu",
       paraData: [
         { paraName: "puser", paraValue: pUser },
-        { paraName: "popt", paraValue: pOpt },  
-        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },
       ],
-    }); 
+    });
     if (response.status === "error") {
       return [];
     }
@@ -276,8 +316,13 @@ export const getphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: s
   }
 };
 
-
-export const luuphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: string, cmenu: string, ctrangthai: string) => {
+export const luuphanquyenmenu = async (
+  pUser: string,
+  pOpt: string,
+  ctaikhoan: string,
+  cmenu: number,
+  ctrangthai: string
+) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
@@ -285,14 +330,14 @@ export const luuphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: s
       funcName: "dbo.emr_pins_tphanquyenmenu",
       paraData: [
         { paraName: "puser", paraValue: pUser },
-        { paraName: "popt", paraValue: pOpt },  
-        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
-        { paraName: "cmenu", paraValue: cmenu },  
-        { paraName: "ctrangthai", paraValue: ctrangthai },  
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },
+        { paraName: "cmenu", paraValue: cmenu },
+        { paraName: "ctrangthai", paraValue: ctrangthai },
         { paraName: "cnguoitao", paraValue: pUser },
-        { paraName: "cnguoicapnhat", paraValue: pUser }
+        { paraName: "cnguoicapnhat", paraValue: pUser },
       ],
-    }); 
+    });
     if (response.status === "error") {
       return [];
     }
@@ -302,8 +347,15 @@ export const luuphanquyenmenu = async (pUser: string, pOpt: string, ctaikhoan: s
   }
 };
 
-export const getphanquyenba = async (pUser: string, pOpt: string, ctaikhoan: string, KhoaDieuTri: string, TuNgay: string, DenNgay: string) => {
-  try {    
+export const getphanquyenba = async (
+  pUser: string,
+  pOpt: string,
+  ctaikhoan: string,
+  KhoaDieuTri: string,
+  TuNgay: string,
+  DenNgay: string
+) => {
+  try {
     // console.log("puser:", pUser);
     // console.log("popt:", pOpt);
     // console.log("ctaikhoan:", ctaikhoan);
@@ -334,7 +386,13 @@ export const getphanquyenba = async (pUser: string, pOpt: string, ctaikhoan: str
   }
 };
 
-export const luuphanquyenba = async (pUser: string, pOpt: string, ctaikhoan: string, cmaba: string, ctrangthai: string) => {
+export const luuphanquyenba = async (
+  pUser: string,
+  pOpt: string,
+  ctaikhoan: string,
+  cmaba: string,
+  ctrangthai: string
+) => {
   try {
     // console.log("puser:", pUser);
     // console.log("popt:", pOpt);
@@ -349,14 +407,14 @@ export const luuphanquyenba = async (pUser: string, pOpt: string, ctaikhoan: str
       funcName: "dbo.emr_pins_tphanquyenba",
       paraData: [
         { paraName: "puser", paraValue: pUser },
-        { paraName: "popt", paraValue: pOpt },  
-        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
-        { paraName: "cmaba", paraValue: cmaba },  
-        { paraName: "ctrangthai", paraValue: ctrangthai },  
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },
+        { paraName: "cmaba", paraValue: cmaba },
+        { paraName: "ctrangthai", paraValue: ctrangthai },
         { paraName: "cnguoitao", paraValue: pUser },
-        { paraName: "cnguoicapnhat", paraValue: pUser }
+        { paraName: "cnguoicapnhat", paraValue: pUser },
       ],
-    }); 
+    });
     // console.log("luuphanquyenba response:", response);
     if (response.status === "error") {
       return [];
@@ -368,27 +426,33 @@ export const luuphanquyenba = async (pUser: string, pOpt: string, ctaikhoan: str
   }
 };
 
-
-export const luuanhnguoidung = async (pUser: string, pOpt: string, cid: number, ctaikhoan: string, choten: string, cimg: string) => {
+export const luuanhnguoidung = async (
+  pUser: string,
+  pOpt: string,
+  cid: number,
+  ctaikhoan: string,
+  choten: string,
+  cimg: string
+) => {
   try {
     // console.log("puser:", pUser);
     // console.log("popt:", pOpt);
     // console.log("cid:", cid);
     // console.log("ctaikhoan:", ctaikhoan);
-    // console.log("choten:", choten); 
+    // console.log("choten:", choten);
     const response = await post(`/api/callService`, {
       userId: "",
       option: "",
       funcName: "dbo.emr_pins_tnguoidung_img",
       paraData: [
         { paraName: "puser", paraValue: pUser },
-        { paraName: "popt", paraValue: pOpt },  
-        { paraName: "cid", paraValue: cid },  
-        { paraName: "ctaikhoan", paraValue: ctaikhoan },  
-        { paraName: "choten", paraValue: choten },  
-        { paraName: "cimg", paraValue: cimg }
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "cid", paraValue: cid },
+        { paraName: "ctaikhoan", paraValue: ctaikhoan },
+        { paraName: "choten", paraValue: choten },
+        { paraName: "cimg", paraValue: cimg },
       ],
-    }); 
+    });
     //console.log("luuanhnguoidung responselenght:[", response.message.length,"]");
     if (response.status === "error") {
       return [];

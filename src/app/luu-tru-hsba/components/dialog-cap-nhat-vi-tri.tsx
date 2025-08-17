@@ -1,26 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import CloseIcon from "@mui/icons-material/Close";
+import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import {
+  Box,
   Button,
   Dialog,
   DialogContent,
   DialogTitle,
+  Grid,
   IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Box,
   TextField,
   Typography,
-  Grid,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
+import React, { useState } from "react";
 
 // Dữ liệu mock cho bảng thông tin bệnh án
 const patientData = [
@@ -157,4 +157,4 @@ const DialogCapNhatViTri: React.FC<CapNhatViTriProps> = ({ open, onClose }) => {
   );
 };
 
-export default DialogCapNhatViTri;
+export default React.memo(DialogCapNhatViTri);

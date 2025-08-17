@@ -20,100 +20,91 @@ import {
 } from "@mui/material";
 
 import { capnhathosobenhan, getHosobenhan } from "@/actions/emr_hosobenhan";
-import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
-import { getloailuutru } from "@/actions/emr_tloailuutru"; // Assuming this function exists
+import { IHoSoBenhAn } from "@/model/thosobenhan";
+import { ILoaiLuuTru } from "@/model/tloailuutru";
+import { ISelectOption } from "@/model/ui";
+import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
-import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import SaveAltIcon from '@mui/icons-material/SaveAlt';
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import SaveAltIcon from "@mui/icons-material/SaveAlt";
+import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import {
   DatePicker,
   DateTimePicker,
   LocalizationProvider,
 } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function luutruhsbaPage() {
-  const [currentTab, setCurrentTab] = React.useState("total");
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [selected, setSelected] = React.useState<readonly string[]>([]);
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [selectedRow, setSelectedRow] = useState<any>(null); // Single row selection
+const columns: GridColDef[] = [
+  { field: "ID", headerName: "ID", width: 60 },
+  {
+    field: "TrangThaiBA",
+    headerName: "Trạng thái",
+    width: 100,
+    renderCell: (params) => (
+      <Box
+        sx={{
+          backgroundColor: "transparent",
+          color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
+          padding: "4px 8px",
+          borderRadius: "4px",
+          fontSize: "12px",
+          fontWeight: "bold",
+          textAlign: "center",
+          minWidth: "60px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "4px",
+        }}>
+        {params.value === "MO" ? (
+          <>
+            <LockOpenIcon sx={{ fontSize: "14px" }} />
+            Mở
+          </>
+        ) : (
+          <>
+            <LockOutlinedIcon sx={{ fontSize: "14px" }} />
+            Đóng
+          </>
+        )}
+      </Box>
+    ),
+  },
+  { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
+  { field: "Hoten", headerName: "Họ và tên", width: 200 },
+  { field: "MaBN", headerName: "Mã BN", width: 130 },
+  { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+  { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
+  { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
+  { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
+  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+  { field: "KhoaDieuTri", headerName: "", width: 0 }, // Ẩn cột này
+  { field: "TenKhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+  { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
+  { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
+  { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
+  { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
+  { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
+  { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
+  { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+  { field: "LoaiLuuTru", headerName: "", width: 0 }, // Ẩn cột này
+];
+
+export default function LuuTruHsbaPage() {
+  const [selectedRow, setSelectedRow] = useState<IHoSoBenhAn | null>(null); // Single row selection
   const [openDialog, setOpenDialog] = useState(false);
-  const [loaiLuuTruList, setLoaiLuuTruList] = useState<any[]>([]);
-  // State và hàm cho Pagination
-  const [page, setPage] = React.useState(1);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  // Dữ liệu cứng cho bảng
-
-  const columns: GridColDef[] = [
-    { field: "ID", headerName: "ID", width: 60 },
-    {
-      field: "TrangThaiBA",
-      headerName: "Trạng thái",
-      width: 100,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            backgroundColor: "transparent",
-            color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontWeight: "bold",
-            textAlign: "center",
-            minWidth: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "4px",
-          }}>
-          {params.value === "MO" ? (
-            <>
-              <LockOpenIcon sx={{ fontSize: "14px" }} />
-              Mở
-            </>
-          ) : (
-            <>
-              <LockOutlinedIcon sx={{ fontSize: "14px" }} />
-              Đóng
-            </>
-          )}
-        </Box>
-      ),
-    },
-    { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
-    { field: "Hoten", headerName: "Họ và tên", width: 200 },
-    { field: "MaBN", headerName: "Mã BN", width: 130 },
-    { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-    { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-    { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-    { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-    { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
-    { field: "KhoaDieuTri", headerName: "", width: 0 }, // Ẩn cột này
-    { field: "TenKhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
-    { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
-    { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
-    { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
-    { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
-    { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
-    { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
-    { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
-    { field: "LoaiLuuTru", headerName: "", width: 0 }, // Ẩn cột này
-  ];
-  const [khoaList, setKhoaList] = useState<{ value: string; label: string }[]>(
-    []
-  );
+  const [loaiLuuTruList, setLoaiLuuTruList] = useState<ILoaiLuuTru[]>([]);
+  const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
   const [selectedKhoa, setSelectedKhoa] = useState("all");
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
-  const { data: loginedUser, setUserData } = useUserStore();
-
+  const { data: loginedUser } = useUserStore();
+  const [searchingData, setSearchingData] = useState<boolean>(false);
   // Form data for dialog
   const [formData, setFormData] = useState({
     ID: "",
@@ -130,74 +121,50 @@ export default function luutruhsbaPage() {
     NgayLuuTru: new Date(),
     LoaiLuuTru: "",
   });
+
+  const fetchLoaiLuuTru = async () => {
+    try {
+      const result = await DataManager.getDmLoaiLuuTru();
+      console.log("Loai luu tru:", result);
+      setLoaiLuuTruList(result || []);
+    } catch {
+      setLoaiLuuTruList([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchLoaiLuuTru();
+  }, []);
+
+  const fetchKhoaList = async () => {
+    try {
+      const dataKhoaPhong = await DataManager.getDmKhoaPhong();
+      setKhoaList(dataKhoaPhong);
+    } catch (error) {
+      console.error("Error fetching khoa list:", error);
+      setKhoaList([{ value: "all", label: "Tất cả" }]);
+    }
+  };
   // Fetch khoa list from API
   useEffect(() => {
-    // if (!loginedUser || !loginedUser.ctaikhoan) {
-    //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
-    //   return;
-    // }
-    const claims = getClaimsFromToken();
-    if (claims) {
-      setUserData(claims);
-      // Log or handle the claims as needed
-      //console.log("User claims:", claims);
-      // You can set user claims in a global state or context if needed
-    } else {
-      console.warn("No valid claims found in token");
-    }
-    async function fetchLoaiLuuTru() {
-      try {
-        const result = await getloailuutru();
-        setLoaiLuuTruList(result || []);
-      } catch (error) {
-        setLoaiLuuTruList([]);
-      }
-    }
-    fetchLoaiLuuTru();
-    async function fetchKhoaList() {
-      try {
-        const result = await gettDMKhoaPhongs();
-        // console.log("Khoa Phongs fetched:", result);
-        if (Array.isArray(result)) {
-          const mapped = result.map((item: any) => ({
-            value: item.cmakhoa,
-            label: item.ckyhieu + " - " + item.ctenkhoa,
-          }));
-          setKhoaList([{ value: "all", label: "Tất cả" }, ...mapped]);
-        } else {
-          setKhoaList([{ value: "all", label: "Tất cả" }]);
-        }
-      } catch (error) {
-        setKhoaList([{ value: "all", label: "Tất cả" }]);
-      }
-    }
     fetchKhoaList();
   }, []);
-  // Hàm xử lý khi chọn rows trong DataGrid
-  const handleRowSelectionChange = (selectionModel: any) => {
-    let selectionArray: any[] = [];
 
+  const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
+    let selectionArray: unknown[] = [];
+
+    console.log("Selected rows for update:", selectionModel);
     if (selectionModel && selectionModel.ids) {
       selectionArray = Array.from(selectionModel.ids);
     } else if (Array.isArray(selectionModel)) {
       selectionArray = selectionModel;
-    } else if (
-      selectionModel &&
-      typeof selectionModel[Symbol.iterator] === "function"
-    ) {
-      selectionArray = [...selectionModel];
     }
-
-    // Chỉ cho phép chọn 1 dòng
-    if (selectionArray.length > 1) {
-      // Giữ lại dòng cuối cùng được chọn
-      selectionArray = [selectionArray[selectionArray.length - 1]];
-    }
-
-    const selectedRowData = rows.find((row) => selectionArray.includes(row.id));
-
-    setSelectedRow(selectedRowData || null);
-    setSelectedRows(selectedRowData ? [selectedRowData] : []);
+    console.log("Selection array:", selectionArray);
+    const selectedRowsData = rows.filter((row) =>
+      selectionArray.includes(row.ID)
+    );
+    console.log("Selected rows data:", selectedRowsData);
+    setSelectedRow(selectedRowsData[0] || null);
   };
 
   // Mở dialog cập nhật lưu trữ
@@ -211,12 +178,12 @@ export default function luutruhsbaPage() {
     setFormData({
       ID: selectedRow.ID,
       SoVaoVien: selectedRow.SoVaoVien || "",
-      NgayVaoVien: selectedRow.NgayVao || "",
-      NgayRaVien: selectedRow.NgayRa || "",
+      NgayVaoVien: (selectedRow.NgayVao as Date) || new Date(),
+      NgayRaVien: (selectedRow.NgayRa as Date) || new Date(),
       HoTen: selectedRow.Hoten || "",
       NgaySinh: selectedRow.Ngaysinh || "",
       GioiTinh: selectedRow.Gioitinh || "",
-      DiaChi: selectedRow.DiaChi || "",
+      DiaChi: selectedRow.Diachi || "",
       KhoaDieuTri: selectedRow.TenKhoaDieuTri || "",
       SoLuuTru: selectedRow.SoLuuTru || "",
       ViTriLuuTru: selectedRow.ViTriLuuTru || "",
@@ -263,89 +230,36 @@ export default function luutruhsbaPage() {
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
     if (!tuNgay || !denNgay) return;
-    const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    };
-    const data = await getHosobenhan(
-      loginedUser.ctaikhoan,
-      popt,
-      selectedKhoa,
-      formatDate(tuNgay),
-      formatDate(denNgay)
-    );
 
-    setRows(
-      (data || []).map((item: any) => ({
-        id: item.ID, // Use ID or index as row ID
-        ...item,
-      }))
-    );
-    //console.log("Search results:", data);
-  };
+    try {
+      setSearchingData(true);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
-    setCurrentTab(newValue);
-  };
-
-  const handleAddNew = () => {
-    console.log("Add new item / Refresh clicked!");
-    // Logic cho nút "Làm mới"
-  };
-
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelecteds = rows.map((n) => n.id);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event: React.MouseEvent<unknown>, id: string) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly string[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+      const data = await getHosobenhan(
+        loginedUser.ctaikhoan,
+        popt,
+        selectedKhoa,
+        formatDate(tuNgay),
+        formatDate(denNgay)
       );
+
+      setRows(
+        (data || []).map((item: IHoSoBenhAn) => ({
+          id: item.ID, // Use ID or index as row ID
+          ...item,
+        }))
+      );
+      //console.log("Search results:", data);
+    } catch (error) {
+      console.error("Error fetching hồ sơ bệnh án:", error);
+    } finally {
+      setSearchingData(false);
     }
-    setSelected(newSelected);
-  };
-
-  const isSelected = (id: string) => selected.indexOf(id) !== -1;
-
-  // Lấy dữ liệu cho trang hiện tại
-  const paginatedData = rows.slice(
-    (page - 1) * rowsPerPage,
-    (page - 1) * rowsPerPage + rowsPerPage
-  );
-  const totalPages = Math.ceil(rows.length / rowsPerPage);
-
-  const handleChangePage = (
-    event: React.ChangeEvent<unknown>,
-    newPage: number
-  ) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (
-    event:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<{ value: unknown }>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value as string, 10));
-    setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang
   };
 
   return (
@@ -468,9 +382,7 @@ export default function luutruhsbaPage() {
             rows={rows}
             columns={columns}
             pagination
-            checkboxSelection
-            disableMultipleRowSelection
-            disableRowSelectionOnClick
+            loading={searchingData}
             density="compact"
             onRowSelectionModelChange={handleRowSelectionChange}
             sx={{
@@ -480,6 +392,9 @@ export default function luutruhsbaPage() {
               },
               "& .MuiDataGrid-cell": {
                 border: "1px solid #e0e0e0",
+              },
+              "& .Mui-selected": {
+                backgroundColor: "#e3f2fd !important",
               },
               "& .MuiDataGrid-row:nth-of-type(odd)": {
                 backgroundColor: "#f9f9f9",

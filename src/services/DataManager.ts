@@ -1,5 +1,7 @@
 import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
+import { getloailuutru } from "@/actions/emr_tloailuutru";
 import { IDmKhoaPhong } from "@/model/tdmkhoaphong";
+import { ILoaiLuuTru } from "@/model/tloailuutru";
 
 export class DataManager {
   static DataKhoaPhong: { value: string; label: string }[] = [];
@@ -22,5 +24,19 @@ export class DataManager {
     }
 
     return this.DataKhoaPhong;
+  }
+
+  static DataDmLoaiLuuTru: ILoaiLuuTru[] = [];
+  static async getDmLoaiLuuTru() {
+    if (this.DataDmLoaiLuuTru.length > 0) {
+      return this.DataDmLoaiLuuTru;
+    }
+
+    try {
+      const result: ILoaiLuuTru[] = await getloailuutru();
+      return result;
+    } catch {
+      return [];
+    }
   }
 }

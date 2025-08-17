@@ -1,5 +1,5 @@
 export interface IHoSoBenhAn {
-  ID: number;
+  ID: string;
   MaBANoiTru?: string | null;
   SoBenhAn?: string | null;
   MaBN?: string | null;
@@ -15,8 +15,8 @@ export interface IHoSoBenhAn {
   KhoaVaoVien?: string | null;
   KhoaDieuTri?: string | null;
   TenKhoaDieuTri?: string | null;
-  NgayVao?: string | null;
-  NgayRa?: string | null;
+  NgayVao?: Date | string | null;
+  NgayRa?: Date | string | null;
   LoaiBenhAn?: string | null;
   NoiDungJson?: string | null;
   NoiDungXml?: string | null;
@@ -30,7 +30,7 @@ export interface IHoSoBenhAn {
   NgayTao?: string | null;
   ViTriLuuTru?: string | null;
   LoaiLuuTru?: string | null;
-  NgayLuuTru?: string | null;
+  NgayLuuTru?: Date | null;
   TenLoaiLuuTru?: string | null;
   SoNamLuuTru?: string | null;
 }
