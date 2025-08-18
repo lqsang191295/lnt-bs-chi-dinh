@@ -5,10 +5,10 @@ import {
   gettnguoidung,
   gettnhomnguoidung,
   instnguoidung,
-} from "@/actions/emr_tnguoidung";
+} from "@/actions/act_tnguoidung";
 import { ITnhomNguoiDung } from "@/model/tnhomnguoidung";
 import { ISelectOption } from "@/model/ui";
-import { IUserItem } from "@/model/user";
+import { IUserItem } from "@/model/tuser";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import {

@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 
-import { getnhatkythaotacba } from "@/actions/emr_tnguoidung";
+import { getnhatkythaotacba } from "@/actions/act_tnguoidung";
 import { useUserStore } from "@/store/user";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";

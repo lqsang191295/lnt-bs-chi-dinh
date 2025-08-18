@@ -1,5 +1,5 @@
 import { post } from "@/api/client";
-import { IUserItem } from "@/model/user";
+import { IUserItem } from "@/model/tuser";
 import { sha256 } from "@/utils/auth";
 
 /** * Hàm thực hiện các thao tác với người dùng

@@ -1,5 +1,5 @@
-import { gettDMKhoaPhongs } from "@/actions/emr_tdmkhoaphong";
-import { getloailuutru } from "@/actions/emr_tloailuutru";
+import { gettDMKhoaPhongs } from "@/actions/act_tdmkhoaphong";
+import { getloailuutru } from "@/actions/act_tloailuutru";
 import { IDmKhoaPhong } from "@/model/tdmkhoaphong";
 import { ILoaiLuuTru } from "@/model/tloailuutru";
 

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IUserItem } from "@/model/user";
+import type { IUserItem } from "@/model/tuser";
 
 interface iUserState {
   data: IUserItem;

@@ -11,7 +11,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Cookies from "js-cookie";
 import { useUserStore } from "@/store/user";
 import { useState } from "react";
-import { IUserItem } from "@/model/user";
+import { IUserItem } from "@/model/tuser";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -19,7 +19,7 @@ import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import KeyIcon from "@mui/icons-material/Key";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { instnguoidungdoimatkhau } from "@/actions/emr_tnguoidung";
+import { instnguoidungdoimatkhau } from "@/actions/act_tnguoidung";
 import { AppBreadcrumbs } from "./AppBreadcrumbs";
 
 export default function AppBarTop() {

@@ -1,6 +1,6 @@
 // app/dong-mo-hsba/page.tsx
 "use client";
-import { capnhathosobenhan, getHosobenhan } from "@/actions/emr_hosobenhan";
+import { capnhathosobenhan, getHosobenhan } from "@/actions/act_thosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";

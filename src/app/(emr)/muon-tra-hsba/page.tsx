@@ -1,6 +1,6 @@
 "use client";
 
-import { getHosobenhan, getmuontraHSBA } from "@/actions/emr_hosobenhan";
+import { getHosobenhan, getmuontraHSBA } from "@/actions/act_thosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
 import { ISelectOption } from "@/model/ui";

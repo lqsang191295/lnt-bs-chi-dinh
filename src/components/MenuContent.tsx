@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 // import { ExpandLess, ExpandMore, Folder, Bookmark } from "@mui/icons-material";
-import type { IMenuTree } from "@/model/menu";
+import type { IMenuTree } from "@/model/tmenu";
 import { useMenuStore } from "@/store/menu";
 import { buildMenuTree } from "@/utils/menu";
 import Link from "next/link";

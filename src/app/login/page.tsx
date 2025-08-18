@@ -1,6 +1,6 @@
 // src/app/login/page.tsx
 "use client";
-import { login } from "@/actions/emr_tnguoidung";
+import { login } from "@/actions/act_tnguoidung";
 import { FacebookIcon, GoogleIcon } from "@/components/CustomIcons";
 import Spinner from "@/components/spinner";
 import { useUserStore } from "@/store/user";

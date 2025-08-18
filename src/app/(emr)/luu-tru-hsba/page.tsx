@@ -19,7 +19,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { capnhathosobenhan, getHosobenhan } from "@/actions/emr_hosobenhan";
+import { capnhathosobenhan, getHosobenhan } from "@/actions/act_thosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ILoaiLuuTru } from "@/model/tloailuutru";
 import { ISelectOption } from "@/model/ui";
