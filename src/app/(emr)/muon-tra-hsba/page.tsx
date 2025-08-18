@@ -46,10 +46,10 @@ import {
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { getChiTietHSBA, getHosobenhan, getmuontraHSBA } from "@/actions/emr_hosobenhan";
+import { getChiTietHSBA, getHosobenhan, getmuontraHSBA } from "@/actions/act_thosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
-import { IUserItem } from "@/model/user";
+import { IUserItem } from "@/model/tuser";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";

@@ -1,6 +1,6 @@
 // app/dong-mo-hsba/page.tsx
 "use client";
-import { getChiTietHSBA, getHosobenhan } from "@/actions/emr_hosobenhan";
+import { getChiTietHSBA, getHosobenhan } from "@/actions/act_thosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";

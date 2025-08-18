@@ -1,7 +1,7 @@
 // src/app/nhat-ky-nguoi-dung/page.tsx
 "use client";
 
-import { gettnhatkynguoidung } from "@/actions/emr_tnguoidung";
+import { gettnhatkynguoidung } from "@/actions/act_tnguoidung";
 import { useUserStore } from "@/store/user";
 import { Refresh, Search } from "@mui/icons-material";
 import { Box, Button, Typography } from "@mui/material";

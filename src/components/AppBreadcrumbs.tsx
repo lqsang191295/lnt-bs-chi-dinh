@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Breadcrumbs, Typography } from "@mui/material";
 import { buildMenuTree, getBreadcrumbs } from "@/utils/menu";
-import { IMenuItem, IMenuTree } from "@/model/menu";
+import { IMenuItem, IMenuTree } from "@/model/tmenu";
 import { useMenuStore } from "@/store/menu";
 import { usePathname } from "next/navigation";
 

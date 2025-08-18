@@ -36,11 +36,11 @@ import {
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { useUserStore } from "@/store/user";
-import { IUserItem } from "@/model/user";
+import { IUserItem } from "@/model/tuser";
 import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
 import { log } from "console";
-import { gettnguoidung } from "@/actions/emr_tnguoidung";
-import { themmuontraHSBA } from "@/actions/emr_hosobenhan";
+import { gettnguoidung } from "@/actions/act_tnguoidung";
+import { themmuontraHSBA } from "@/actions/act_thosobenhan";
 
 interface DsMuonHsbaProps {
   loai: string; // Loại mượn ( "MUON" hoặc "TRA")

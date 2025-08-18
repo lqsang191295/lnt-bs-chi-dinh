@@ -8,10 +8,10 @@ import {
   luuphanquyenba,
   luuphanquyenbakhoa,
   luuphanquyenmenu,
-} from "@/actions/emr_tnguoidung";
-import { IMenuItem, IMenuTree } from "@/model/menu";
+} from "@/actions/act_tnguoidung";
+import { IMenuItem, IMenuTree } from "@/model/tmenu";
 import { IPhanQuyenHoSoBenhAn, IPhanQuyenKhoa } from "@/model/tphanquyen";
-import { IUserItem } from "@/model/user";
+import { IUserItem } from "@/model/tuser";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import * as MuiIcons from "@mui/icons-material";

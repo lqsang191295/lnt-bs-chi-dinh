@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IMenuItem } from "@/model/menu";
+import type { IMenuItem } from "@/model/tmenu";
 
 interface iMenuState {
   data: IMenuItem[];

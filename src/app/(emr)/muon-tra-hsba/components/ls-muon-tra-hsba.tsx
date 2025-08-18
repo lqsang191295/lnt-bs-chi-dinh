@@ -25,7 +25,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Clear, Search } from "@mui/icons-material";
-import { getmuontraHSBA } from "@/actions/emr_hosobenhan";
+import { getmuontraHSBA } from "@/actions/act_thosobenhan";
 import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
 import { useUserStore } from "@/store/user";
 import { toast } from "react-toastify";

@@ -1,5 +1,5 @@
 // utils/menu.ts
-import type { IMenuItem, IMenuTree } from "@/model/menu";
+import type { IMenuItem, IMenuTree } from "@/model/tmenu";
 
 export function buildMenuTree(data: IMenuItem[]): IMenuTree[] {
   const map = new Map<number, IMenuTree>();

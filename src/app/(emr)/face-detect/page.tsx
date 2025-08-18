@@ -31,7 +31,7 @@ import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import * as faceapi from "face-api.js";
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT  
-import {luuanhnguoidung} from "@/actions/emr_tnguoidung"; 
+import {luuanhnguoidung} from "@/actions/act_tnguoidung"; 
 
 const CameraComponent = ({
   onCapture,

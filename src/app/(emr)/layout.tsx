@@ -1,5 +1,5 @@
 "use client";
-import { getMenuItems } from "@/actions/menu";
+import { getMenuItems } from "@/actions/act_tmenu";
 import AppBarTop from "@/components/AppBarTop";
 import SideMenu from "@/components/SideMenu";
 import { useMenuStore } from "@/store/menu";
