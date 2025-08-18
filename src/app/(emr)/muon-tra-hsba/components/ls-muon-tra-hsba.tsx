@@ -164,8 +164,8 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
 
   // Filter dữ liệu hiển thị
   const filteredData = historyData.filter(item => {
-    const matchThaoTac = thaoTac === "Tất cả" || item.cthaotac === thaoTac;
-    const matchNguoiMuon = !nguoiMuon || (item.cnguoimuon && item.cnguoimuon.toLowerCase().includes(nguoiMuon.toLowerCase()));
+    const matchThaoTac = thaoTac === "Tất cả" || item.ctrangthaitra === thaoTac;
+    const matchNguoiMuon = !nguoiMuon || (item.ctennguoimuon && item.ctennguoimuon.toLowerCase().includes(nguoiMuon.toLowerCase()));
     const matchNgayTra = !ngayTra || (item.cngaytra && formatDisplayDate(item.cngaytra).includes(ngayTra));
     
     return matchThaoTac && matchNguoiMuon && matchNgayTra;
@@ -184,7 +184,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
           color: "white",
         }}>
         <Typography variant="h6" component="div">
-          LỊCH SỬ MƯỢN TRẢ HSBA
+          LỊCH SỬ MƯỢN TRẢ HỒ SƠ BỆNH ÁN
           {selectedHsbaId && (
             <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>
               Mã bệnh án: {selectedHsbaId}
@@ -204,7 +204,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
         {!selectedHsbaId && (
           <Box sx={{ mb: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 1 }}>
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
-              Tìm kiếm theo thời gian:
+              Tìm kiếm theo ngày mượn:
             </Typography>
             <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
               <TextField
@@ -249,12 +249,12 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                 <TableCell sx={{ fontWeight: "bold", width: 80 }}>STT</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 120 }}>Thao tác</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 120 }}>Trạng thái</TableCell>
                 <TableCell sx={{ fontWeight: "bold", width: 180 }}>Ngày thực hiện</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Người mượn</TableCell>
                 <TableCell sx={{ fontWeight: "bold", width: 150 }}>Ngày trả dự kiến</TableCell>
                 <TableCell sx={{ fontWeight: "bold", width: 150 }}>Ngày trả thực tế</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 100 }}>Trạng thái</TableCell>
+                {/* <TableCell sx={{ fontWeight: "bold", width: 100 }}>Trạng thái</TableCell> */}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -268,8 +268,8 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                       onChange={(e) => setThaoTac(e.target.value as string)}
                       displayEmpty>
                       <MenuItem value="Tất cả">Tất cả</MenuItem>
-                      <MenuItem value="MUON">MƯỢN BA</MenuItem>
-                      <MenuItem value="TRA">TRẢ BA</MenuItem>
+                      <MenuItem value="0">Đang mượn</MenuItem>
+                      <MenuItem value="1">Đã trả</MenuItem>
                     </Select>
                   </FormControl>
                 </TableCell>
@@ -314,10 +314,10 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>
                       <Chip
-                        label={row.cthaotac === "TRA" ? "TRẢ BA" : "MƯỢN BA"}
-                        color={row.cthaotac === "TRA" ? "warning" : "success"}
+                        label={row.ctrangthaitra === "1" ? "Đã trả" : "Đang mượn"}
+                        color={row.ctrangthaitra === "1" ? "success" : "error"}
                         size="small"
-                        sx={{ fontWeight: "bold", color: "white" }}
+                        variant="outlined"
                       />
                     </TableCell>
                     <TableCell>
@@ -329,14 +329,6 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                     </TableCell>
                     <TableCell>
                       {formatDisplayDate(row.cngaytra)}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={row.ctrangthaitra === "1" ? "Đã trả" : "Chưa trả"}
-                        color={row.ctrangthaitra === "1" ? "success" : "error"}
-                        size="small"
-                        variant="outlined"
-                      />
                     </TableCell>
                   </TableRow>
                 ))

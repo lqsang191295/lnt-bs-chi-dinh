@@ -85,7 +85,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
       // Format dates để đảm bảo đúng định dạng
       const formatDateForAPI = (date: Date | null) => {
         if (!date) return null;
-        return date.toISOString();
+        return date.toISOString().replace("T", " ").replace("Z", "")  // Chuyển đổi sang định dạng YYYY-MM-DD HH:mm:ss;
       };
 
       // Chuẩn bị dữ liệu
@@ -111,7 +111,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
         pOpt,
         hsbaData
       );
-
+      console.log("Save result:", result);
       if (result && Array.isArray(result) && result.length > 0) {
         const success = result[0]?.status === "success" || result[0]?.ID > 0;
 
@@ -160,15 +160,15 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
     return errors;
   };
   // Debug component để xem cấu trúc dữ liệu
-  if (open) {
-    console.log("=== DIALOG DEBUG INFO ===");
-    console.log("loai prop:", loai);
-    console.log("phieumuon prop:", phieumuon);
-    console.log("selectedHsbaForDetail prop:", selectedHsbaForDetail);
-    console.log("formData state:", formData);
-    console.log("nguoiMuon state:", nguoiMuon);
-    console.log("loginedUser:", loginedUser);
-  }
+  // if (open) {
+  //   console.log("=== DIALOG DEBUG INFO ===");
+  //   console.log("loai prop:", loai);
+  //   console.log("phieumuon prop:", phieumuon);
+  //   console.log("selectedHsbaForDetail prop:", selectedHsbaForDetail);
+  //   console.log("formData state:", formData);
+  //   console.log("nguoiMuon state:", nguoiMuon);
+  //   console.log("loginedUser:", loginedUser);
+  // }
   // Effect để fetch danh sách người mượn khi dialog mở và có loginedUser
   useEffect(() => {
     if (!open || !loginedUser?.ctaikhoan) {
@@ -424,7 +424,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
                       fullWidth
                       multiline
                       rows={2}
-                      value={`${formData.cid} - ${formData.cmabenhan} - ${formData.cghichumuon}`}
+                      value={formData.cghichumuon}
                       onChange={(e) => setFormData({ ...formData, cghichumuon: e.target.value })}
                       sx={{ backgroundColor: "white" }}
                     />

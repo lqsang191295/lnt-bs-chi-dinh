@@ -6,6 +6,7 @@ export interface ITMuonTraHSBA {
   cnguoithaotac?: string | null;
   cngaytradukien?: string | null;
   cnguoimuon?: string | null;
+  ctennguoimuon?: string | null;
   cghichumuon?: string | null;
   cngaytra?: string | null;
   cghichutra?: string | null;
