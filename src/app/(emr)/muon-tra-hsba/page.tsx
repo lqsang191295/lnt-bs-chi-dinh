@@ -154,7 +154,7 @@ export default function MuonTraHsbaPage() {
     if (selectedIds.length > 0) {
       const selectedId = selectedIds[0];
       //console.log("rows:", rows); // Debug log
-      const selectedRowData = rows.find((row) => row.id === selectedId);
+      const selectedRowData = rows.find((row) => row.ID === selectedId);
       //console.log("Selected row data HSBA:", selectedRowData); // Debug log
       if (selectedRowData) {
         setSelectedHsbaForDetail(selectedRowData);
