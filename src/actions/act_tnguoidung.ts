@@ -14,9 +14,10 @@ export const instnguoidung = async (
   user: IUserItem
 ) => {
   try {
-    // console.log("puser", pUser);
-    // console.log("popt", pOpt);
-    // console.log("user", user);
+    console.log("=======debug update user==================", "");
+    console.log("puser", pUser);
+    console.log("popt", pOpt);
+    console.log("user", user);
 
     const response = await post(`/api/callService`, {
       userId: "",
@@ -37,15 +38,12 @@ export const instnguoidung = async (
         { paraName: "cemail", paraValue: user.cemail },
         { paraName: "cchucdanh", paraValue: user.cchucdanh },
         { paraName: "cghichu", paraValue: user.cghichu },
-        {
-          paraName: "cmatkhau",
-          paraValue: (await sha256(user.cmatkhau)).toString(),
-        },
+        { paraName: "cmatkhau", paraValue: (await sha256(user.cmatkhau)).toString() },
         { paraName: "cxacthuc2lop", paraValue: user.cxacthuc2lop },
         { paraName: "ctrangthai", paraValue: user.ctrangthai },
       ],
     });
-    // console.log("instnguoidung response:", response);
+    console.log("instnguoidung response:", response);
     if (response.status === "error") {
       return [];
     }
@@ -340,12 +338,12 @@ export const getphanquyenba = async (
   DenNgay: string
 ) => {
   try {
-    // console.log("puser:", pUser);
-    // console.log("popt:", pOpt);
-    // console.log("ctaikhoan:", ctaikhoan);
-    // console.log("KhoaDieuTri:", KhoaDieuTri);
-    // console.log("TuNgay:", TuNgay);
-    // console.log("DenNgay:", DenNgay);
+    console.log("puser:", pUser);
+    console.log("popt:", pOpt);
+    console.log("ctaikhoan:", ctaikhoan);
+    console.log("KhoaDieuTri:", KhoaDieuTri);
+    console.log("TuNgay:", TuNgay);
+    console.log("DenNgay:", DenNgay);
     const response = await post(`/api/callService`, {
       userId: "",
       option: "",
@@ -359,7 +357,7 @@ export const getphanquyenba = async (
         { paraName: "DenNgay", paraValue: DenNgay },
       ],
     });
-    // console.log("getphanquyenba response:", response);
+    console.log("getphanquyenba response:", response);
     if (response.status === "error") {
       return [];
     }

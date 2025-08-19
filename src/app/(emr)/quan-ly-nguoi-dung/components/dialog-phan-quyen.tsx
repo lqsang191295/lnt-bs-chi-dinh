@@ -231,6 +231,14 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
+    // console.log("Fetching HSBA with params:", {
+    //   taikhoan: loginedUser.ctaikhoan,
+    //   loai: "1",
+    //   user: selectedUser.ctaikhoan,
+    //   khoa: selectedKhoaBA,
+    //   fromDate: formatDate(fromDate),
+    //   toDate: formatDate(toDate),
+    // });
     const result = await getphanquyenba(
       loginedUser.ctaikhoan,
       "1",
@@ -239,7 +247,7 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
       formatDate(fromDate),
       formatDate(toDate)
     );
-    //console.log("Danh sách HSBA:", result);
+    // console.log("Danh sách HSBA:", result);
     setDsHSBA(result);
   };
   function MenuTree({
@@ -393,11 +401,11 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
   };
 
   const handleTabChange = async (_: unknown, newIndex: number) => {
-    console.log(
-      "============== newIndex =============== ",
-      newIndex,
-      selectedUser
-    );
+    // console.log(
+    //   "============== newIndex =============== ",
+    //   newIndex,
+    //   selectedUser
+    // );
     setTabIndex(newIndex);
     // if (newIndex === 0 && selectedUser) {
     //   // Gọi API lấy danh sách menu phân quyền cho user
@@ -428,8 +436,8 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
   const GetBaKhoaPhanQuyen = useCallback(async () => {
     if (!selectedUser) return;
 
-    if (tabIndex !== 2) return;
-
+    if (tabIndex !== 2) return; 
+    
     const result = await getphanquyenbakhoa(
       loginedUser.ctaikhoan,
       "1",
