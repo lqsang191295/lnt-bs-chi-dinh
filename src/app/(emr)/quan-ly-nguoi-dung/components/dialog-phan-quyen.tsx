@@ -57,130 +57,6 @@ interface DialogPhanQuyenProps {
   selectedUser: IUserItem | null;
 }
 
-const MenuTree = ({
-  menuList,
-  onCheck,
-}: {
-  menuList: IMenuItem[];
-  onCheck: (cid: string, checked: boolean, newMenuList: IMenuItem[]) => void;
-}) => {
-  // Tạo cây từ danh sách phẳng, menu gốc có cidcha = "" hoặc "0"
-  const buildTree = (list: IMenuItem[], parentId: number): IMenuTree[] =>
-    list
-      .filter((item) => item.cidcha === parentId)
-      .sort((a, b) => Number(a.cthutu) - Number(b.cthutu))
-      .map((item) => ({
-        ...item,
-        children: buildTree(list, item.cid),
-      }));
-
-  const tree = buildTree(menuList, 0);
-  console.log("tree ================ ", tree);
-  // Hàm cập nhật trạng thái cho node và các con
-  const updateNodeCheck = (
-    nodes: IMenuTree[],
-    cid: number,
-    checked: boolean
-  ): IMenuTree[] =>
-    nodes.map((node) => {
-      if (node.cid === cid) {
-        return {
-          ...node,
-          ctrangthai: checked ? 1 : 0,
-          children: node.children
-            ? updateAllChildren(node.children, checked)
-            : [],
-        };
-      }
-      return {
-        ...node,
-        children: node.children
-          ? updateNodeCheck(node.children, cid, checked)
-          : [],
-      };
-    });
-
-  // Hàm cập nhật tất cả các con
-  const updateAllChildren = (
-    nodes: IMenuTree[],
-    checked: boolean
-  ): IMenuTree[] =>
-    nodes.map((node) => ({
-      ...node,
-      ctrangthai: checked ? 1 : 0,
-      children: node.children ? updateAllChildren(node.children, checked) : [],
-    }));
-
-  // Khi check/uncheck, cập nhật trạng thái cho node và các con
-  const handleCheck = (cid: number, checked: boolean) => {
-    const newTree = updateNodeCheck(tree, cid, checked);
-    // Flatten tree về lại mảng phẳng để cập nhật dsMenu
-    const flatten = (nodes: any[]): any[] =>
-      nodes.reduce(
-        (acc, node) => [
-          ...acc,
-          { ...node, children: undefined },
-          ...(node.children ? flatten(node.children) : []),
-        ],
-        []
-      );
-    const newMenuList = flatten(newTree);
-    // Cập nhật trạng thái cho dsMenu
-    onCheck(cid, checked, newMenuList);
-  };
-
-  // Hàm render icon từ node.cicon
-  const renderIcon = (iconName: string) => {
-    const IconComponent =
-      MuiIcons[iconName.replace("Icon", "") as keyof typeof MuiIcons];
-    return IconComponent ? (
-      <IconComponent fontSize="small" sx={{ mr: 1 }} />
-    ) : null;
-  };
-
-  // Render node
-  const renderNode = (node: any, level: number = 0) => (
-    <Box
-      key={node.cid}
-      sx={{
-        pl: 2 + level * 2,
-        display: "flex",
-        flexDirection: "row",
-        alignContent: "top",
-        alignItems: "top",
-        py: 0.5,
-        borderBottom: "1px solid #eee",
-        bgcolor: "transparent",
-      }}>
-      {/* Checkbox cho node */}
-      <Box sx={{ alignItems: "center", mr: 1, width: "100%" }}>
-        <input
-          type="checkbox"
-          checked={node.ctrangthai === 1}
-          onChange={(e) => handleCheck(node.cid, e.target.checked)}
-          style={{ marginRight: 8, alignItems: "left", verticalAlign: "top" }}
-        />
-        {renderIcon(node.cicon)}
-        <span
-          style={{
-            fontWeight: node.ccap === 1 ? "bold" : "normal",
-            width: node.ccap === 1 ? "100%" : "100%",
-          }}>
-          {node.ctenmenu}
-        </span>
-      </Box>
-      {node.children && node.children.length > 0 && (
-        <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
-          <span style={{ width: "100%" }}>
-            {node.children.map((child: any) => renderNode(child, level + 1))}
-          </span>
-        </Box>
-      )}
-    </Box>
-  );
-  return <Box sx={{ pl: 1 }}>{tree.map((node) => renderNode(node))}</Box>;
-};
-
 const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
   open,
   onClose,
@@ -200,7 +76,7 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
   const [dsMenu, setDsMenu] = useState<IMenuItem[]>([]);
 
   const handleCheckMenu = (
-    cid: string,
+    cid: number,
     checked: boolean,
     newMenuList: IMenuItem[]
   ) => {
@@ -246,11 +122,11 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
     menuList,
     onCheck,
   }: {
-    menuList: any[];
-    onCheck: (cid: string, checked: boolean, newMenuList: any[]) => void;
+    menuList: IMenuItem[];
+    onCheck: (cid: number, checked: boolean, newMenuList: IMenuItem[]) => void;
   }) {
     // Tạo cây từ danh sách phẳng, menu gốc có cidcha = "" hoặc "0"
-    const buildTree = (list: any[], parentId: number): any[] =>
+    const buildTree = (list: IMenuItem[], parentId: number): IMenuTree[] =>
       list
         .filter((item) => item.cidcha === parentId)
         .sort((a, b) => Number(a.cthutu) - Number(b.cthutu))
@@ -263,10 +139,10 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
 
     // Hàm cập nhật trạng thái cho node và các con
     const updateNodeCheck = (
-      nodes: any[],
-      cid: string,
+      nodes: IMenuTree[],
+      cid: number,
       checked: boolean
-    ): any[] =>
+    ): IMenuTree[] =>
       nodes.map((node) => {
         if (node.cid === cid) {
           return {
@@ -286,7 +162,10 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
       });
 
     // Hàm cập nhật tất cả các con
-    const updateAllChildren = (nodes: any[], checked: boolean): any[] =>
+    const updateAllChildren = (
+      nodes: IMenuTree[],
+      checked: boolean
+    ): IMenuTree[] =>
       nodes.map((node) => ({
         ...node,
         ctrangthai: checked ? 1 : 0,
@@ -296,14 +175,14 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
       }));
 
     // Khi check/uncheck, cập nhật trạng thái cho node và các con
-    const handleCheck = (cid: string, checked: boolean) => {
+    const handleCheck = (cid: number, checked: boolean) => {
       const newTree = updateNodeCheck(tree, cid, checked);
       // Flatten tree về lại mảng phẳng để cập nhật dsMenu
-      const flatten = (nodes: any[]): any[] =>
-        nodes.reduce(
+      const flatten = (nodes: IMenuTree[]): IMenuItem[] =>
+        nodes.reduce<IMenuItem[]>(
           (acc, node) => [
             ...acc,
-            { ...node, children: undefined },
+            { ...node, children: undefined } as IMenuItem,
             ...(node.children ? flatten(node.children) : []),
           ],
           []
@@ -323,7 +202,7 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
     };
 
     // Render node
-    const renderNode = (node: any, level: number = 0) => (
+    const renderNode = (node: IMenuTree, level: number = 0) => (
       <Box
         key={node.cid}
         sx={{
@@ -356,7 +235,9 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
         {node.children && node.children.length > 0 && (
           <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
             <span style={{ width: "100%" }}>
-              {node.children.map((child: any) => renderNode(child, level + 1))}
+              {node.children.map((child: IMenuItem) =>
+                renderNode(child, level + 1)
+              )}
             </span>
           </Box>
         )}
