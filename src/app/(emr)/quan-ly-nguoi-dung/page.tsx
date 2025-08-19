@@ -7,8 +7,8 @@ import {
   instnguoidung,
 } from "@/actions/act_tnguoidung";
 import { ITnhomNguoiDung } from "@/model/tnhomnguoidung";
-import { ISelectOption } from "@/model/ui";
 import { IUserItem } from "@/model/tuser";
+import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import {
@@ -23,7 +23,7 @@ import {
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DialogPhanQuyen from "./components/dialog-phan-quyen";
 import HeadMetadata from "./head-metadata";
 
@@ -52,19 +52,6 @@ const taikhoans: { field: keyof IUserItem; label: string; type?: string }[] = [
   // { label: "Xác thực 2 lớp", field: "cxacthuc2lop", type: "checkbox"   },
 ];
 
-function TabPanel(props: {
-  children?: React.ReactNode;
-  value: number;
-  index: number;
-}) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
-    </div>
-  );
-}
-
 export default function PageQuanLyNguoiDung() {
   const [users, setUsers] = useState<IUserItem[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);
@@ -73,7 +60,6 @@ export default function PageQuanLyNguoiDung() {
     []
   );
   const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
-  const [page, setPage] = useState(0);
   const [newUserStatus, setNewUserStatus] = useState(0);
   const [password, setPassword] = useState("");
   const [openPhanQuyen, setOpenPhanQuyen] = useState(false);

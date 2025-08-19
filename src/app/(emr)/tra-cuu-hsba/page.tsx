@@ -174,7 +174,7 @@ export default function TraCuuHsbaPage() {
       );
       //console.log("Search results:", data);
     } catch (error) {
-      //console.error("Error fetching HSBA data:", error);
+      console.error("Error fetching HSBA data:", error);
     } finally {
       setSearchingData(false);
     }
