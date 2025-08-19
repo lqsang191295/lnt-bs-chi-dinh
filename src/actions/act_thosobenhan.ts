@@ -143,7 +143,7 @@ export const themmuontraHSBA = async (pUser: string, pOpt: string, hsba: ITMuonT
         { paraName: "cghichutra", paraValue: hsba.cghichutra },
       ],
     });
-    console.log("Response from themmuontraHSBA:", response);
+    //console.log("Response from themmuontraHSBA:", response);
     if (response.status === "error") {
       return [];
     }
@@ -178,7 +178,7 @@ export const getmuontraHSBA = async (pUser: string, pOpt: string, cmaba: string,
         { paraName: "cdenngay", paraValue: cdenngay },
       ],
     });
-
+    //console.log("Response from getmuontraHSBA:", response);
     if (response.status === "error") {
       return [];
     }

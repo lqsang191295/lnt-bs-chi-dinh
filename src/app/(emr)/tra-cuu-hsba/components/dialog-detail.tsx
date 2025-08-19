@@ -61,7 +61,7 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
       // Tạo Blob URL
       return URL.createObjectURL(blob);
     } catch (error) {
-      console.error("Error creating PDF blob:", error);
+      //console.error("Error creating PDF blob:", error);
       return "";
     }
   };
@@ -78,7 +78,6 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
   // Hàm đóng dialog chi tiết
   const handleCloseDetailDialog = () => {
     setPdfUrl("");
-
     if (onClose) onClose();
   };
 

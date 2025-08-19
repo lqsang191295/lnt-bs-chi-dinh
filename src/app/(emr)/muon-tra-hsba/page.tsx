@@ -150,10 +150,12 @@ export default function MuonTraHsbaPage() {
   };
 
   const handleRowSelected = async (selectedIds: unknown[]) => {
+    //console.log("Selected IDs:", selectedIds); // Debug log
     if (selectedIds.length > 0) {
       const selectedId = selectedIds[0];
-      const selectedRowData = rows.find((row) => row.ID === selectedId);
-
+      //console.log("rows:", rows); // Debug log
+      const selectedRowData = rows.find((row) => row.id === selectedId);
+      //console.log("Selected row data HSBA:", selectedRowData); // Debug log
       if (selectedRowData) {
         setSelectedHsbaForDetail(selectedRowData);
 
@@ -173,7 +175,7 @@ export default function MuonTraHsbaPage() {
             setPhieumuontraHSBA(null);
           }
         } catch (error) {
-          console.error("Error fetching phieu muon tra:", error);
+          //console.error("Error fetching phieu muon tra:", error);
           setPhieumuontraHSBA(null);
         }
       }

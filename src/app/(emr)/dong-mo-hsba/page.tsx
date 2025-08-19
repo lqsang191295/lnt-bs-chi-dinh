@@ -133,7 +133,7 @@ export default function DongMoHsbaPage() {
         } hồ sơ!`
       );
     } catch (error) {
-      console.error("Error updating HSBA:", error);
+      //console.error("Error updating HSBA:", error);
       ToastError(`Có lỗi xảy ra khi ${loai === "DONG" ? "đóng" : "mở"} HSBA!`);
     }
   };
@@ -142,17 +142,17 @@ export default function DongMoHsbaPage() {
   const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
     let selectionArray: unknown[] = [];
 
-    console.log("Selected rows for update:", selectionModel);
+    //console.log("Selected rows for update:", selectionModel);
     if (selectionModel && selectionModel.ids) {
       selectionArray = Array.from(selectionModel.ids);
     } else if (Array.isArray(selectionModel)) {
       selectionArray = selectionModel;
     }
-    console.log("Selection array:", selectionArray);
+    //console.log("Selection array:", selectionArray);
     const selectedRowsData = rows.filter((row) =>
       selectionArray.includes(row.ID)
     );
-    console.log("Selected rows data:", selectedRowsData);
+    //console.log("Selected rows data:", selectedRowsData);
     setSelectedRows(selectedRowsData);
   };
 
@@ -176,7 +176,7 @@ export default function DongMoHsbaPage() {
         formatDate(tuNgay),
         formatDate(denNgay)
       );
-      console.log("Fetched HSBA data:", data); // For debugging
+      //console.log("Fetched HSBA data:", data); // For debugging
       setRows(
         (data || []).map((item: IHoSoBenhAn) => ({
           id: item.ID, // Use ID or index as row ID
@@ -185,7 +185,7 @@ export default function DongMoHsbaPage() {
       );
       //console.log("Search results:", data);
     } catch (error) {
-      console.error("Error fetching HSBA data:", error);
+      //console.error("Error fetching HSBA data:", error);
     } finally {
       setSearchingData(false);
     }

@@ -91,7 +91,7 @@ export default function nhatkynguoidungPage() {
   };
 
   const handleRefresh = () => {
-    console.log("Refresh clicked!");
+    //console.log("Refresh clicked!");
   };
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {

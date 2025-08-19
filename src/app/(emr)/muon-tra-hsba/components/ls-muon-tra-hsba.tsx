@@ -105,7 +105,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
         // Lấy theo mã bệnh án cụ thể (pOpt = "1")
         result = await getmuontraHSBA(
           loginedUser.ctaikhoan,
-          "1", 
+          "3", 
           selectedHsbaId,
           "",
           ""
@@ -121,16 +121,16 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
         ) as ITMuonTraHSBA[];
       }
 
-      console.log("Lich su muon tra result:", result);
+      //console.log("Lich su muon tra result:", result);
 
       if (Array.isArray(result)) {
         setHistoryData(result);
       } else {
-        console.log("Result is not array:", result);
+        //console.log("Result is not array:", result);
         setHistoryData([]);
       }
     } catch (error) {
-      console.error("Error fetching lich su muon tra:", error);
+      //console.error("Error fetching lich su muon tra:", error);
       toast.error("Có lỗi khi tải lịch sử mượn trả!");
       setHistoryData([]);
     } finally {
@@ -250,10 +250,10 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                 <TableCell sx={{ fontWeight: "bold", width: 80 }}>STT</TableCell>
                 <TableCell sx={{ fontWeight: "bold", width: 120 }}>Trạng thái</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 180 }}>Ngày thực hiện</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 180 }}>Ngày mượn</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Người mượn</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 150 }}>Ngày trả dự kiến</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 150 }}>Ngày trả thực tế</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>Ngày hẹn trả</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>Ngày trả</TableCell>
                 {/* <TableCell sx={{ fontWeight: "bold", width: 100 }}>Trạng thái</TableCell> */}
               </TableRow>
             </TableHead>
@@ -323,7 +323,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                     <TableCell>
                       {formatDisplayDate(row.cngaythaotac)}
                     </TableCell>
-                    <TableCell>{row.cnguoimuon || ""}</TableCell>
+                    <TableCell>{row.ctennguoimuon || ""}</TableCell>
                     <TableCell>
                       {formatDisplayDate(row.cngaytradukien)}
                     </TableCell>

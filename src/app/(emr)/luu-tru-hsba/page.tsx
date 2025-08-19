@@ -153,17 +153,17 @@ export default function LuuTruHsbaPage() {
   const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
     let selectionArray: unknown[] = [];
 
-    console.log("Selected rows for update:", selectionModel);
+    //console.log("Selected rows for update:", selectionModel);
     if (selectionModel && selectionModel.ids) {
       selectionArray = Array.from(selectionModel.ids);
     } else if (Array.isArray(selectionModel)) {
       selectionArray = selectionModel;
     }
-    console.log("Selection array:", selectionArray);
+    //console.log("Selection array:", selectionArray);
     const selectedRowsData = rows.filter((row) =>
       selectionArray.includes(row.ID)
     );
-    console.log("Selected rows data:", selectedRowsData);
+    //console.log("Selected rows data:", selectedRowsData);
     setSelectedRow(selectedRowsData[0] || null);
   };
 
@@ -256,7 +256,7 @@ export default function LuuTruHsbaPage() {
       );
       //console.log("Search results:", data);
     } catch (error) {
-      console.error("Error fetching hồ sơ bệnh án:", error);
+      //console.error("Error fetching hồ sơ bệnh án:", error);
     } finally {
       setSearchingData(false);
     }

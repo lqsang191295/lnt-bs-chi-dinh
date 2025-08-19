@@ -14,9 +14,9 @@ export const instnguoidung = async (
   user: IUserItem
 ) => {
   try {
-    console.log("puser", pUser);
-    console.log("popt", pOpt);
-    console.log("user", user);
+    // console.log("puser", pUser);
+    // console.log("popt", pOpt);
+    // console.log("user", user);
 
     const response = await post(`/api/callService`, {
       userId: "",
@@ -45,23 +45,7 @@ export const instnguoidung = async (
         { paraName: "ctrangthai", paraValue: user.ctrangthai },
       ],
     });
-    //     @puser nvarchar(100),
-    // 	   @popt nvarchar(100),
-    //     @cid bigint,
-    //     @ctaikhoan nvarchar(256),
-    //     @choten nvarchar(1000),
-    //     @cngaysinh nvarchar(100),
-    //     @cmadonvi int,
-    //     @cmanhomnguoidung int,
-    //     @cdiachi nvarchar(2000),
-    //     @cdienthoai nvarchar(100),
-    //     @ccchn nvarchar(100),
-    //     @cemail nvarchar(100),
-    //     @cchucdanh nvarchar(100),
-    //     @cghichu nvarchar(3000),
-    //     @cmatkhau nvarchar(3000),
-    //     @cxacthuc2lop nvarchar(100),
-    //     @ctrangthai int
+    // console.log("instnguoidung response:", response);
     if (response.status === "error") {
       return [];
     }

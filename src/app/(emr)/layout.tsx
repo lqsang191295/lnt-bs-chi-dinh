@@ -25,21 +25,21 @@ export default function RootLayout({
       //console.log("Menu items fetched:", menu);
       setData(menu);
     } catch (error) {
-      console.error("Error fetching menu items:", error);
+      //console.error("Error fetching menu items:", error);
     }
   }, [setData]);
 
   const initUser = useCallback(async () => {
     try {
       const claims = getClaimsFromToken();
-      console.log("Claims fetched 1111111111111111111:", claims);
+      //console.log("Claims fetched 1111111111111111111:", claims);
       if (claims) {
         setUserData(claims);
       } else {
-        console.warn("No valid claims found in token");
+        //console.warn("No valid claims found in token");
       }
     } catch (error) {
-      console.error("Error initializing user data:", error);
+      //console.error("Error initializing user data:", error);
     }
   }, [setUserData]);
 
