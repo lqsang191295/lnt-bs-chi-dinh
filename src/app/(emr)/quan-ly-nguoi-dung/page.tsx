@@ -140,6 +140,7 @@ export default function PageQuanLyNguoiDung() {
   };
 
   const handleChange = (field: string, value: string) => {
+    console.log("handleChange", field, value);
     setSelectedUser((prev) => {
       if (!prev) return prev;
       return { ...prev, [field]: value } as IUserItem;
@@ -202,13 +203,13 @@ export default function PageQuanLyNguoiDung() {
       }
     } else if (newUserStatus === 0) {
       if (!selectedUser) return;
-      //console.log("selectedUser", selectedUser);
+      console.log("user cập nhật:", selectedUser);
       const result = await instnguoidung(
         loginedUser.ctaikhoan,
         "2",
         selectedUser
       );
-      //console.log("result", result);
+      console.log("kq cập nhật", result);
       const arr = result as Array<{ ROW_COUNT: number }>;
 
       if (
