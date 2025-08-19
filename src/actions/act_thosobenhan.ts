@@ -138,9 +138,12 @@ export const themmuontraHSBA = async (pUser: string, pOpt: string, hsba: ITMuonT
         { paraName: "cnguoithaotac", paraValue: hsba.cnguoithaotac },
         { paraName: "cngaytradukien", paraValue: hsba.cngaytradukien },
         { paraName: "cnguoimuon", paraValue: hsba.cnguoimuon },
+        { paraName: "cghichumuon", paraValue: hsba.cghichumuon },
+        { paraName: "cngaytra", paraValue: hsba.cngaytra },
+        { paraName: "cghichutra", paraValue: hsba.cghichutra },
       ],
     });
-
+    //console.log("Response from themmuontraHSBA:", response);
     if (response.status === "error") {
       return [];
     }
@@ -175,7 +178,7 @@ export const getmuontraHSBA = async (pUser: string, pOpt: string, cmaba: string,
         { paraName: "cdenngay", paraValue: cdenngay },
       ],
     });
-
+    //console.log("Response from getmuontraHSBA:", response);
     if (response.status === "error") {
       return [];
     }

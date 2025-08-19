@@ -85,7 +85,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
         if (!(date instanceof Date) || isNaN(date.getTime())) {
           throw new Error("Invalid date format");
         }
-        return date.toISOString();
+        return date.toISOString().replace("T", " ").replace("Z", ""); // Chuyển đổi sang định dạng YYYY-MM-DD HH:mm:ss;
       };
 
       // Chuẩn bị dữ liệu
@@ -103,7 +103,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
         ctrangthaitra: loai === "TRA" ? "1" : "0",
       };
 
-      console.log("Saving HSBA data:", hsbaData);
+      //console.log("Saving HSBA data:", hsbaData);
 
       const pOpt = formData.cid === -1 ? "1" : "2";
       const result = await themmuontraHSBA(
@@ -111,25 +111,44 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
         pOpt,
         hsbaData
       );
-
-      if (result && Array.isArray(result) && result.length > 0) {
-        const success = result[0]?.status === "success" || result[0]?.ID > 0;
-
-        if (success) {
-          toast.success(
-            loai === "MUON"
-              ? `Tạo phiếu mượn HSBA thành công! ID: ${result[0]?.ID}`
-              : "Cập nhật trạng thái trả HSBA thành công!"
-          );
+      //console.log("Save result:", result);
+      if (pOpt === "1") {
+        const arr = result as Array<{ _ID: number }>;
+        if (
+          typeof arr === "string" &&
+          arr === "Authorization has been denied for this request."
+        ) {
+          alert("Bạn không có quyền thêm!");
+        } else if (
+          Array.isArray(arr) &&
+          arr.length > 0 &&
+          typeof arr[0]._ID !== "undefined"
+        ) {
+          alert("Thêm thành công");
           onClose();
         } else {
-          toast.error(result[0]?.message || "Có lỗi xảy ra khi lưu!");
+          alert("Thêm thất bại");
         }
-      } else {
-        toast.error("Không nhận được phản hồi từ server!");
+      } else if (pOpt === "2") {
+        const arr = result as Array<{ ROW_COUNT: number }>;
+        if (
+          typeof arr === "string" &&
+          arr === "Authorization has been denied for this request."
+        ) {
+          alert("Bạn không có quyền cập nhật!");
+        } else if (
+          Array.isArray(arr) &&
+          arr.length > 0 &&
+          typeof arr[0].ROW_COUNT !== "undefined"
+        ) {
+          alert("Cập nhật thành công");
+          onClose();
+        } else {
+          alert("Cập nhật thất bại");
+        }
       }
     } catch (error) {
-      console.error("Error saving:", error);
+      //console.error("Error saving:", error);
       toast.error(
         `Lỗi: ${error instanceof Error ? error.message : "Unknown error"}`
       );
@@ -161,15 +180,15 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
     return errors;
   };
   // Debug component để xem cấu trúc dữ liệu
-  if (open) {
-    console.log("=== DIALOG DEBUG INFO ===");
-    console.log("loai prop:", loai);
-    console.log("phieumuon prop:", phieumuon);
-    console.log("selectedHsbaForDetail prop:", selectedHsbaForDetail);
-    console.log("formData state:", formData);
-    console.log("nguoiMuon state:", nguoiMuon);
-    console.log("loginedUser:", loginedUser);
-  }
+  // if (open) {
+  //   console.log("=== DIALOG DEBUG INFO ===");
+  //   console.log("loai prop:", loai);
+  //   console.log("phieumuon prop:", phieumuon);
+  //   console.log("selectedHsbaForDetail prop:", selectedHsbaForDetail);
+  //   console.log("formData state:", formData);
+  //   console.log("nguoiMuon state:", nguoiMuon);
+  //   console.log("loginedUser:", loginedUser);
+  // }
   // Effect để fetch danh sách người mượn khi dialog mở và có loginedUser
   useEffect(() => {
     if (!open || !loginedUser?.ctaikhoan) {
@@ -185,7 +204,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
           setNguoiMuon(result as IUserItem[]);
         }
       } catch (error) {
-        console.error("Error fetching nguoi muon:", error);
+        //console.error("Error fetching nguoi muon:", error);
       }
     };
     fetchNguoimuon();
@@ -443,7 +462,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
                       fullWidth
                       multiline
                       rows={2}
-                      value={`${formData.cid} - ${formData.cmabenhan} - ${formData.cghichumuon}`}
+                      value={formData.cghichumuon}
                       onChange={(e) =>
                         setFormData({
                           ...formData,

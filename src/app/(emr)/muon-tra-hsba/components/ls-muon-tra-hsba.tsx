@@ -88,7 +88,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
         // Lấy theo mã bệnh án cụ thể (pOpt = "1")
         result = (await getmuontraHSBA(
           loginedUser.ctaikhoan,
-          "1",
+          "3",
           selectedHsbaId,
           "",
           ""
@@ -104,16 +104,16 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
         )) as ITMuonTraHSBA[];
       }
 
-      console.log("Lich su muon tra result:", result);
+      //console.log("Lich su muon tra result:", result);
 
       if (Array.isArray(result)) {
         setHistoryData(result);
       } else {
-        console.log("Result is not array:", result);
+        //console.log("Result is not array:", result);
         setHistoryData([]);
       }
     } catch (error) {
-      console.error("Error fetching lich su muon tra:", error);
+      //console.error("Error fetching lich su muon tra:", error);
       toast.error("Có lỗi khi tải lịch sử mượn trả!");
       setHistoryData([]);
     } finally {
@@ -147,11 +147,11 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
 
   // Filter dữ liệu hiển thị
   const filteredData = historyData.filter((item) => {
-    const matchThaoTac = thaoTac === "Tất cả" || item.cthaotac === thaoTac;
+    const matchThaoTac = thaoTac === "Tất cả" || item.ctrangthaitra === thaoTac;
     const matchNguoiMuon =
       !nguoiMuon ||
-      (item.cnguoimuon &&
-        item.cnguoimuon.toLowerCase().includes(nguoiMuon.toLowerCase()));
+      (item.ctennguoimuon &&
+        item.ctennguoimuon.toLowerCase().includes(nguoiMuon.toLowerCase()));
     const matchNgayTra =
       !ngayTra ||
       (item.cngaytra && formatDisplayDate(item.cngaytra).includes(ngayTra));
@@ -172,7 +172,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
           color: "white",
         }}>
         <Typography variant="h6" component="div">
-          LỊCH SỬ MƯỢN TRẢ HSBA
+          LỊCH SỬ MƯỢN TRẢ HỒ SƠ BỆNH ÁN
           {selectedHsbaId && (
             <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>
               Mã bệnh án: {selectedHsbaId}
@@ -193,7 +193,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
           <Box
             sx={{ mb: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 1 }}>
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
-              Tìm kiếm theo thời gian:
+              Tìm kiếm theo ngày mượn:
             </Typography>
             <Box
               sx={{
@@ -247,21 +247,19 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                   STT
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold", width: 120 }}>
-                  Thao tác
+                  Trạng thái
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold", width: 180 }}>
-                  Ngày thực hiện
+                  Ngày mượn
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Người mượn</TableCell>
                 <TableCell sx={{ fontWeight: "bold", width: 150 }}>
-                  Ngày trả dự kiến
+                  Ngày hẹn trả
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold", width: 150 }}>
-                  Ngày trả thực tế
+                  Ngày trả
                 </TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 100 }}>
-                  Trạng thái
-                </TableCell>
+                {/* <TableCell sx={{ fontWeight: "bold", width: 100 }}>Trạng thái</TableCell> */}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -275,8 +273,8 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                       onChange={(e) => setThaoTac(e.target.value as string)}
                       displayEmpty>
                       <MenuItem value="Tất cả">Tất cả</MenuItem>
-                      <MenuItem value="MUON">MƯỢN BA</MenuItem>
-                      <MenuItem value="TRA">TRẢ BA</MenuItem>
+                      <MenuItem value="0">Đang mượn</MenuItem>
+                      <MenuItem value="1">Đã trả</MenuItem>
                     </Select>
                   </FormControl>
                 </TableCell>
@@ -321,28 +319,20 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>
                       <Chip
-                        label={row.cthaotac === "TRA" ? "TRẢ BA" : "MƯỢN BA"}
-                        color={row.cthaotac === "TRA" ? "warning" : "success"}
-                        size="small"
-                        sx={{ fontWeight: "bold", color: "white" }}
-                      />
-                    </TableCell>
-                    <TableCell>{formatDisplayDate(row.cngaythaotac)}</TableCell>
-                    <TableCell>{row.cnguoimuon || ""}</TableCell>
-                    <TableCell>
-                      {formatDisplayDate(row.cngaytradukien)}
-                    </TableCell>
-                    <TableCell>{formatDisplayDate(row.cngaytra)}</TableCell>
-                    <TableCell>
-                      <Chip
                         label={
-                          row.ctrangthaitra === "1" ? "Đã trả" : "Chưa trả"
+                          row.ctrangthaitra === "1" ? "Đã trả" : "Đang mượn"
                         }
                         color={row.ctrangthaitra === "1" ? "success" : "error"}
                         size="small"
                         variant="outlined"
                       />
                     </TableCell>
+                    <TableCell>{formatDisplayDate(row.cngaythaotac)}</TableCell>
+                    <TableCell>{row.ctennguoimuon || ""}</TableCell>
+                    <TableCell>
+                      {formatDisplayDate(row.cngaytradukien)}
+                    </TableCell>
+                    <TableCell>{formatDisplayDate(row.cngaytra)}</TableCell>
                   </TableRow>
                 ))
               ) : (

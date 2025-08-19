@@ -222,7 +222,7 @@ export default function PageQuanLyNguoiDung() {
         "2",
         selectedUser
       );
-      console.log("result", result);
+      //console.log("result", result);
       const arr = result as Array<{ ROW_COUNT: number }>;
 
       if (
