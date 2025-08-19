@@ -1,28 +1,27 @@
 // src/app/muon-tra-hsba/components/ds-tra-hsba.tsx
 "use client";
 
-import React, { useState } from "react";
+import { Reply } from "@mui/icons-material";
+import ClearIcon from "@mui/icons-material/Clear";
+import CloseIcon from "@mui/icons-material/Close";
 import {
+  Box,
   Button,
   Dialog,
   DialogContent,
   DialogTitle,
   IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Box,
   TextField,
   Typography,
-  Grid,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import ClearIcon from "@mui/icons-material/Clear";
-import { Reply } from "@mui/icons-material";
+import React, { useState } from "react";
 
 // Dữ liệu mock cho bảng
 const patientData = [

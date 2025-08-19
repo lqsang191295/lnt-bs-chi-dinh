@@ -1,33 +1,34 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { getmuontraHSBA } from "@/actions/act_thosobenhan";
+import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
+import { useUserStore } from "@/store/user";
+import { formatDisplayDate } from "@/utils/timer";
+import { Clear, Search } from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
 import {
+  Box,
   Button,
+  Chip,
+  CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
+  FormControl,
   IconButton,
+  MenuItem,
+  Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Box,
   TextField,
-  FormControl,
-  Select,
-  MenuItem,
   Typography,
-  Chip,
-  CircularProgress,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import { Clear, Search } from "@mui/icons-material";
-import { getmuontraHSBA } from "@/actions/act_thosobenhan";
-import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
-import { useUserStore } from "@/store/user";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 interface LsMuonTraHsbaProps {
@@ -36,10 +37,10 @@ interface LsMuonTraHsbaProps {
   selectedHsbaId?: string; // Mã bệnh án được chọn từ component cha
 }
 
-const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({ 
-  open, 
-  onClose, 
-  selectedHsbaId 
+const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
+  open,
+  onClose,
+  selectedHsbaId,
 }) => {
   // States
   const [historyData, setHistoryData] = useState<ITMuonTraHSBA[]>([]);
@@ -47,17 +48,17 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
   const [thaoTac, setThaoTac] = useState("Tất cả");
   const [nguoiMuon, setNguoiMuon] = useState("");
   const [ngayTra, setNgayTra] = useState("");
-  
+
   // Date states
   const [tuNgay, setTuNgay] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30); // 30 ngày trước
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   });
-  
+
   const [denNgay, setDenNgay] = useState(() => {
     const date = new Date();
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   });
 
   const { data: loginedUser } = useUserStore();
@@ -66,28 +67,10 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
   const formatDateForAPI = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
-  };
-
-  // Hàm format ngày hiển thị
-  const formatDisplayDate = (dateString: string | null) => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit', 
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-    } catch {
-      return dateString;
-    }
   };
 
   // Fetch lịch sử mượn trả
@@ -103,22 +86,22 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
 
       if (selectedHsbaId) {
         // Lấy theo mã bệnh án cụ thể (pOpt = "1")
-        result = await getmuontraHSBA(
+        result = (await getmuontraHSBA(
           loginedUser.ctaikhoan,
-          "3", 
+          "3",
           selectedHsbaId,
           "",
           ""
-        ) as ITMuonTraHSBA[];
+        )) as ITMuonTraHSBA[];
       } else {
-        // Lấy theo khoảng thời gian (pOpt = "2") 
-        result = await getmuontraHSBA(
+        // Lấy theo khoảng thời gian (pOpt = "2")
+        result = (await getmuontraHSBA(
           loginedUser.ctaikhoan,
           "2",
           "",
           formatDateForAPI(tuNgay),
           formatDateForAPI(denNgay)
-        ) as ITMuonTraHSBA[];
+        )) as ITMuonTraHSBA[];
       }
 
       //console.log("Lich su muon tra result:", result);
@@ -155,19 +138,24 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
     setThaoTac("Tất cả");
     setNguoiMuon("");
     setNgayTra("");
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     const lastMonth = new Date();
     lastMonth.setDate(lastMonth.getDate() - 30);
-    setTuNgay(lastMonth.toISOString().split('T')[0]);
+    setTuNgay(lastMonth.toISOString().split("T")[0]);
     setDenNgay(today);
   };
 
   // Filter dữ liệu hiển thị
-  const filteredData = historyData.filter(item => {
+  const filteredData = historyData.filter((item) => {
     const matchThaoTac = thaoTac === "Tất cả" || item.ctrangthaitra === thaoTac;
-    const matchNguoiMuon = !nguoiMuon || (item.ctennguoimuon && item.ctennguoimuon.toLowerCase().includes(nguoiMuon.toLowerCase()));
-    const matchNgayTra = !ngayTra || (item.cngaytra && formatDisplayDate(item.cngaytra).includes(ngayTra));
-    
+    const matchNguoiMuon =
+      !nguoiMuon ||
+      (item.ctennguoimuon &&
+        item.ctennguoimuon.toLowerCase().includes(nguoiMuon.toLowerCase()));
+    const matchNgayTra =
+      !ngayTra ||
+      (item.cngaytra && formatDisplayDate(item.cngaytra).includes(ngayTra));
+
     return matchThaoTac && matchNguoiMuon && matchNgayTra;
   });
 
@@ -202,11 +190,18 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
       <DialogContent dividers>
         {/* Filter Section */}
         {!selectedHsbaId && (
-          <Box sx={{ mb: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 1 }}>
+          <Box
+            sx={{ mb: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 1 }}>
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
               Tìm kiếm theo ngày mượn:
             </Typography>
-            <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}>
               <TextField
                 label="Từ ngày"
                 type="date"
@@ -217,7 +212,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                 sx={{ minWidth: 150 }}
               />
               <TextField
-                label="Đến ngày" 
+                label="Đến ngày"
                 type="date"
                 value={denNgay}
                 onChange={(e) => setDenNgay(e.target.value)}
@@ -248,12 +243,22 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
           <Table size="small">
             <TableHead>
               <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableCell sx={{ fontWeight: "bold", width: 80 }}>STT</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 120 }}>Trạng thái</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 180 }}>Ngày mượn</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 80 }}>
+                  STT
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 120 }}>
+                  Trạng thái
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 180 }}>
+                  Ngày mượn
+                </TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Người mượn</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 150 }}>Ngày hẹn trả</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 150 }}>Ngày trả</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Ngày hẹn trả
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Ngày trả
+                </TableCell>
                 {/* <TableCell sx={{ fontWeight: "bold", width: 100 }}>Trạng thái</TableCell> */}
               </TableRow>
             </TableHead>
@@ -314,22 +319,20 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>
                       <Chip
-                        label={row.ctrangthaitra === "1" ? "Đã trả" : "Đang mượn"}
+                        label={
+                          row.ctrangthaitra === "1" ? "Đã trả" : "Đang mượn"
+                        }
                         color={row.ctrangthaitra === "1" ? "success" : "error"}
                         size="small"
                         variant="outlined"
                       />
                     </TableCell>
-                    <TableCell>
-                      {formatDisplayDate(row.cngaythaotac)}
-                    </TableCell>
+                    <TableCell>{formatDisplayDate(row.cngaythaotac)}</TableCell>
                     <TableCell>{row.ctennguoimuon || ""}</TableCell>
                     <TableCell>
                       {formatDisplayDate(row.cngaytradukien)}
                     </TableCell>
-                    <TableCell>
-                      {formatDisplayDate(row.cngaytra)}
-                    </TableCell>
+                    <TableCell>{formatDisplayDate(row.cngaytra)}</TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -346,7 +349,13 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
         </TableContainer>
 
         {/* Footer */}
-        <Box sx={{ mt: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box
+          sx={{
+            mt: 3,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}>
           <Typography variant="body2" color="text.secondary">
             Tổng số: {filteredData.length} bản ghi
           </Typography>

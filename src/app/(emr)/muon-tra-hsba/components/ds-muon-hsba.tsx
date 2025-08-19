@@ -1,11 +1,14 @@
 // src/app/muon-tra-hsba/components/ds-muon-hsba.tsx
 "use client";
 
+import { themmuontraHSBA } from "@/actions/act_thosobenhan";
+import { gettnguoidung } from "@/actions/act_tnguoidung";
+import { IHoSoBenhAn } from "@/model/thosobenhan";
+import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
+import { IUserItem } from "@/model/tuser";
+import { useUserStore } from "@/store/user";
 import { NoteAdd } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CircularProgress from "@mui/material/CircularProgress";
-import { toast } from "react-toastify"; // Nếu sử dụng toast notification
 import {
   Box,
   Button,
@@ -16,31 +19,15 @@ import {
   IconButton,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
-import {
-  DatePicker,
-  DateTimePicker,
-  LocalizationProvider,
-} from "@mui/x-date-pickers";
+import CircularProgress from "@mui/material/CircularProgress";
+import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { IHoSoBenhAn } from "@/model/thosobenhan";
-import { useUserStore } from "@/store/user";
-import { IUserItem } from "@/model/tuser";
-import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
-import { log } from "console";
-import { gettnguoidung } from "@/actions/act_tnguoidung";
-import { themmuontraHSBA } from "@/actions/act_thosobenhan";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify"; // Nếu sử dụng toast notification
 
 interface DsMuonHsbaProps {
   loai: string; // Loại mượn ( "MUON" hoặc "TRA")
@@ -50,13 +37,19 @@ interface DsMuonHsbaProps {
   selectedHsbaForDetail: IHoSoBenhAn | null;
 }
 
-const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose, selectedHsbaForDetail }) => {
+const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
+  loai,
+  phieumuon,
+  open,
+  onClose,
+  selectedHsbaForDetail,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [nguoiMuon, setNguoiMuon] = useState<IUserItem[]>([]); // Danh sách người mượn
-  const { data: loginedUser, setUserData } = useUserStore();
+  const { data: loginedUser } = useUserStore();
 
-  // Form data for dialog 
+  // Form data for dialog
   const [formData, setFormData] = useState({
     puser: loginedUser?.ctaikhoan || "", // Tài khoản người dùng hiện tại
     popt: loai === "MUON" ? "1" : "2", // 1: insert, 2: update
@@ -68,7 +61,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
     cngaytradukien: phieumuon?.cngaytradukien || new Date(),
     cnguoimuon: phieumuon?.cnguoimuon || "", // Tài khoản người mượn
     cghichumuon: phieumuon?.cghichumuon || "", // Ghi chú mượn
-    cngaytra: phieumuon?.cngaytra || null, // Ngày trả thực tế
+    cngaytra: phieumuon?.cngaytra || "", // Ngày trả thực tế
     cghichutra: phieumuon?.cghichutra || "", // Ghi chú trả
   });
   const handleMuonHsba = async () => {
@@ -83,14 +76,21 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
       }
 
       // Format dates để đảm bảo đúng định dạng
-      const formatDateForAPI = (date: Date | null) => {
+      const formatDateForAPI = (date: Date | string | null) => {
         if (!date) return null;
-        return date.toISOString().replace("T", " ").replace("Z", "")  // Chuyển đổi sang định dạng YYYY-MM-DD HH:mm:ss;
+
+        if (typeof date === "string") {
+          date = new Date(date);
+        }
+        if (!(date instanceof Date) || isNaN(date.getTime())) {
+          throw new Error("Invalid date format");
+        }
+        return date.toISOString().replace("T", " ").replace("Z", ""); // Chuyển đổi sang định dạng YYYY-MM-DD HH:mm:ss;
       };
 
       // Chuẩn bị dữ liệu
       const hsbaData: ITMuonTraHSBA = {
-        cid: formData.cid === -1 ? undefined : formData.cid,
+        cid: formData.cid,
         cmabenhan: selectedHsbaForDetail?.ID?.toString() || "",
         cthaotac: loai,
         cnguoithaotac: loginedUser?.ctaikhoan || "",
@@ -114,9 +114,16 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
       //console.log("Save result:", result);
       if (pOpt === "1") {
         const arr = result as Array<{ _ID: number }>;
-        if (typeof arr === "string" && arr === "Authorization has been denied for this request.") {
+        if (
+          typeof arr === "string" &&
+          arr === "Authorization has been denied for this request."
+        ) {
           alert("Bạn không có quyền thêm!");
-        } else if (Array.isArray(arr) && arr.length > 0 && typeof arr[0]._ID !== "undefined") {
+        } else if (
+          Array.isArray(arr) &&
+          arr.length > 0 &&
+          typeof arr[0]._ID !== "undefined"
+        ) {
           alert("Thêm thành công");
           onClose();
         } else {
@@ -142,7 +149,9 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
       }
     } catch (error) {
       //console.error("Error saving:", error);
-      toast.error(`Lỗi: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Lỗi: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -207,19 +216,22 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
       cid: phieumuon?.cid || -1,
       cmabenhan: selectedHsbaForDetail?.ID?.toString() || "",
       cthaotac: loai,
-      cngaymuon: phieumuon?.cngaythaotac ? new Date(phieumuon.cngaythaotac) : new Date(),
+      cngaymuon: phieumuon?.cngaythaotac
+        ? new Date(phieumuon.cngaythaotac)
+        : new Date(),
       cnguoithaotac: loginedUser?.ctaikhoan || "",
-      cngaytradukien: phieumuon?.cngaytradukien ? new Date(phieumuon.cngaytradukien) : (() => {
-        const futureDate = new Date();
-        futureDate.setDate(futureDate.getDate() + 7); // Mặc định 7 ngày sau
-        return futureDate;
-      })(),
+      cngaytradukien: phieumuon?.cngaytradukien
+        ? new Date(phieumuon.cngaytradukien)
+        : (() => {
+            const futureDate = new Date();
+            futureDate.setDate(futureDate.getDate() + 7); // Mặc định 7 ngày sau
+            return futureDate;
+          })(),
       cnguoimuon: phieumuon?.cnguoimuon || "",
       cghichumuon: phieumuon?.cghichumuon || "",
-      cngaytra: phieumuon?.cngaytra ? new Date(phieumuon.cngaytra) : null,
+      cngaytra: phieumuon?.cngaytra || "",
       cghichutra: phieumuon?.cghichutra || "",
     });
-
   }, [open, phieumuon, selectedHsbaForDetail, loginedUser, loai]);
 
   return (
@@ -246,8 +258,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <Box
-            sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 2 }}>
             {/* Khung thông tin chỉ xem */}
             <Box
               sx={{
@@ -286,14 +297,22 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
                 <TextField
                   InputProps={{ readOnly: true }}
                   label="Ngày vào viện"
-                  value={selectedHsbaForDetail?.NgayVao ? selectedHsbaForDetail?.NgayVao : ""}
+                  value={
+                    selectedHsbaForDetail?.NgayVao
+                      ? selectedHsbaForDetail?.NgayVao
+                      : ""
+                  }
                   size="small"
                   sx={{ flex: 2, backgroundColor: "white" }}
                 />
                 <TextField
                   InputProps={{ readOnly: true }}
                   label="Ngày ra viện"
-                  value={selectedHsbaForDetail?.NgayRa ? selectedHsbaForDetail?.NgayRa : ""}
+                  value={
+                    selectedHsbaForDetail?.NgayRa
+                      ? selectedHsbaForDetail?.NgayRa
+                      : ""
+                  }
                   size="small"
                   sx={{ flex: 2, backgroundColor: "white" }}
                 />
@@ -375,7 +394,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <DateTimePicker
                     label="Ngày mượn"
-                    value={formData.cngaymuon}
+                    value={formData.cngaymuon as Date}
                     onChange={(value) =>
                       setFormData({ ...formData, cngaymuon: value as Date })
                     }
@@ -390,9 +409,12 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
                   />
                   <DateTimePicker
                     label="Ngày trả dự kiến"
-                    value={formData.cngaytradukien}
+                    value={formData.cngaytradukien as Date}
                     onChange={(value) =>
-                      setFormData({ ...formData, cngaytradukien: value as Date })
+                      setFormData({
+                        ...formData,
+                        cngaytradukien: value as Date,
+                      })
                     }
                     format="dd/MM/yyyy HH:mm:ss"
                     slotProps={{
@@ -411,7 +433,12 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
                       <InputLabel>Chọn người mượn</InputLabel>
                       <Select
                         value={formData?.cnguoimuon || ""}
-                        onChange={(e) => setFormData({ ...formData, cnguoimuon: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            cnguoimuon: e.target.value,
+                          })
+                        }
                         fullWidth
                         size="small"
                         label="Chọn người mượn"
@@ -436,7 +463,12 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
                       multiline
                       rows={2}
                       value={formData.cghichumuon}
-                      onChange={(e) => setFormData({ ...formData, cghichumuon: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          cghichumuon: e.target.value,
+                        })
+                      }
                       sx={{ backgroundColor: "white" }}
                     />
                   </Box>
@@ -459,13 +491,20 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
                 </Typography>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-
-
                   <DateTimePicker
                     label="Ngày trả"
-                    value={formData.cngaytra || null}
+                    value={
+                      formData.cngaytra
+                        ? typeof formData.cngaytra === "string"
+                          ? new Date(formData.cngaytra)
+                          : formData.cngaytra
+                        : null
+                    }
                     onChange={(value) =>
-                      setFormData({ ...formData, cngaytra: value as Date })
+                      setFormData({
+                        ...formData,
+                        cngaytra: value ? (value as Date).toISOString() : "",
+                      })
                     }
                     format="dd/MM/yyyy HH:mm:ss"
                     slotProps={{
@@ -488,7 +527,9 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
                       multiline
                       rows={2}
                       value={formData.cghichutra || ""}
-                      onChange={(e) => setFormData({ ...formData, cghichutra: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, cghichutra: e.target.value })
+                      }
                       sx={{ backgroundColor: "white" }}
                     />
                   </Box>
@@ -502,7 +543,9 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
               variant="contained"
               onClick={handleMuonHsba}
               disabled={isLoading}
-              startIcon={isLoading ? <CircularProgress size={16} /> : <NoteAdd />}
+              startIcon={
+                isLoading ? <CircularProgress size={16} /> : <NoteAdd />
+              }
               sx={{
                 backgroundColor: "#1976d2",
                 "&:hover": {
@@ -512,14 +555,14 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({ loai, phieumuon, open, onClose,
               }}>
               {isLoading
                 ? "Đang xử lý..."
-                : (loai === "MUON" ? "MƯỢN HSBA (F3)" : "TRẢ HSBA (F3)")
-              }
+                : loai === "MUON"
+                ? "MƯỢN HSBA (F3)"
+                : "TRẢ HSBA (F3)"}
             </Button>
           </Box>
         </DialogContent>
       </Dialog>
     </LocalizationProvider>
-
   );
 };
 

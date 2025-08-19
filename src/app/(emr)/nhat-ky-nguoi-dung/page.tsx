@@ -40,7 +40,7 @@ const columns = [
   { field: "cthaotac", headerName: "Thao tác", width: 100, filterable: true },
   { field: "cnoidung", headerName: "Nội dung", width: 400 },
 ];
-export default function nhatkynguoidungPage() {
+export default function NhatKyNguoiDungPage() {
   const [currentTab, setCurrentTab] = React.useState("export");
   const [searchTerm, setSearchTerm] = React.useState(""); // Tên tài liệu
   const [searchStatus, setSearchStatus] = React.useState(""); // Tình trạng xét xuất
@@ -83,7 +83,7 @@ export default function nhatkynguoidungPage() {
     );
 
     setRows(
-      (data || []).map((item: any, idx: number) => ({
+      (data || []).map((item: DataRow, idx: number) => ({
         id: idx + 1,
         ...item,
       }))
