@@ -75,12 +75,17 @@ export default function SignIn() {
   const { setUserData } = useUserStore();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    console.log("handleSubmit")
     event.preventDefault();
     setError("");
     setLoading(true);
     try {
       const hashedPassword = await sha256(password);
+      console.log("handleSubmit ---- ", username, password)
+
       const res = await login(username, hashedPassword);
+
+      console.log("handleSubmit res ---- ", res)
       //console.log("hashpass:", hashedPassword);
       if (res && res.status === "success") {
         // Lưu token nếu cần
@@ -95,7 +100,8 @@ export default function SignIn() {
         );
         ToastError("Đăng nhập thất bại");
       }
-    } catch {
+    } catch(error) {
+      console.log('error ', error)
       setError("Có lỗi xảy ra. Vui lòng thử lại.");
       ToastError("Đăng nhập thất bại");
     }
