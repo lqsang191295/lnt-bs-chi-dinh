@@ -56,23 +56,13 @@ export default function PageQuanLyNguoiDung() {
   const [users, setUsers] = useState<IUserItem[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);
   const { data: loginedUser } = useUserStore();
-  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<ISelectOption[]>(
-    []
-  );
+  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<ISelectOption[]>([]);
   const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
   const [newUserStatus, setNewUserStatus] = useState(0);
   const [password, setPassword] = useState("");
   const [openPhanQuyen, setOpenPhanQuyen] = useState(false);
   const [loadingUser, setLoadingUser] = useState<boolean>(false);
 
-  const handlePhanQuyen = () => {
-    if (!selectedUser) return;
-    setOpenPhanQuyen(true);
-  };
-
-  const handleClosePhanQuyen = () => {
-    setOpenPhanQuyen(false);
-  };
 
   const fetchUsers = useCallback(async () => {
     if (!loginedUser || !loginedUser.ctaikhoan) return;
@@ -100,7 +90,7 @@ export default function PageQuanLyNguoiDung() {
     try {
       const result = await gettnhomnguoidung(loginedUser.ctaikhoan, "1");
 
-      console.log("------------------ Nhom nguoi dung result:", result);
+      console.log("-------- Nhom nguoi dung result:", result);
 
       if (Array.isArray(result)) {
         const mapped = result.map((item: ITnhomNguoiDung) => ({
@@ -134,11 +124,11 @@ export default function PageQuanLyNguoiDung() {
     fetchNhomNguoiDungList();
     fetchKhoaList();
   }, [fetchUsers, fetchNhomNguoiDungList, fetchKhoaList]);
-
+  // xử lý chọn người dùng từ ds người dùng
   const handleRowClick = (user: IUserItem) => {
     setSelectedUser(user);
   };
-
+  // xử lý khi giá trị 1 trường thay đổi
   const handleChange = (field: string, value: string) => {
     console.log("handleChange", field, value);
     setSelectedUser((prev) => {
@@ -146,7 +136,7 @@ export default function PageQuanLyNguoiDung() {
       return { ...prev, [field]: value } as IUserItem;
     });
   };
-
+  // xử lý thêm mới người dùng set trạng thái mới các trường về mac định
   const handleThem = async () => {
     setNewUserStatus(1);
     setSelectedUser({
@@ -169,7 +159,7 @@ export default function PageQuanLyNguoiDung() {
       cnguoitao: loginedUser.ctaikhoan,
     } as IUserItem);
   };
-
+  // xử lý lưu thông tin người dùng
   const handleLuu = async () => {
     if (newUserStatus === 1) {
       if (!selectedUser || !selectedUser.ctaikhoan || !selectedUser.cmatkhau) {
@@ -233,11 +223,12 @@ export default function PageQuanLyNguoiDung() {
       }
     }
   };
-
+  // xử lý hủy thao tác
   const handleHuy = () => {
     setSelectedUser(null);
     setNewUserStatus(0);
   };
+  // xử lý xóa người dùng
   const handleXoa = async () => {
     if (!selectedUser) return;
     if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
@@ -257,6 +248,7 @@ export default function PageQuanLyNguoiDung() {
       }
     }
   };
+  // xử lý đổi mật khẩu người dùng
   const handleDoiMatKhau = async () => {
     if (!selectedUser) return;
     const result = await instnguoidung(
@@ -271,6 +263,15 @@ export default function PageQuanLyNguoiDung() {
     } else {
       alert("Đổi mật khẩu người dùng thất bại");
     }
+  };
+  // xử lý phân quyền người dùng mở dialog phân quyền
+  const handlePhanQuyen = () => {
+    if (!selectedUser) return;
+    setOpenPhanQuyen(true);
+  };
+  // xử lý đóng dialog phân quyền
+  const handleClosePhanQuyen = () => {
+    setOpenPhanQuyen(false);
   };
 
   return (
@@ -297,62 +298,10 @@ export default function PageQuanLyNguoiDung() {
               onRowClick={(params) => handleRowClick(params.row as IUserItem)}
               loading={loadingUser}
             />
-          </Box>
-          {/* <TableContainer
-            component={Paper}
-            className="h-full overflow-hidden relative flex-1 box-shadow flex flex-col"
-            sx={{ boxShadow: "none" }}>
-            <Table
-              size="small"
-              aria-label="customized table"
-              sx={{
-                "& td, & th": {
-                  border: "1px solid #ccc",
-                },
-              }}
-              className="h-full">
-              <TableHead>
-                <TableRow className="bg-blue-200">
-                  <TableCell>STT</TableCell>
-                  <TableCell>Tài khoản</TableCell>
-                  <TableCell>Họ tên</TableCell>
-                  <TableCell>Ngày sinh</TableCell>
-                  <TableCell>SĐT</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((user, idx) => (
-                  <TableRow
-                    key={user.cid}
-                    hover
-                    selected={selectedUser?.cid === user.cid}
-                    onClick={() => handleRowClick(user)}
-                    sx={{ cursor: "pointer" }}>
-                    <TableCell>{idx + 1}</TableCell>
-                    <TableCell>{user.ctaikhoan}</TableCell>
-                    <TableCell component="th" scope="row">
-                      {user.choten}
-                    </TableCell>
-                    <TableCell>{user.cngaysinh}</TableCell>
-                    <TableCell>{user.cdienthoai}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePagination
-              component="div"
-              count={users.length}
-              rowsPerPage={5}
-              page={page}
-              onPageChange={(_, newPage) => setPage(newPage)}
-              rowsPerPageOptions={[]}
-              className="overflow-hidden"
-            />
-          </TableContainer> */}
+          </Box>          
         </Grid>
 
         {/* Form chi tiết */}
-
         <Grid
           size={4}
           className="h-full flex flex-col overflow-hidden bg-white">
@@ -466,8 +415,7 @@ export default function PageQuanLyNguoiDung() {
                     value={newUserStatus === 1 ? password : ""}
                     type="password"
                     placeholder="********"
-                    onChange={(e) => {
-                      setPassword(e.target.value);
+                    onChange={(e) => {                      
                       handleChange("cmatkhau", e.target.value);
                     }}
                     disabled={false}

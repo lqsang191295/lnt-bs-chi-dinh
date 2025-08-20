@@ -41,24 +41,12 @@ const columns = [
   { field: "cnoidung", headerName: "Nội dung", width: 400 },
 ];
 export default function NhatKyNguoiDungPage() {
-  const [searchTerm] = React.useState(""); // Tên tài liệu
-  const [searchStatus] = React.useState(""); // Tình trạng xét xuất
   const [searchTuNgay, setSearchTuNgay] = useState<Date | null>(new Date());
   const [searchDenNgay, setSearchDenNgay] = useState<Date | null>(new Date());
-  const [searchDateType] = React.useState("ngayVaoVien"); // Default search by "Ngày vào viện"
   const [mockData, setRows] = React.useState<DataRow[]>([]); // Dữ liệu bảng
-  // State và hàm cho Pagination
-  const { data: loginedUser } = useUserStore();
-  const [popt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
+  const { data: loginedUser } = useUserStore();
   const handleSearch = async () => {
-    console.log("Searching with:", {
-      searchTerm,
-      searchStatus,
-      searchTuNgay,
-      searchDenNgay,
-      searchDateType,
-    });
     // Logic lọc dữ liệu mockData
     if (!searchTuNgay || !searchDenNgay) return;
     const formatDate = (date: Date) => {
@@ -69,7 +57,7 @@ export default function NhatKyNguoiDungPage() {
     };
     const data = await gettnhatkynguoidung(
       loginedUser.ctaikhoan,
-      popt,
+      "1",
       formatDate(searchTuNgay),
       formatDate(searchDenNgay)
     );
