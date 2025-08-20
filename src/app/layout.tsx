@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Hệ thống bệnh án điện tử",
   description: "Hệ thống bệnh án điện tử của bệnh viện LNT",
+  icons: {
+    icon: "/favicon.ico", // default
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
