@@ -1,6 +1,7 @@
 // app/dong-mo-hsba/page.tsx
 "use client";
 import { capnhathosobenhan, getHosobenhan } from "@/actions/act_thosobenhan";
+import HeadMetadata from "@/components/HeadMetadata";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
@@ -86,7 +87,7 @@ export default function DongMoHsbaPage() {
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
-  const {data: loginedUser } = useUserStore();
+  const { data: loginedUser } = useUserStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
 
   const fetchKhoaList = async () => {
@@ -193,6 +194,8 @@ export default function DongMoHsbaPage() {
   // Render component
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <HeadMetadata title="Đóng mở hồ sơ bệnh án" />
+
       <Box p={2} className="w-full h-full flex flex-col overflow-hidden">
         <Typography
           variant="h6"
@@ -284,32 +287,36 @@ export default function DongMoHsbaPage() {
             />
           </Box>
           <Box flex={1}>
-            <Button fullWidth variant="contained" size="small" onClick={handleSearch}>
+            <Button
+              fullWidth
+              variant="contained"
+              size="small"
+              onClick={handleSearch}>
               Tìm kiếm
             </Button>
-          </Box>          
+          </Box>
         </Box>
- {/* Tab Navigation */}
-      <Box className="bg-white flex gap-2 p-2">
-        <Button
-              startIcon={<LockOutlinedIcon />}
-              variant="contained"
-              color="error"
-              size="small" 
-              onClick={() => dongmohsba("DONG", selectedRows)}
-              disabled={selectedRows.length === 0}>
-              Đóng HSBA
-            </Button>
-        <Button
-              startIcon={<LockOpenIcon />}
-              variant="contained"
-              color="success"
-              size="small" 
-              onClick={() => dongmohsba("MO", selectedRows)}
-              disabled={selectedRows.length === 0}>
-              Mở HSBA
-            </Button> 
-      </Box>
+        {/* Tab Navigation */}
+        <Box className="bg-white flex gap-2 p-2">
+          <Button
+            startIcon={<LockOutlinedIcon />}
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => dongmohsba("DONG", selectedRows)}
+            disabled={selectedRows.length === 0}>
+            Đóng HSBA
+          </Button>
+          <Button
+            startIcon={<LockOpenIcon />}
+            variant="contained"
+            color="success"
+            size="small"
+            onClick={() => dongmohsba("MO", selectedRows)}
+            disabled={selectedRows.length === 0}>
+            Mở HSBA
+          </Button>
+        </Box>
         <Box className="w-full h-full overflow-hidden">
           <DataGrid
             rows={rows}

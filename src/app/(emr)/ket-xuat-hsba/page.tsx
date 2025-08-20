@@ -1,41 +1,43 @@
 // app/ket-xuat-hsba/page.tsx
 "use client";
-import { Download, NoteAdd, Refresh } from "@mui/icons-material";
 import {
+  capnhathosobenhan,
+  getChiTietHSBA,
+  getHosobenhan,
+} from "@/actions/act_thosobenhan";
+import HeadMetadata from "@/components/HeadMetadata";
+import { IPDFItem } from "@/model/ipdf";
+import { IHoSoBenhAn } from "@/model/thosobenhan";
+import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
+import { ISelectOption } from "@/model/ui";
+import { DataManager } from "@/services/DataManager";
+import { useUserStore } from "@/store/user";
+import { mergePDFsWithProgress } from "@/utils/pdflib";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
+import { Download, NoteAdd, Refresh } from "@mui/icons-material";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import {
+  Alert,
   Box,
   Button,
   FormControl,
   FormControlLabel,
   FormLabel,
+  LinearProgress,
+  MenuItem,
   Radio,
   RadioGroup,
   Select,
   Tab,
   Tabs,
   Typography,
-  LinearProgress,
-  Alert,
-  MenuItem,
 } from "@mui/material";
-import { capnhathosobenhan, getHosobenhan, getChiTietHSBA } from "@/actions/act_thosobenhan"; 
-import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
-import { IHoSoBenhAn } from "@/model/thosobenhan";
-import { ISelectOption } from "@/model/ui";
-import { DataManager } from "@/services/DataManager";
-import { useUserStore } from "@/store/user";
-import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined';
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { mergePDFsWithProgress } from "@/utils/pdflib";
-import { IPDFItem } from "@/model/ipdf";
-import React , { useCallback, useEffect, useState }from "react"; 
+import React, { useEffect, useState } from "react";
 // ----------------- MOCK DATA -----------------
-
 
 const columns: GridColDef[] = [
   { field: "ID", headerName: "ID", width: 60 },
@@ -47,7 +49,7 @@ const columns: GridColDef[] = [
       <Box
         sx={{
           backgroundColor: "transparent",
-          color: params.value === 1 ? "#f44336": "#8200fcff", // Màu vàng cho MO, màu đỏ cho DONG,
+          color: params.value === 1 ? "#f44336" : "#8200fcff", // Màu vàng cho MO, màu đỏ cho DONG,
           padding: "4px 8px",
           borderRadius: "4px",
           fontSize: "12px",
@@ -61,8 +63,10 @@ const columns: GridColDef[] = [
         }}>
         {params.value === 1 ? (
           <>
-            <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />            
-            <button onClick={() => handleDownload(params.row)}>Tải xuống</button>
+            <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
+            <button onClick={() => handleDownload(params.row)}>
+              Tải xuống
+            </button>
           </>
         ) : (
           <>
@@ -72,7 +76,7 @@ const columns: GridColDef[] = [
         )}
       </Box>
     ),
-  }, 
+  },
   { field: "Hoten", headerName: "Họ và tên", width: 200 },
   { field: "MaBN", headerName: "Mã BN", width: 130 },
   { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
@@ -119,8 +123,8 @@ function a11yProps(index: number) {
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
- 
-function handleDownload(hsba: IHoSoBenhAn)   {
+
+function handleDownload(hsba: IHoSoBenhAn) {
   try {
     if (!hsba.NoiDungPdf) {
       ToastWarning("Hồ sơ bệnh án chưa được kết xuất PDF!");
@@ -128,42 +132,42 @@ function handleDownload(hsba: IHoSoBenhAn)   {
     }
 
     // Validate and clean base64 string
-    const cleanBase64 = hsba.NoiDungPdf.replace(/[^A-Za-z0-9+/]/g, '');
-    
+    const cleanBase64 = hsba.NoiDungPdf.replace(/[^A-Za-z0-9+/]/g, "");
+
     // Add padding if needed
-    const paddedBase64 = cleanBase64 + '='.repeat((4 - cleanBase64.length % 4) % 4);
-    
+    const paddedBase64 =
+      cleanBase64 + "=".repeat((4 - (cleanBase64.length % 4)) % 4);
+
     // Convert base64 to binary using a safer method
     const binaryString = atob(paddedBase64);
     const bytes = new Uint8Array(binaryString.length);
-    
+
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    
+
     // Tạo blob để download
-    const blob = new Blob([bytes], { type: 'application/pdf' });
-    
+    const blob = new Blob([bytes], { type: "application/pdf" });
+
     const url = URL.createObjectURL(blob);
-    
+
     // Tạo tên file với timestamp
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
     const fileName = `HSBA_${hsba.MaBN}_${hsba.SoVaoVien}_${timestamp}.pdf`;
-    
+
     // Download file
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
   } catch (error) {
     console.error("Error downloading PDF:", error);
     ToastError("Lỗi khi tải xuống hồ sơ bệnh án. Vui lòng thử lại.");
   }
-}  
+}
 
 // ----------------- COMPONENT -----------------
 export default function KetXuatHsbaPage() {
@@ -180,9 +184,9 @@ export default function KetXuatHsbaPage() {
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
-  const {data: loginedUser } = useUserStore();
+  const { data: loginedUser } = useUserStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
- 
+
   const fetchKhoaList = async () => {
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
@@ -206,112 +210,118 @@ export default function KetXuatHsbaPage() {
     try {
       // Kiểm tra có dữ liệu được chọn không
       if (!selectedRows || selectedRows.length === 0) {
-      ToastWarning("Vui lòng chọn ít nhất một hồ sơ bệnh án để kết xuất!");
-      return;
-    }
+        ToastWarning("Vui lòng chọn ít nhất một hồ sơ bệnh án để kết xuất!");
+        return;
+      }
 
-    setLoading(true);
-    setError(null);
-    setProgress(0);
-    let hsbaSuccess = 0;
-    // Lấy PDF data cho từng HSBA được chọn
-    for (const hsba of selectedRows) {
-      try {
-        // Tạo danh sách PDF từ selectedRows
-        const pdfList: IPDFItem[] = [];
+      setLoading(true);
+      setError(null);
+      setProgress(0);
+      let hsbaSuccess = 0;
+      // Lấy PDF data cho từng HSBA được chọn
+      for (const hsba of selectedRows) {
+        try {
+          // Tạo danh sách PDF từ selectedRows
+          const pdfList: IPDFItem[] = [];
 
-        //console.log(`Getting PDF for HSBA: ${hsba.ID}`);
-        
-        // Gọi API để lấy chi tiết PDF của HSBA
-        const chiTietData = await getChiTietHSBA(
-          loginedUser.ctaikhoan, 
-          popt, 
-          hsba.ID
-        );
+          //console.log(`Getting PDF for HSBA: ${hsba.ID}`);
 
-        if (chiTietData && Array.isArray(chiTietData)) {
-          chiTietData.forEach((phieu: IHoSoBenhAnChiTiet, index: number) => {
-            if (phieu.FilePdfKySo) {
-              pdfList.push({
-                maHSBA: `${hsba.MaBN}-${hsba.SoVaoVien}-${index + 1}`,
-                FilePdf: phieu.FilePdfKySo
-              });
-            }
-          });
-        }
-            
-        if (pdfList.length === 0) {
-          ToastError("Không tìm thấy file PDF nào để kết xuất!");
-          return;
-        }
+          // Gọi API để lấy chi tiết PDF của HSBA
+          const chiTietData = await getChiTietHSBA(
+            loginedUser.ctaikhoan,
+            popt,
+            hsba.ID
+          );
 
-        //console.log(`Found ${pdfList.length} PDF files to merge`);
-
-        // Gọi trực tiếp mergePDFsWithProgress
-        const mergedPdfBase64 = await mergePDFsWithProgress(
-          pdfList,
-          "HỒ SƠ BỆNH ÁN ĐIỆN TỬ BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG", // Text không dấu
-          true,
-          (current, total, currentHSBA) => {
-            setProgress((current / total) * 100);
-            console.log(`Processing ${current}/${total}: ${currentHSBA}`);
+          if (chiTietData && Array.isArray(chiTietData)) {
+            chiTietData.forEach((phieu: IHoSoBenhAnChiTiet, index: number) => {
+              if (phieu.FilePdfKySo) {
+                pdfList.push({
+                  maHSBA: `${hsba.MaBN}-${hsba.SoVaoVien}-${index + 1}`,
+                  FilePdf: phieu.FilePdfKySo,
+                });
+              }
+            });
           }
-        );
 
-        if (mergedPdfBase64) {
-          try {
-            // XỬ LÝ LƯU TRỮ PDF VÀO BLOB VÀ TẢI VỀ
+          if (pdfList.length === 0) {
+            ToastError("Không tìm thấy file PDF nào để kết xuất!");
+            return;
+          }
+
+          //console.log(`Found ${pdfList.length} PDF files to merge`);
+
+          // Gọi trực tiếp mergePDFsWithProgress
+          const mergedPdfBase64 = await mergePDFsWithProgress(
+            pdfList,
+            "HỒ SƠ BỆNH ÁN ĐIỆN TỬ BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG", // Text không dấu
+            true,
+            (current, total, currentHSBA) => {
+              setProgress((current / total) * 100);
+              console.log(`Processing ${current}/${total}: ${currentHSBA}`);
+            }
+          );
+
+          if (mergedPdfBase64) {
             try {
+              // XỬ LÝ LƯU TRỮ PDF VÀO BLOB VÀ TẢI VỀ
+              try {
                 console.log(`Updating HSBA ID: ${hsba.ID} with merged PDF`);
                 const updatedHsba = {
                   ...hsba,
-                  NoiDungPdf: mergedPdfBase64 // Cập nhật trường Nội dung PDF với base64 đã hợp nhất
-                  ,TrangThaiKetXuat: "1", // Cập nhật trạng thái kết xuất 
-                  NguoiKetXuat: loginedUser.ctaikhoan
+                  NoiDungPdf: mergedPdfBase64, // Cập nhật trường Nội dung PDF với base64 đã hợp nhất
+                  TrangThaiKetXuat: "1", // Cập nhật trạng thái kết xuất
+                  NguoiKetXuat: loginedUser.ctaikhoan,
                 };
-                const result = await capnhathosobenhan(loginedUser.ctaikhoan, "5", updatedHsba);
+                const result = await capnhathosobenhan(
+                  loginedUser.ctaikhoan,
+                  "5",
+                  updatedHsba
+                );
                 // console.log("Update result:", result);
                 if (result && result[0].ROW_COUNT === 1) {
                   // console.log(`Cập nhật thành công hồ sơ bệnh án ID: ${hsba.ID}`);
                   hsbaSuccess++;
-                } 
+                }
                 // else {
                 //   console.error(`Cập nhật thất bại cho HSBA ID: ${hsba.ID}`);
-                // } 
-
-            } catch (error) {
-              console.error("Error updating HSBA:", error);
-              //ToastError(`Có lỗi xảy ra khi cập nhật kết xuất HSBA! ${error instanceof Error ? error.message : 'Unknown error'}`);
+                // }
+              } catch (error) {
+                console.error("Error updating HSBA:", error);
+                //ToastError(`Có lỗi xảy ra khi cập nhật kết xuất HSBA! ${error instanceof Error ? error.message : 'Unknown error'}`);
+              }
+            } catch (conversionError) {
+              console.error(
+                "Error converting base64 to blob:",
+                conversionError
+              );
+              ToastError("Lỗi khi chuyển đổi dữ liệu PDF. Vui lòng thử lại.");
             }
- 
-          } catch (conversionError) {
-            console.error('Error converting base64 to blob:', conversionError);
-            ToastError('Lỗi khi chuyển đổi dữ liệu PDF. Vui lòng thử lại.');
           }
+        } catch (error) {
+          console.error(`Error getting PDF for HSBA ${hsba.ID}:`, error);
+          continue;
         }
-      } catch (error) {
-        console.error(`Error getting PDF for HSBA ${hsba.ID}:`, error);
-        continue;
       }
+      if (hsbaSuccess === selectedRows.length) {
+        ToastSuccess(`Kết xuất thành công ${selectedRows.length} HSBA!`);
+      } else {
+        ToastWarning(
+          `Kết xuất thành công ${hsbaSuccess} trong tổng số ${selectedRows.length} HSBA!`
+        );
+      }
+      await handleSearch();
+    } catch (error) {
+      console.error("Error in handleKetXuat:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      setError(errorMessage);
+      ToastError(`Lỗi kết xuất: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+      setProgress(0);
     }
-    if (hsbaSuccess === selectedRows.length) {
-      ToastSuccess(`Kết xuất thành công ${selectedRows.length} HSBA!`);
-    }
-    else {
-      ToastWarning(`Kết xuất thành công ${hsbaSuccess} trong tổng số ${selectedRows.length} HSBA!`);
-    }
-    await handleSearch();
-
-  } catch (error) {
-    console.error("Error in handleKetXuat:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    setError(errorMessage);
-    ToastError(`Lỗi kết xuất: ${errorMessage}`);
-  } finally {
-    setLoading(false);
-    setProgress(0);
-  }
-};
+  };
 
   // Hàm xử lý khi chọn rows trong DataGrid
   const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
@@ -368,18 +378,18 @@ export default function KetXuatHsbaPage() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <HeadMetadata title="Quản lý kết xuất hồ sơ bệnh án" />
 
-      
-    <Box p={2} className="w-full h-full flex flex-col">
-      <Typography
-        variant="h6"
-        gutterBottom
-        sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
-        QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
-      </Typography>
+      <Box p={2} className="w-full h-full flex flex-col overflow-hidden">
+        <Typography
+          variant="h6"
+          gutterBottom
+          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+          QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
+        </Typography>
 
-      {/* Bộ lọc */}
-      <Box display="flex" gap={2} mb={2}>
+        {/* Bộ lọc */}
+        <Box display="flex" gap={2}>
           <Box flex={3}>
             <Select
               fullWidth
@@ -463,118 +473,121 @@ export default function KetXuatHsbaPage() {
             />
           </Box>
           <Box flex={1}>
-            <Button fullWidth variant="contained" size="small" onClick={handleSearch}>
+            <Button
+              fullWidth
+              variant="contained"
+              size="small"
+              onClick={handleSearch}>
               Tìm kiếm
             </Button>
-          </Box>          
+          </Box>
         </Box>
 
-      {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs
-          aria-label="basic tabs example"
-          value={value}
-          onChange={handleChange}>
-          <Tab label="Kết xuất" {...a11yProps(0)} />
-          <Tab label="Lịch sử" {...a11yProps(1)} />
-        </Tabs>
+        {/* Tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            aria-label="basic tabs example"
+            value={value}
+            onChange={handleChange}>
+            <Tab label="Kết xuất" {...a11yProps(0)} />
+            <Tab label="Lịch sử" {...a11yProps(1)} />
+          </Tabs>
+        </Box>
+
+        {/* Tab Kết xuất */}
+        <CustomTabPanel value={value} index={0}>
+          <Box className="bg-white flex gap-2 p-2">
+            <Button
+              variant="contained"
+              startIcon={<NoteAdd />}
+              size="small"
+              onClick={handleKetXuat}
+              disabled={loading}>
+              {loading ? `Kết xuất... ${progress.toFixed(0)}%` : "Kết xuất"}
+            </Button>
+            <Button variant="contained" startIcon={<Refresh />} size="small">
+              Làm mới
+            </Button>
+          </Box>
+
+          {/* Progress indicator */}
+          {loading && (
+            <Box sx={{ width: "100%", mt: 1 }}>
+              <LinearProgress variant="determinate" value={progress} />
+              <Typography variant="caption" color="text.secondary">
+                Đang xử lý: {progress.toFixed(0)}%
+              </Typography>
+            </Box>
+          )}
+
+          {/* Error message */}
+          {error && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {error}
+            </Alert>
+          )}
+          {/* DataGrid */}
+          <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              loading={searchingData}
+              pagination
+              checkboxSelection
+              disableRowSelectionOnClick
+              density="compact"
+              onRowSelectionModelChange={handleRowSelectionChange}
+              sx={{
+                "& .MuiDataGrid-columnHeaders": {
+                  backgroundColor: "#f5f5f5",
+                  fontWeight: "bold",
+                },
+                "& .MuiDataGrid-cell": {
+                  border: "1px solid #e0e0e0",
+                },
+                "& .MuiDataGrid-row:nth-of-type(odd)": {
+                  backgroundColor: "#f9f9f9",
+                },
+                "& .MuiDataGrid-row:nth-of-type(even)": {
+                  backgroundColor: "white",
+                },
+                "& .MuiDataGrid-row:hover": {
+                  backgroundColor: "#e3f2fd !important",
+                },
+              }}
+            />
+          </Box>
+        </CustomTabPanel>
+        {/* Tab Lịch sử */}
+        <CustomTabPanel value={value} index={1}>
+          <Box className="bg-white flex gap-2 p-2">
+            <Button variant="contained" startIcon={<Refresh />} size="small">
+              Làm mới
+            </Button>
+            <Button variant="contained" startIcon={<Download />} size="small">
+              Download
+            </Button>
+          </Box>
+
+          {/* DataGrid */}
+          <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              pagination
+              checkboxSelection
+              disableRowSelectionOnClick
+              density="compact"
+              sx={{
+                "& .MuiDataGrid-columnHeaders": {
+                  backgroundColor: "#f5f5f5",
+                  fontWeight: "bold",
+                },
+              }}
+            />
+          </Box>
+        </CustomTabPanel>
       </Box>
-
-      {/* Tab Kết xuất */}
-      <CustomTabPanel value={value} index={0}>
-        <Box className="bg-white flex gap-2 p-2">
-           <Button 
-          variant="contained" 
-          startIcon={<NoteAdd />} 
-          size="small"
-          onClick={handleKetXuat}
-          disabled={loading}
-        >
-          {loading ? `Kết xuất... ${progress.toFixed(0)}%` : 'Kết xuất'}
-        </Button>
-          <Button variant="contained" startIcon={<Refresh />} size="small">
-            Làm mới
-          </Button>
-        </Box>
-
-      {/* Progress indicator */}
-      {loading && (
-        <Box sx={{ width: '100%', mt: 1 }}>
-          <LinearProgress variant="determinate" value={progress} />
-          <Typography variant="caption" color="text.secondary">
-            Đang xử lý: {progress.toFixed(0)}%
-          </Typography>
-        </Box>
-      )}
-      
-      {/* Error message */}
-      {error && (
-        <Alert severity="error" sx={{ mt: 1 }}>
-          {error}
-        </Alert>
-      )}
-        {/* DataGrid */}
-        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            loading={searchingData}
-            pagination
-            checkboxSelection
-            disableRowSelectionOnClick
-            density="compact"
-            onRowSelectionModelChange={handleRowSelectionChange}
-            sx={{
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#f5f5f5",
-                fontWeight: "bold",
-              },
-              "& .MuiDataGrid-cell": {
-                border: "1px solid #e0e0e0",
-              },
-              "& .MuiDataGrid-row:nth-of-type(odd)": {
-                backgroundColor: "#f9f9f9",
-              },
-              "& .MuiDataGrid-row:nth-of-type(even)": {
-                backgroundColor: "white",
-              },
-              "& .MuiDataGrid-row:hover": {
-                backgroundColor: "#e3f2fd !important",
-              },
-            }}
-          />
-        </Box>
-      </CustomTabPanel>
-      {/* Tab Lịch sử */}
-      <CustomTabPanel value={value} index={1}>
-        <Box className="bg-white flex gap-2 p-2">
-          <Button variant="contained" startIcon={<Refresh />} size="small">
-            Làm mới
-          </Button>
-          <Button variant="contained" startIcon={<Download />} size="small">
-            Download
-          </Button>
-        </Box>
-
-        {/* DataGrid */}
-        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            pagination
-            checkboxSelection
-            disableRowSelectionOnClick
-            density="compact"
-            sx={{
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#f5f5f5",
-                fontWeight: "bold",
-              },
-            }}
-          />
-        </Box>
-      </CustomTabPanel>
-    </Box>
     </LocalizationProvider>
   );
 }

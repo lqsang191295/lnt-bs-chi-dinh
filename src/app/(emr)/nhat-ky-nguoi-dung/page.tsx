@@ -2,6 +2,7 @@
 "use client";
 
 import { gettnhatkynguoidung } from "@/actions/act_tnguoidung";
+import HeadMetadata from "@/components/HeadMetadata";
 import { useUserStore } from "@/store/user";
 import { Refresh, Search } from "@mui/icons-material";
 import { Box, Button, Typography } from "@mui/material";
@@ -72,6 +73,8 @@ export default function NhatKyNguoiDungPage() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <HeadMetadata title="Quản lý lịch sử thao tác người dùng" />
+
       <Box p={2} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"

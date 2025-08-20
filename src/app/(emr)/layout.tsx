@@ -1,6 +1,7 @@
 "use client";
 import { getMenuItems } from "@/actions/act_tmenu";
 import AppBarTop from "@/components/AppBarTop";
+import HeadMetadata from "@/components/HeadMetadata";
 import SideMenu from "@/components/SideMenu";
 import { useMenuStore } from "@/store/menu";
 import { useUserStore } from "@/store/user";
@@ -53,6 +54,7 @@ export default function RootLayout({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <HeadMetadata title="Hồ sơ bệnh án" />
       <Box className="flex w-screen h-screen">
         <SideMenu />
         {/* <AppNavbar /> */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { getHosobenhan, getmuontraHSBA } from "@/actions/act_thosobenhan";
+import HeadMetadata from "@/components/HeadMetadata";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
 import { ISelectOption } from "@/model/ui";
@@ -221,6 +222,8 @@ export default function MuonTraHsbaPage() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <HeadMetadata title="Quản lý mượn trả hồ sơ bệnh án" />
+
       <Box p={2} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"
