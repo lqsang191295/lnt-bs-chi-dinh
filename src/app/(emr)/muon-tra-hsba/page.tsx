@@ -133,7 +133,7 @@ export default function MuonTraHsbaPage() {
       );
       //console.log("Search results:", data);
     } catch (error) {
-      console.error("Error fetching HSBA data:", error);
+      // console.error("Error fetching HSBA data:", error);
     } finally {
       setSearchingData(false);
     }
@@ -144,7 +144,7 @@ export default function MuonTraHsbaPage() {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
     } catch (error) {
-      console.error("Error fetching khoa list:", error);
+      // console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
   };
@@ -175,7 +175,7 @@ export default function MuonTraHsbaPage() {
             setPhieumuontraHSBA(null);
           }
         } catch (error) {
-          console.error("Error fetching phieu muon tra:", error);
+          // console.error("Error fetching phieu muon tra:", error);
           setPhieumuontraHSBA(null);
         }
       }
@@ -190,32 +190,27 @@ export default function MuonTraHsbaPage() {
     selectionModel: GridRowSelectionModel
   ) => {
     let selectedIds: unknown[] = [];
-
     if (selectionModel && selectionModel.ids) {
       selectedIds = Array.from(selectionModel.ids);
     } else if (Array.isArray(selectionModel)) {
       selectedIds = selectionModel;
     }
-
     handleRowSelected(selectedIds);
   };
 
   // Hàm xác định loại dựa trên trạng thái phiếu
   const getLoaiPhieu = () => {
     if (!phieumuontraHSBA) return "MUON"; // Nếu chưa có phiếu thì là mượn mới
-
     // Kiểm tra trạng thái trả
     if (phieumuontraHSBA.ctrangthaitra === "0" || !phieumuontraHSBA.cngaytra) {
       return "TRA"; // Đã mượn, chưa trả -> cho phép trả
     }
-
     return "MUON"; // Đã trả hoặc trường hợp khác -> cho phép mượn mới
   };
 
   // Hàm xử lý double click
   const handleRowDoubleClick = (params: GridRowParams) => {
     handleRowSelected([params.row.id]);
-
     setIsOpenDsMuonHsba(true);
   };
 

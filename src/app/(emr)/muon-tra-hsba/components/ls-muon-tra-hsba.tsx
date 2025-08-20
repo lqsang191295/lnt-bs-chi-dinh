@@ -29,7 +29,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 
 interface LsMuonTraHsbaProps {
   open: boolean;
@@ -76,7 +76,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
   // Fetch lịch sử mượn trả
   const fetchLichSuMuonTra = useCallback(async () => {
     if (!loginedUser?.ctaikhoan) {
-      toast.error("Không có thông tin người dùng!");
+      ToastError("Không có thông tin người dùng!");
       return;
     }
 
@@ -113,7 +113,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
         setHistoryData([]);
       }
     } catch {
-      toast.error("Có lỗi khi tải lịch sử mượn trả!");
+      ToastError("Có lỗi khi tải lịch sử mượn trả!");
       setHistoryData([]);
     } finally {
       setLoading(false);

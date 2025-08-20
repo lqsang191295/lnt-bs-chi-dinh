@@ -27,7 +27,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify"; // Nếu sử dụng toast notification
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 
 interface DsMuonHsbaProps {
   loai: string; // Loại mượn ( "MUON" hoặc "TRA")
@@ -71,7 +71,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
       // Validate dữ liệu
       const validationErrors = validateFormData();
       if (validationErrors.length > 0) {
-        toast.error(validationErrors.join("\n"));
+        ToastError(validationErrors.join("\n"));
         return;
       }
 
@@ -118,16 +118,16 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
           typeof arr === "string" &&
           arr === "Authorization has been denied for this request."
         ) {
-          alert("Bạn không có quyền thêm!");
+          ToastError("Bạn không có quyền thêm!");
         } else if (
           Array.isArray(arr) &&
           arr.length > 0 &&
           typeof arr[0]._ID !== "undefined"
         ) {
-          alert("Thêm thành công");
+          ToastSuccess("Thêm thành công");
           onClose();
         } else {
-          alert("Thêm thất bại");
+          ToastError("Thêm thất bại");
         }
       } else if (pOpt === "2") {
         const arr = result as Array<{ ROW_COUNT: number }>;
@@ -135,21 +135,21 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
           typeof arr === "string" &&
           arr === "Authorization has been denied for this request."
         ) {
-          alert("Bạn không có quyền cập nhật!");
+          ToastError("Bạn không có quyền cập nhật!");
         } else if (
           Array.isArray(arr) &&
           arr.length > 0 &&
           typeof arr[0].ROW_COUNT !== "undefined"
         ) {
-          alert("Cập nhật thành công");
+          ToastSuccess("Cập nhật thành công");
           onClose();
         } else {
-          alert("Cập nhật thất bại");
+          ToastError("Cập nhật thất bại");
         }
       }
     } catch (error) {
       //console.error("Error saving:", error);
-      toast.error(
+      ToastError(
         `Lỗi: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     } finally {

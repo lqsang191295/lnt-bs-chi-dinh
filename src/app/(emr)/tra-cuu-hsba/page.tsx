@@ -98,7 +98,6 @@ export default function TraCuuHsbaPage() {
   // Hàm xử lý double click trên lưới chính
   const handleRowDoubleClick = async (params: GridRowParams) => {
     const hsba = params.row;
-
     // console.log("Selected HSBA for detail:", hsba);
     setSelectedHsbaForDetail(hsba);
 
@@ -117,7 +116,7 @@ export default function TraCuuHsbaPage() {
 
       setPhieuList(mappedData);
     } catch (error) {
-      console.error("Lỗi khi lấy chi tiết HSBA:", error);
+      // console.error("Lỗi khi lấy chi tiết HSBA:", error);
       setPhieuList([]);
     }
 
@@ -136,7 +135,7 @@ export default function TraCuuHsbaPage() {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
     } catch (error) {
-      console.error("Error fetching khoa list:", error);
+      // console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
   };
@@ -174,7 +173,7 @@ export default function TraCuuHsbaPage() {
       );
       //console.log("Search results:", data);
     } catch (error) {
-      console.error("Error fetching HSBA data:", error);
+      // console.error("Error fetching HSBA data:", error);
     } finally {
       setSearchingData(false);
     }

@@ -37,6 +37,7 @@ import {
 import TableCell from "@mui/material/TableCell";
 import { DatePicker } from "@mui/x-date-pickers";
 import React, { useCallback, useEffect, useState } from "react";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 
 function TabPanel(props: {
   children?: React.ReactNode;
@@ -94,7 +95,7 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
         item.ctrangthai.toString()
       );
     }
-    alert("Lưu phân quyền menu thành công!");
+    ToastSuccess("Lưu phân quyền menu thành công!");
   };
   // Hàm lấy danh sách HSBA theo filter
   const fetchHSBA = async () => {
@@ -278,7 +279,7 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
         item.ctrangthai.toString()
       );
     }
-    alert("Lưu phân quyền BA thành công!");
+    ToastSuccess("Lưu phân quyền BA thành công!");
   };
 
   const handleTabChange = async (_: unknown, newIndex: number) => {
@@ -365,7 +366,7 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
         item.ctrangthai.toString()
       );
     }
-    alert("Lưu phân quyền BA theo khoa thành công!");
+    ToastSuccess("Lưu phân quyền BA theo khoa thành công!");
   };
 
   const fetchKhoaList = useCallback(async () => {
