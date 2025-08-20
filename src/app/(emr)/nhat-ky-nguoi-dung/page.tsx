@@ -63,8 +63,8 @@ export default function NhatKyNguoiDungPage() {
     );
 
     setRows(
-      (data || []).map((item: DataRow, idx: number) => ({
-        id: idx + 1,
+      (data || []).map((item: DataRow) => ({
+        id: item.cid,
         ...item,
       }))
     );

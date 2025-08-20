@@ -167,8 +167,8 @@ export default function TraCuuHsbaPage() {
       );
 
       setRows(
-        (data || []).map((item: IHoSoBenhAn, idx: number) => ({
-          id: idx + 1,
+        (data || []).map((item: IHoSoBenhAn) => ({
+          id: item.ID,
           ...item,
         }))
       );
