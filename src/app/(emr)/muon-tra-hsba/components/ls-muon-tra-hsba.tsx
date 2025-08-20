@@ -28,7 +28,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 interface LsMuonTraHsbaProps {
@@ -74,7 +74,7 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
   };
 
   // Fetch lịch sử mượn trả
-  const fetchLichSuMuonTra = async () => {
+  const fetchLichSuMuonTra = useCallback(async () => {
     if (!loginedUser?.ctaikhoan) {
       toast.error("Không có thông tin người dùng!");
       return;
@@ -112,21 +112,20 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
         //console.log("Result is not array:", result);
         setHistoryData([]);
       }
-    } catch (error) {
-      //console.error("Error fetching lich su muon tra:", error);
+    } catch {
       toast.error("Có lỗi khi tải lịch sử mượn trả!");
       setHistoryData([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [loginedUser, selectedHsbaId, tuNgay, denNgay]);
 
   // Effect để load data khi dialog mở
   useEffect(() => {
     if (open) {
       fetchLichSuMuonTra();
     }
-  }, [open, selectedHsbaId, loginedUser]);
+  }, [fetchLichSuMuonTra, open, selectedHsbaId]);
 
   // Hàm tìm kiếm
   const handleSearch = () => {

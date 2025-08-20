@@ -175,7 +175,7 @@ export default function MuonTraHsbaPage() {
             setPhieumuontraHSBA(null);
           }
         } catch (error) {
-          //console.error("Error fetching phieu muon tra:", error);
+          console.error("Error fetching phieu muon tra:", error);
           setPhieumuontraHSBA(null);
         }
       }

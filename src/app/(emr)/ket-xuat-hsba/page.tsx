@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DatePicker } from "@mui/x-date-pickers";
-import React, { useState } from "react";
+import React from "react";
 
 // ----------------- MOCK DATA -----------------
 interface DataRow {
@@ -262,8 +262,6 @@ const columns: GridColDef[] = [
 ];
 // ----------------- COMPONENT -----------------
 export default function KetXuatHsbaPage() {
-  const [currentTab, setCurrentTab] = useState("borrow");
-  const [searchTerm, setSearchTerm] = useState("");
   const [value, setValue] = React.useState(0);
 
   // Rows: dùng luôn mockData vì đã trùng key với field trong columns

@@ -1,21 +1,16 @@
 // app/face-detect/page.tsx
 "use client";
 
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-} from "@mui/material";
-import {useRef, useEffect, useState } from "react";
-import * as faceapi from "face-api.js";
+import { luuanhnguoidung } from "@/actions/act_tnguoidung";
 import { useUserStore } from "@/store/user";
-import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT  
-import {luuanhnguoidung} from "@/actions/act_tnguoidung"; 
+import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
+import { Box, Button, TextField, Typography } from "@mui/material";
+import * as faceapi from "face-api.js";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
 const CameraComponent = ({
   onCapture,
-  capturedImage,
 }: {
   onCapture: (img: string) => void;
   capturedImage: string | null;
@@ -31,13 +26,13 @@ const CameraComponent = ({
       try {
         setLoading(true);
         console.log("Loading face-api models...");
-        
+
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri("/models"),
           faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
-          faceapi.nets.faceLandmark68Net.loadFromUri("/models")
+          faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
         ]);
-        
+
         console.log("Models loaded successfully");
         setModelsLoaded(true);
         setLoading(false);
@@ -53,15 +48,15 @@ const CameraComponent = ({
   useEffect(() => {
     const getCamera = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
             width: { ideal: 640 },
-            height: { ideal: 480 }
-          } 
+            height: { ideal: 480 },
+          },
         });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          
+
           // Đợi video sẵn sàng
           videoRef.current.onloadedmetadata = () => {
             console.log("Video metadata loaded");
@@ -75,92 +70,89 @@ const CameraComponent = ({
     getCamera();
 
     // Cleanup camera stream khi component unmount
+    const videoElement = videoRef.current;
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
+      if (videoElement && videoElement.srcObject) {
+        const stream = videoElement.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
 
-useEffect(() => {
-  let intervalId: NodeJS.Timeout;
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
 
-  const detectFaces = async () => {
-    if (
-      videoRef.current &&
-      canvasRef.current &&
-      modelsLoaded &&
-      videoRef.current.readyState >= 2
-    ) {
-      try {
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
-        
-        if (!ctx) return;
+    const detectFaces = async () => {
+      if (
+        videoRef.current &&
+        canvasRef.current &&
+        modelsLoaded &&
+        videoRef.current.readyState >= 2
+      ) {
+        try {
+          const video = videoRef.current;
+          const canvas = canvasRef.current;
+          const ctx = canvas.getContext("2d");
 
-        // Set canvas size
-        canvas.width = video.clientWidth;
-        canvas.height = video.clientHeight;
+          if (!ctx) return;
 
-        // Detect faces
-        const detections = await faceapi.detectAllFaces(
-          video,
-          new faceapi.TinyFaceDetectorOptions({
-            inputSize: 320,
-            scoreThreshold: 0.3
-          })
-        );
+          // Set canvas size
+          canvas.width = video.clientWidth;
+          canvas.height = video.clientHeight;
 
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // Detect faces
+          const detections = await faceapi.detectAllFaces(
+            video,
+            new faceapi.TinyFaceDetectorOptions({
+              inputSize: 320,
+              scoreThreshold: 0.3,
+            })
+          );
 
-        // Draw detections
-        if (detections.length > 0) {
-          const scaleX = canvas.width / video.videoWidth;
-          const scaleY = canvas.height / video.videoHeight;
+          // Clear canvas
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-          detections.forEach((detection, i) => {
-            const { x, y, width, height } = detection.box;
-            
-            ctx.strokeStyle = '#00ff00';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(
-              x * scaleX,
-              y * scaleY,
-              width * scaleX,
-              height * scaleY
-            );
-            
-            ctx.fillStyle = '#00ff00';
-            ctx.font = '16px Arial';
-            ctx.fillText(
-              `Face ${i + 1}`,
-              x * scaleX,
-              y * scaleY - 5
-            );
-          });
-          
-          //console.log(`Detected ${detections.length} faces`);
+          // Draw detections
+          if (detections.length > 0) {
+            const scaleX = canvas.width / video.videoWidth;
+            const scaleY = canvas.height / video.videoHeight;
+
+            detections.forEach((detection, i) => {
+              const { x, y, width, height } = detection.box;
+
+              ctx.strokeStyle = "#00ff00";
+              ctx.lineWidth = 3;
+              ctx.strokeRect(
+                x * scaleX,
+                y * scaleY,
+                width * scaleX,
+                height * scaleY
+              );
+
+              ctx.fillStyle = "#00ff00";
+              ctx.font = "16px Arial";
+              ctx.fillText(`Face ${i + 1}`, x * scaleX, y * scaleY - 5);
+            });
+
+            //console.log(`Detected ${detections.length} faces`);
+          }
+        } catch {
+          //console.error("Detection error:", error);
         }
-      } catch (error) {
-        //console.error("Detection error:", error);
       }
-    }
-  };
+    };
 
-  if (modelsLoaded && !loading) {
-    // Sử dụng setInterval thay vì requestAnimationFrame
-    intervalId = setInterval(detectFaces, 100); // 10 FPS
-  }
-
-  return () => {
-    if (intervalId) {
-      clearInterval(intervalId);
+    if (modelsLoaded && !loading) {
+      // Sử dụng setInterval thay vì requestAnimationFrame
+      intervalId = setInterval(detectFaces, 100); // 10 FPS
     }
-  };
-}, [modelsLoaded, loading]);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [modelsLoaded, loading]);
 
   // Chụp hình và nhận diện khuôn mặt
   const handleCapture = async () => {
@@ -175,7 +167,7 @@ useEffect(() => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext("2d");
-      
+
       if (!ctx) {
         alert("Không thể tạo canvas context!");
         return;
@@ -190,7 +182,7 @@ useEffect(() => {
         canvas,
         new faceapi.TinyFaceDetectorOptions({
           inputSize: 416,
-          scoreThreshold: 0.5
+          scoreThreshold: 0.5,
         })
       );
 
@@ -200,7 +192,7 @@ useEffect(() => {
       }
 
       console.log(`Captured image with ${detections.length} face(s) detected`);
-      
+
       // Gửi imgData lên backend để so sánh với CSDL nhân viên
       onCapture(imgData);
     } catch (error) {
@@ -221,11 +213,11 @@ useEffect(() => {
           autoPlay
           playsInline
           muted
-          style={{ 
-            width: "100%", 
-            maxWidth: 500, 
+          style={{
+            width: "100%",
+            maxWidth: 500,
             borderRadius: 8,
-            display: "block"
+            display: "block",
           }}
         />
         <canvas
@@ -237,15 +229,21 @@ useEffect(() => {
             width: "100%",
             height: "100%",
             pointerEvents: "none",
-            borderRadius: 8
+            borderRadius: 8,
           }}
         />
       </Box>
-      
+
       {/* Status indicators */}
       <Box sx={{ mt: 1, mb: 2 }}>
-        <Typography variant="caption" color={modelsLoaded ? "success.main" : "warning.main"}>
-          {loading ? "🔄 Đang tải models..." : modelsLoaded ? "✅ Models sẵn sàng" : "❌ Lỗi tải models"}
+        <Typography
+          variant="caption"
+          color={modelsLoaded ? "success.main" : "warning.main"}>
+          {loading
+            ? "🔄 Đang tải models..."
+            : modelsLoaded
+            ? "✅ Models sẵn sàng"
+            : "❌ Lỗi tải models"}
         </Typography>
       </Box>
 
@@ -254,126 +252,135 @@ useEffect(() => {
         sx={{ mt: 1 }}
         onClick={handleCapture}
         disabled={loading || !modelsLoaded}
-        fullWidth
-      >
+        fullWidth>
         {loading ? "Đang tải mô hình..." : "📸 Chụp & Nhận diện"}
       </Button>
     </Box>
   );
 };
 
-export default function facedetectPage() {
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
+export default function FacedetectPage() {
   const [ctaikhoan, setCtaikhoan] = useState("");
   const [choten, setChoten] = useState("");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [serverImage, setServerImage] = useState<string | null>(null);
-  const { data: loginedUser, setUserData} = useUserStore();  
+  const { data: loginedUser, setUserData } = useUserStore();
   const [token, setToken] = useState<string | null>(null);
   const [recognitionTime, setRecognitionTime] = useState<string | null>(null);
   const [isRecognizing, setIsRecognizing] = useState(false);
-   useEffect(() => {
-        // if (!loginedUser || !loginedUser.ctaikhoan) {
-        //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
-        //   return;
-        // } 
-      const getTokenFromClient = () => {
+
+  useEffect(() => {
+    // if (!loginedUser || !loginedUser.ctaikhoan) {
+    //   router.push("/login"); // <-- Chuyển hướng nếu chưa đăng nhập
+    //   return;
+    // }
+    const getTokenFromClient = () => {
       // Cách 1: Từ localStorage nếu bạn lưu token ở đó
       const storedToken = localStorage.getItem("authToken");
-      
+
       // Cách 2: Từ document.cookie
       const cookieToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('authToken='))
-        ?.split('=')[1];
-      
+        .split("; ")
+        .find((row) => row.startsWith("authToken="))
+        ?.split("=")[1];
+
       return storedToken || cookieToken || null;
     };
 
     const clientToken = getTokenFromClient();
     setToken(clientToken);
-        const claims = getClaimsFromToken();
-        if (claims) {
-          setUserData(claims);
-          // Log or handle the claims as needed 
-          //console.log("User claims:", claims);
-          // You can set user claims in a global state or context if needed
-        } else {
-          console.warn("No valid claims found in token");
-        }  
-      }, []);
+    const claims = getClaimsFromToken();
+    if (claims) {
+      setUserData(claims);
+      // Log or handle the claims as needed
+      //console.log("User claims:", claims);
+      // You can set user claims in a global state or context if needed
+    } else {
+      console.warn("No valid claims found in token");
+    }
+  }, [loginedUser, setUserData]);
 
-    // Hàm gửi ảnh lên backend để kiểm tra nhân viên
- const handleFaceCapture = async (imgBase64: string) => {
+  // Hàm gửi ảnh lên backend để kiểm tra nhân viên
+  const handleFaceCapture = async (imgBase64: string) => {
     const startTime = Date.now();
     const startDate = new Date(startTime);
-    
+
     setIsRecognizing(true);
     setRecognitionTime(null);
-    
+
     console.log("=== BẮT ĐẦU NHẬN DIỆN KHUÔN MẶT ===");
     console.log("Thời gian bắt đầu:", startDate.toLocaleString());
     console.log("Timestamp bắt đầu:", startTime);
-    
+
     setCapturedImage(imgBase64);
-    
+
     try {
       console.log("🔄 Đang gửi ảnh lên API để nhận diện nhân viên...");
-      
+
       const apiStartTime = Date.now();
-      console.log("Thời gian gọi API:", new Date(apiStartTime).toLocaleString());
-      
+      console.log(
+        "Thời gian gọi API:",
+        new Date(apiStartTime).toLocaleString()
+      );
+
       const res = await fetch("/api/staff-detect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: token, image: imgBase64 }),
       });
-      
+
       const apiEndTime = Date.now();
       const apiDuration = apiEndTime - apiStartTime;
-      console.log("⏱️ Thời gian API response:", new Date(apiEndTime).toLocaleString());
+      console.log(
+        "⏱️ Thời gian API response:",
+        new Date(apiEndTime).toLocaleString()
+      );
       console.log("⚡ Thời gian xử lý API:", apiDuration + "ms");
-      
+
       const data = await res.json();
       console.log("📋 Kết quả nhận diện:", data);
-      
+
       if (data.found) {
         setServerImage(data.nhanvien.cimg);
         setCtaikhoan(data.nhanvien.ctaikhoan);
         setChoten(data.nhanvien.choten);
-        console.log("✅ Nhận diện thành công:", data.nhanvien.ctaikhoan + " - " + data.nhanvien.choten);
-        
+        console.log(
+          "✅ Nhận diện thành công:",
+          data.nhanvien.ctaikhoan + " - " + data.nhanvien.choten
+        );
+
         if (data.confidence) {
           console.log("🎯 Độ tin cậy:", data.confidence + "%");
         }
       } else {
-        setChoten("Không tìm thấy nhân viên trùng khớp");     
+        setChoten("Không tìm thấy nhân viên trùng khớp");
         setServerImage(null);
         console.log("❌ Không tìm thấy nhân viên trùng khớp");
       }
-      
     } catch (error) {
       console.error("🚨 Lỗi trong quá trình nhận diện:", error);
       setChoten(
         "Lỗi khi nhận diện: " +
-        (error instanceof Error ? error.message : String(error))
-      );     
+          (error instanceof Error ? error.message : String(error))
+      );
       setServerImage(null);
     } finally {
       const endTime = Date.now();
       const endDate = new Date(endTime);
       const totalDuration = endTime - startTime;
-      
+
       setIsRecognizing(false);
       setRecognitionTime(`${(totalDuration / 1000).toFixed(2)}s`);
-      
+
       console.log("=== KẾT THÚC NHẬN DIỆN KHUÔN MẶT ===");
       console.log("Thời gian kết thúc:", endDate.toLocaleString());
       console.log("Timestamp kết thúc:", endTime);
       console.log("⏰ TỔNG THỜI GIAN NHẬN DIỆN:", totalDuration + "ms");
-      console.log("⏰ TỔNG THỜI GIAN NHẬN DIỆN:", (totalDuration / 1000).toFixed(2) + " giây");
-      
+      console.log(
+        "⏰ TỔNG THỜI GIAN NHẬN DIỆN:",
+        (totalDuration / 1000).toFixed(2) + " giây"
+      );
+
       if (totalDuration < 1000) {
         console.log("🚀 Hiệu suất: Rất nhanh");
       } else if (totalDuration < 3000) {
@@ -383,7 +390,7 @@ export default function facedetectPage() {
       } else {
         console.log("🐌 Hiệu suất: Chậm");
       }
-      
+
       console.log("================================================");
     }
   };
@@ -402,13 +409,23 @@ export default function facedetectPage() {
       return;
     }
     // Gọi API để lưu ảnh người dùng
-    console.log("Đang gửi ảnh lên server..." + Date.now()); 
+    console.log("Đang gửi ảnh lên server..." + Date.now());
     //console.log("Gửi ảnh lên server:", imgBase64);
-    const result = await luuanhnguoidung(loginedUser.ctaikhoan, "1", 0, ctaikhoan, choten, imgBase64);
+    const result = await luuanhnguoidung(
+      loginedUser.ctaikhoan,
+      "1",
+      0,
+      ctaikhoan,
+      choten,
+      imgBase64
+    );
     console.log("Kết quả lưu ảnh:", result);
-    const arr = result as Array<{ _ID: number}>;
+    const arr = result as Array<{ _ID: number }>;
 
-    if (typeof arr === "string" && arr === "Authorization has been denied for this request.") {
+    if (
+      typeof arr === "string" &&
+      arr === "Authorization has been denied for this request."
+    ) {
       alert("Bạn không có quyền thêm ảnh người dùng!");
     } else if (
       Array.isArray(arr) &&
@@ -419,26 +436,37 @@ export default function facedetectPage() {
     } else {
       alert("Thêm ảnh người dùng thất bại");
     }
-   
-     
   };
-  
+
   // Hàm load ảnh từ server
   const handleLoadImage = async () => {
     if (!ctaikhoan.trim()) {
       alert("Vui lòng nhập tài khoản!");
       return;
     }
-    const result = await luuanhnguoidung(loginedUser.ctaikhoan, "2", 0, ctaikhoan, "", "");
+    const result = await luuanhnguoidung(
+      loginedUser.ctaikhoan,
+      "2",
+      0,
+      ctaikhoan,
+      "",
+      ""
+    );
 
-    const arr = result as Array<{ cid: number, ctaikhoan: string, choten: string, cimg: string, cngaytao: string }>;
+    const arr = result as Array<{
+      cid: number;
+      ctaikhoan: string;
+      choten: string;
+      cimg: string;
+      cngaytao: string;
+    }>;
 
-    if (typeof arr === "string" && arr === "Authorization has been denied for this request.") {
-      alert("Bạn không có quyền tải ảnh người dùng!");
-    } else if (
-      Array.isArray(arr) &&
-      arr.length > 0  
+    if (
+      typeof arr === "string" &&
+      arr === "Authorization has been denied for this request."
     ) {
+      alert("Bạn không có quyền tải ảnh người dùng!");
+    } else if (Array.isArray(arr) && arr.length > 0) {
       setServerImage(arr[0].cimg);
       setCtaikhoan(arr[0].ctaikhoan);
       setChoten(arr[0].choten);
@@ -447,219 +475,228 @@ export default function facedetectPage() {
       setChoten("");
       alert("Không tìm thấy ảnh trên server!");
     }
-    
   };
 
   return (
-   <Box p={2} 
-    sx={{ 
-      minHeight: "100vh", // Đảm bảo chiều cao đủ
-      overflow: "auto", // Cho phép scroll nếu cần
-      pb: 4 // Padding bottom thêm
-    }}>
-    <Typography variant="h6" gutterBottom sx={{ color: "#1976d2", fontWeight: "normal", letterSpacing: 1 }}>
-     Nhận diện Khuôn mặt Nhân viên
-    </Typography>
-    
-    <Box display="flex" gap={2} mb={2}>
-      <TextField
-        label="Tài khoản"
-        value={ctaikhoan}
-        onChange={(e) => setCtaikhoan(e.target.value)}
-        size="small"
-        required
-      />
-      <TextField
-        label="Họ tên"
-        value={choten}
-        onChange={(e) => setChoten(e.target.value)}
-        size="small"
-        required
-      />
-      <Button
-        variant="outlined"
-        color="secondary"
-        onClick={handleLoadImage}
-      >
-        Load ảnh từ server
-      </Button>
-    </Box>
-    
-    {/* Camera Component */}
-    <Box mb={3}>
-      <CameraComponent onCapture={handleFaceCapture} capturedImage={capturedImage} />
-    </Box>
-    
-    {/* Hiển thị trạng thái nhận diện */}
-    {isRecognizing && (
-      <Box sx={{ mb: 2, p: 1, backgroundColor: "#fff3cd", borderRadius: 1 }}>
-        <Typography color="warning.main">
-          🔄 Đang nhận diện... Vui lòng chờ
-        </Typography>
-      </Box>
-    )}
-    
-    {recognitionTime && (
-      <Box sx={{ mb: 2, p: 1, backgroundColor: "#d1ecf1", borderRadius: 1 }}>
-        <Typography color="info.main">
-          ⏱️ Thời gian nhận diện: {recognitionTime}
-        </Typography>
-      </Box>
-    )}
-    
-    {/* Container cho ảnh - sử dụng layout responsive */}
-    <Box 
+    <Box
+      p={2}
       sx={{
-        display: "flex",
-        flexDirection: { xs: "column", md: "row" }, // Vertical trên mobile, horizontal trên desktop
-        gap: 3,
-        mt: 3,
-        flexWrap: "wrap", // Cho phép wrap xuống dòng nếu cần
-        justifyContent: "flex-start",
-        alignItems: "flex-start" // Align top để không bị stretch
-      }}
-    >
-      {/* Ảnh vừa chụp */}
-      {capturedImage ? (
-        <Box
-          sx={{
-            p: 2,
-            border: "1px solid #ccc",
-            borderRadius: 2,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            background: "#fafbfc",
-            minWidth: { xs: "100%", sm: 320 }, // Full width trên mobile
-            maxWidth: { xs: "100%", sm: 400 }, // Giới hạn width
-            flex: { md: "1" }, // Flexible trên desktop
-          }}
-        >
-          <Typography fontSize={14} mb={1} fontWeight="bold" color="#071b30ff">
-            Ảnh vừa chụp
-          </Typography>
-          <Box
-            sx={{
-              width: "100%",
-              maxWidth: 300,
-              overflow: "hidden",
-              borderRadius: 1,
-              border: "1px solid #eee"
-            }}
-          >
-            <img
-              src={capturedImage}
-              alt="Ảnh chụp"
-              style={{ 
-                width: "100%", 
-                height: "auto", 
-                display: "block",
-                objectFit: "contain" // Giữ tỷ lệ ảnh
-              }}
-            />
-          </Box>
-          <Box mt={2} textAlign="center" sx={{ width: "100%" }}>
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={() => {
-                if (capturedImage) {
-                  handleSendCapture(capturedImage);
-                }
-              }}
-            >
-              Lưu ảnh
-            </Button>
-          </Box>
-        </Box>
-      ) : (
-        <Box
-          sx={{
-            p: 2,
-            minWidth: { xs: "100%", sm: 320 },
-            minHeight: 280,
-            border: "1px dashed #ccc",
-            borderRadius: 2,
-            background: "#fafbfc",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#bbb",
-            flex: { md: "1" },
-          }}
-        >
-          <Typography variant="body2" textAlign="center">
-            Chưa có ảnh chụp
+        minHeight: "100vh", // Đảm bảo chiều cao đủ
+        overflow: "auto", // Cho phép scroll nếu cần
+        pb: 4, // Padding bottom thêm
+      }}>
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{ color: "#1976d2", fontWeight: "normal", letterSpacing: 1 }}>
+        Nhận diện Khuôn mặt Nhân viên
+      </Typography>
+
+      <Box display="flex" gap={2} mb={2}>
+        <TextField
+          label="Tài khoản"
+          value={ctaikhoan}
+          onChange={(e) => setCtaikhoan(e.target.value)}
+          size="small"
+          required
+        />
+        <TextField
+          label="Họ tên"
+          value={choten}
+          onChange={(e) => setChoten(e.target.value)}
+          size="small"
+          required
+        />
+        <Button variant="outlined" color="secondary" onClick={handleLoadImage}>
+          Load ảnh từ server
+        </Button>
+      </Box>
+
+      {/* Camera Component */}
+      <Box mb={3}>
+        <CameraComponent
+          onCapture={handleFaceCapture}
+          capturedImage={capturedImage}
+        />
+      </Box>
+
+      {/* Hiển thị trạng thái nhận diện */}
+      {isRecognizing && (
+        <Box sx={{ mb: 2, p: 1, backgroundColor: "#fff3cd", borderRadius: 1 }}>
+          <Typography color="warning.main">
+            🔄 Đang nhận diện... Vui lòng chờ
           </Typography>
         </Box>
       )}
 
-      {/* Ảnh từ server */}
-      {serverImage ? (
-        <Box
-          sx={{
-            p: 2,
-            border: "1px solid #1976d2",
-            borderRadius: 2,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            background: "#f0f7ff",
-            minWidth: { xs: "100%", sm: 320 },
-            maxWidth: { xs: "100%", sm: 400 },
-            flex: { md: "1" },
-          }}
-        >
-          <Typography fontSize={14} mb={1} fontWeight="bold" color="#071b30ff" textAlign="center">
-            Nhân viên: {ctaikhoan} - {choten}
-          </Typography>
-          <Box
-            sx={{
-              width: "100%",
-              maxWidth: 300,
-              overflow: "hidden",
-              borderRadius: 1,
-              border: "1px solid #eee"
-            }}
-          >
-            <img
-              src={serverImage}
-              alt="Ảnh từ server"
-              style={{ 
-                width: "100%", 
-                height: "auto", 
-                display: "block",
-                objectFit: "contain"
-              }}
-            />
-          </Box>
-        </Box>
-      ) : (
-        <Box
-          sx={{
-            p: 2,
-            minWidth: { xs: "100%", sm: 320 },
-            minHeight: 280,
-            border: "1px dashed #1976d2",
-            borderRadius: 2,
-            background: "#f0f7ff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#90caf9",
-            flex: { md: "1" },
-          }}
-        >
-          <Typography variant="body2" textAlign="center">
-            Không phát hiện ảnh
+      {recognitionTime && (
+        <Box sx={{ mb: 2, p: 1, backgroundColor: "#d1ecf1", borderRadius: 1 }}>
+          <Typography color="info.main">
+            ⏱️ Thời gian nhận diện: {recognitionTime}
           </Typography>
         </Box>
       )}
+
+      {/* Container cho ảnh - sử dụng layout responsive */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" }, // Vertical trên mobile, horizontal trên desktop
+          gap: 3,
+          mt: 3,
+          flexWrap: "wrap", // Cho phép wrap xuống dòng nếu cần
+          justifyContent: "flex-start",
+          alignItems: "flex-start", // Align top để không bị stretch
+        }}>
+        {/* Ảnh vừa chụp */}
+        {capturedImage ? (
+          <Box
+            sx={{
+              p: 2,
+              border: "1px solid #ccc",
+              borderRadius: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              background: "#fafbfc",
+              minWidth: { xs: "100%", sm: 320 }, // Full width trên mobile
+              maxWidth: { xs: "100%", sm: 400 }, // Giới hạn width
+              flex: { md: "1" }, // Flexible trên desktop
+            }}>
+            <Typography
+              fontSize={14}
+              mb={1}
+              fontWeight="bold"
+              color="#071b30ff">
+              Ảnh vừa chụp
+            </Typography>
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: 300,
+                overflow: "hidden",
+                borderRadius: 1,
+                border: "1px solid #eee",
+              }}>
+              <div
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                }}>
+                <Image
+                  src={capturedImage}
+                  alt="Ảnh chụp"
+                  fill
+                  style={{ objectFit: "contain" }}
+                />
+              </div>
+            </Box>
+            <Box mt={2} textAlign="center" sx={{ width: "100%" }}>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={() => {
+                  if (capturedImage) {
+                    handleSendCapture(capturedImage);
+                  }
+                }}>
+                Lưu ảnh
+              </Button>
+            </Box>
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              p: 2,
+              minWidth: { xs: "100%", sm: 320 },
+              minHeight: 280,
+              border: "1px dashed #ccc",
+              borderRadius: 2,
+              background: "#fafbfc",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#bbb",
+              flex: { md: "1" },
+            }}>
+            <Typography variant="body2" textAlign="center">
+              Chưa có ảnh chụp
+            </Typography>
+          </Box>
+        )}
+
+        {/* Ảnh từ server */}
+        {serverImage ? (
+          <Box
+            sx={{
+              p: 2,
+              border: "1px solid #1976d2",
+              borderRadius: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              background: "#f0f7ff",
+              minWidth: { xs: "100%", sm: 320 },
+              maxWidth: { xs: "100%", sm: 400 },
+              flex: { md: "1" },
+            }}>
+            <Typography
+              fontSize={14}
+              mb={1}
+              fontWeight="bold"
+              color="#071b30ff"
+              textAlign="center">
+              Nhân viên: {ctaikhoan} - {choten}
+            </Typography>
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: 300,
+                overflow: "hidden",
+                borderRadius: 1,
+                border: "1px solid #eee",
+              }}>
+              <div
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                }}>
+                <Image
+                  src={serverImage}
+                  alt="Ảnh từ server"
+                  fill
+                  style={{ objectFit: "contain" }}
+                />
+              </div>
+            </Box>
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              p: 2,
+              minWidth: { xs: "100%", sm: 320 },
+              minHeight: 280,
+              border: "1px dashed #1976d2",
+              borderRadius: 2,
+              background: "#f0f7ff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#90caf9",
+              flex: { md: "1" },
+            }}>
+            <Typography variant="body2" textAlign="center">
+              Không phát hiện ảnh
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Spacer để đảm bảo có khoảng trống phía dưới */}
+      <Box sx={{ height: 50 }} />
     </Box>
-    
-    {/* Spacer để đảm bảo có khoảng trống phía dưới */}
-    <Box sx={{ height: 50 }} />
-  </Box>
   );
 }

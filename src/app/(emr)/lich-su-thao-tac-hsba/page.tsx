@@ -1,20 +1,11 @@
 // app/lich-su-thao-tac-hsba/page.tsx
 "use client";
 
-import CloseIcon from "@mui/icons-material/Close"; // Dùng cho nút "X" trong ô tìm kiếm
-import {
-  Box,
-  Button,
-  IconButton,
-  InputAdornment,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import React, { useState } from "react";
 
 import { getnhatkythaotacba } from "@/actions/act_tnguoidung";
 import { useUserStore } from "@/store/user";
-import type { SelectChangeEvent } from "@mui/material/Select";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -85,25 +76,12 @@ export default function LichSuThaoTacHsbaPage() {
   // State cho các ô tìm kiếm trong tiêu đề cột
   const [colSearchMaBenhAn, setColSearchMaBenhAn] = React.useState("");
   const [colSearchThoiGian, setColSearchThoiGian] = React.useState("");
-  const [colSearchGiaTriCu, setColSearchGiaTriCu] = React.useState("");
-  const [colSearchGiaTriMoi, setColSearchGiaTriMoi] = React.useState("");
-  const [colSearchLoai, setColSearchLoai] = React.useState("");
-  const [colSearchTacVu, setColSearchTacVu] = React.useState("");
-  const [colSearchGhiChu, setColSearchGhiChu] = React.useState("");
-  const [colSearchNoiDung, setColSearchNoiDung] = React.useState("");
-  const [currentTab, setCurrentTab] = React.useState("export");
-  const [searchTerm, setSearchTerm] = React.useState(""); // Tên tài liệu
-  const [searchStatus, setSearchStatus] = React.useState(""); // Tình trạng xét xuất
   const [searchTuNgay, setSearchTuNgay] = useState<Date | null>(new Date());
   const [searchDenNgay, setSearchDenNgay] = useState<Date | null>(new Date());
-  const [searchDateType, setSearchDateType] = React.useState("ngayVaoVien"); // Default search by "Ngày vào viện"
   const [mockData, setRows] = React.useState<DataRow[]>([]); // Dữ liệu bảng
   // State và hàm cho Pagination
-  const [page, setPage] = React.useState(1);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [selected, setSelected] = React.useState<readonly string[]>([]);
   const { data: loginedUser } = useUserStore();
-  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
+  const [popt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   const handleSearch = async () => {
     console.log("Searching with:", {
@@ -144,68 +122,7 @@ export default function LichSuThaoTacHsbaPage() {
     setSearchToDate("");
     setColSearchMaBenhAn("");
     setColSearchThoiGian("");
-    setColSearchGiaTriCu("");
-    setColSearchGiaTriMoi("");
-    setColSearchLoai("");
-    setColSearchTacVu("");
-    setColSearchGhiChu("");
-    setColSearchNoiDung("");
-    setPage(1);
   };
-
-  // Lấy dữ liệu cho trang hiện tại
-  const paginatedData = mockData.slice(
-    (page - 1) * rowsPerPage,
-    (page - 1) * rowsPerPage + rowsPerPage
-  );
-  const totalPages = Math.ceil(mockData.length / rowsPerPage);
-  const totalItems = mockData.length; // Tổng số mục
-
-  const handleChangePage = (
-    event: React.ChangeEvent<unknown>,
-    newPage: number
-  ) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: SelectChangeEvent) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang
-  };
-
-  // Component cho ô tìm kiếm trong TableHeader
-  const ColumnSearchTextField: React.FC<{
-    value: string;
-    onChange: (val: string) => void;
-  }> = ({ value, onChange }) => (
-    <TextField
-      variant="standard"
-      size="small"
-      placeholder="Tìm"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      InputProps={{
-        disableUnderline: true, // Bỏ gạch chân
-        sx: { fontSize: "0.75rem", py: 0.5 },
-        endAdornment: value && ( // Chỉ hiện nút X khi có giá trị
-          <InputAdornment position="end">
-            <IconButton
-              size="small"
-              onClick={() => onChange("")}
-              sx={{ p: "2px" }}>
-              <CloseIcon fontSize="inherit" sx={{ fontSize: "0.8rem" }} />
-            </IconButton>
-          </InputAdornment>
-        ),
-      }}
-      sx={{ width: "100px", mr: 0.5 }}
-      onKeyPress={(e) => {
-        if (e.key === "Enter") {
-          handleSearch(); // Thực hiện tìm kiếm khi nhấn Enter
-        }
-      }}
-    />
-  );
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>

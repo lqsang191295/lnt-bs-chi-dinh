@@ -24,7 +24,7 @@ export default function RootLayout({
       const menu = await getMenuItems();
       //console.log("Menu items fetched:", menu);
       setData(menu);
-    } catch (error) {
+    } catch {
       //console.error("Error fetching menu items:", error);
     }
   }, [setData]);
@@ -38,7 +38,7 @@ export default function RootLayout({
       } else {
         //console.warn("No valid claims found in token");
       }
-    } catch (error) {
+    } catch {
       //console.error("Error initializing user data:", error);
     }
   }, [setUserData]);

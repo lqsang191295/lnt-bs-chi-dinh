@@ -255,7 +255,7 @@ export default function LuuTruHsbaPage() {
         }))
       );
       //console.log("Search results:", data);
-    } catch (error) {
+    } catch {
       //console.error("Error fetching hồ sơ bệnh án:", error);
     } finally {
       setSearchingData(false);

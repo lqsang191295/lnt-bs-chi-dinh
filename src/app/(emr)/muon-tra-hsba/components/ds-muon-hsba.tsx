@@ -203,7 +203,7 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
         if (Array.isArray(result)) {
           setNguoiMuon(result as IUserItem[]);
         }
-      } catch (error) {
+      } catch {
         //console.error("Error fetching nguoi muon:", error);
       }
     };
