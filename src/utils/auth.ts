@@ -34,6 +34,20 @@ export function getClaimsFromToken(token?: string) {
 
 // Hàm mã hóa SHA256 trả về hex string
 export async function sha256(message: string): Promise<string> {
+  if (typeof window !== "undefined" && window.crypto?.subtle) {
+    // Client-side
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  } else {
+    // Server-side (Node.js)
+    const { createHash } = await import("crypto");
+    return createHash("sha256").update(message).digest("hex");
+  }
+  
   const encoder = new TextEncoder();
   const data = encoder.encode(message);
   const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
