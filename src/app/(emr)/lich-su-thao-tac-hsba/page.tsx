@@ -30,14 +30,23 @@ interface DataRow {
 
 const columns: GridColDef[] = [
   { field: "cid", headerName: "ID", width: 60 },
-  { field: "ctaikhoan", headerName: "Tài khoản", width: 150, filterable: true },
+  { field: "ctaikhoan", headerName: "Tài khoản", width: 100, filterable: true },
   { field: "choten", headerName: "Họ tên", width: 150, filterable: true },
   {
     field: "cdienthoai",
     headerName: "Điện thoại",
-    width: 130,
+    width: 100,
+    filterable: true,
+  },  
+  { field: "cthaotac", headerName: "Thao tác", width: 200, filterable: true },
+  {
+    field: "tngaythaotac",
+    headerName: "Ngày thao tác",
+    width: 180,
     filterable: true,
   },
+  { field: "cgiatricu", headerName: "Giá trị cũ", width: 200 },
+  { field: "cgiatrimoi", headerName: "Giá trị mới", width: 200 },
   {
     field: "cmabenhan",
     headerName: "Mã bệnh án",
@@ -57,15 +66,6 @@ const columns: GridColDef[] = [
     field: "KhoaDieuTri",
     headerName: "Khoa điều trị",
     width: 130,
-    filterable: true,
-  },
-  { field: "cthaotac", headerName: "Thao tác", width: 100, filterable: true },
-  { field: "cgiatricu", headerName: "Giá trị cũ", width: 200 },
-  { field: "cgiatrimoi", headerName: "Giá trị mới", width: 200 },
-  {
-    field: "tngaythaotac",
-    headerName: "Ngày thao tác",
-    width: 180,
     filterable: true,
   },
 ];

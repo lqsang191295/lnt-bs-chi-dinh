@@ -61,6 +61,7 @@ export const getChiTietHSBA = async (pUser: string, pOpt: string, ID: string) =>
 //  "2" - Cập nhật, 
 //  "3" - Cập nhật lưu trữ hsba SoLuuTru,VitriLuuTru,LoaiLuuTru,NgayLuuTru,
 //  "4" - Cập nhật trạng thái hồ sơ bệnh án [đóng/mở]
+//  "5" - Cập nhật PDF KẾT XUẤT hồ sơ bệnh án 
 export const capnhathosobenhan = async (pUser: string, pOpt: string, hsba: IHoSoBenhAn) => {
   try {
     //console.log("Fetching HoSoBenhAn...");
@@ -101,6 +102,7 @@ export const capnhathosobenhan = async (pUser: string, pOpt: string, hsba: IHoSo
         { paraName: "ViTriLuuTru", paraValue: hsba.ViTriLuuTru },
         { paraName: "LoaiLuuTru", paraValue: hsba.LoaiLuuTru },
         { paraName: "NgayLuuTru", paraValue: hsba.NgayLuuTru },
+        { paraName: "NguoiKetXuat", paraValue: hsba.NguoiKetXuat },
       ],
     });
 

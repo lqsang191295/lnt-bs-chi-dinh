@@ -33,4 +33,7 @@ export interface IHoSoBenhAn {
   NgayLuuTru?: Date | null;
   TenLoaiLuuTru?: string | null;
   SoNamLuuTru?: string | null;
+  TrangThaiKetXuat?: string | null;
+  NgayKetXuat?: string | null;
+  NguoiKetXuat?: string | null;
 }
