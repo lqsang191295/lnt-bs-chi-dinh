@@ -104,7 +104,7 @@ function CustomTabPanel(props: TabPanelProps) {
 
   return (
     <div
-      className="p-0 w-full h-full"
+      className="p-0 w-full h-full overflow-hidden"
       role="tabpanel"
       hidden={value !== index}
       id={`simple-tabpanel-${index}`}
