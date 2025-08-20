@@ -7,8 +7,8 @@ import {
   instnguoidung,
 } from "@/actions/act_tnguoidung";
 import { ITnhomNguoiDung } from "@/model/tnhomnguoidung";
-import { ISelectOption } from "@/model/ui";
 import { IUserItem } from "@/model/tuser";
+import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import {
@@ -23,7 +23,7 @@ import {
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DialogPhanQuyen from "./components/dialog-phan-quyen";
 import HeadMetadata from "./head-metadata";
 
