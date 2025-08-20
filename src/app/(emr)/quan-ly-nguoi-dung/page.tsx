@@ -52,33 +52,17 @@ const taikhoans: { field: keyof IUserItem; label: string; type?: string }[] = [
   // { label: "Xác thực 2 lớp", field: "cxacthuc2lop", type: "checkbox"   },
 ];
 
-function TabPanel(props: {
-  children?: React.ReactNode;
-  value: number;
-  index: number;
-}) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
-    </div>
-  );
-}
-
 export default function PageQuanLyNguoiDung() {
   const [users, setUsers] = useState<IUserItem[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);
   const { data: loginedUser } = useUserStore();
-  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<ISelectOption[]>(
-    []
-  );
+  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<ISelectOption[]>([]);
   const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
-  const [page, setPage] = useState(0);
   const [newUserStatus, setNewUserStatus] = useState(0);
   const [password, setPassword] = useState("");
   const [openPhanQuyen, setOpenPhanQuyen] = useState(false);
   const [loadingUser, setLoadingUser] = useState<boolean>(false);
-
+  
   const handlePhanQuyen = () => {
     if (!selectedUser) return;
     setOpenPhanQuyen(true);
@@ -114,7 +98,7 @@ export default function PageQuanLyNguoiDung() {
     try {
       const result = await gettnhomnguoidung(loginedUser.ctaikhoan, "1");
 
-      console.log("------------------ Nhom nguoi dung result:", result);
+      console.log("-------- Nhom nguoi dung result:", result);
 
       if (Array.isArray(result)) {
         const mapped = result.map((item: ITnhomNguoiDung) => ({
@@ -311,62 +295,10 @@ export default function PageQuanLyNguoiDung() {
               onRowClick={(params) => handleRowClick(params.row as IUserItem)}
               loading={loadingUser}
             />
-          </Box>
-          {/* <TableContainer
-            component={Paper}
-            className="h-full overflow-hidden relative flex-1 box-shadow flex flex-col"
-            sx={{ boxShadow: "none" }}>
-            <Table
-              size="small"
-              aria-label="customized table"
-              sx={{
-                "& td, & th": {
-                  border: "1px solid #ccc",
-                },
-              }}
-              className="h-full">
-              <TableHead>
-                <TableRow className="bg-blue-200">
-                  <TableCell>STT</TableCell>
-                  <TableCell>Tài khoản</TableCell>
-                  <TableCell>Họ tên</TableCell>
-                  <TableCell>Ngày sinh</TableCell>
-                  <TableCell>SĐT</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((user, idx) => (
-                  <TableRow
-                    key={user.cid}
-                    hover
-                    selected={selectedUser?.cid === user.cid}
-                    onClick={() => handleRowClick(user)}
-                    sx={{ cursor: "pointer" }}>
-                    <TableCell>{idx + 1}</TableCell>
-                    <TableCell>{user.ctaikhoan}</TableCell>
-                    <TableCell component="th" scope="row">
-                      {user.choten}
-                    </TableCell>
-                    <TableCell>{user.cngaysinh}</TableCell>
-                    <TableCell>{user.cdienthoai}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePagination
-              component="div"
-              count={users.length}
-              rowsPerPage={5}
-              page={page}
-              onPageChange={(_, newPage) => setPage(newPage)}
-              rowsPerPageOptions={[]}
-              className="overflow-hidden"
-            />
-          </TableContainer> */}
+          </Box>          
         </Grid>
 
         {/* Form chi tiết */}
-
         <Grid
           size={4}
           className="h-full flex flex-col overflow-hidden bg-white">

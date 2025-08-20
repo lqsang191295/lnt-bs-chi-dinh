@@ -41,32 +41,12 @@ const columns = [
   { field: "cnoidung", headerName: "Nội dung", width: 400 },
 ];
 export default function NhatKyNguoiDungPage() {
-  const [currentTab, setCurrentTab] = React.useState("export");
-  const [searchTerm, setSearchTerm] = React.useState(""); // Tên tài liệu
-  const [searchStatus, setSearchStatus] = React.useState(""); // Tình trạng xét xuất
   const [searchTuNgay, setSearchTuNgay] = useState<Date | null>(new Date());
   const [searchDenNgay, setSearchDenNgay] = useState<Date | null>(new Date());
-  const [searchDateType, setSearchDateType] = React.useState("ngayVaoVien"); // Default search by "Ngày vào viện"
   const [mockData, setRows] = React.useState<DataRow[]>([]); // Dữ liệu bảng
-  // State và hàm cho Pagination
-  const [page, setPage] = React.useState(1);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [selected, setSelected] = React.useState<readonly string[]>([]);
+  
   const { data: loginedUser } = useUserStore();
-  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
-    setCurrentTab(newValue);
-  };
-
-  const handleSearch = async () => {
-    console.log("Searching with:", {
-      searchTerm,
-      searchStatus,
-      searchTuNgay,
-      searchDenNgay,
-      searchDateType,
-    });
+  const handleSearch = async () => {   
     // Logic lọc dữ liệu mockData
     if (!searchTuNgay || !searchDenNgay) return;
     const formatDate = (date: Date) => {
@@ -77,7 +57,7 @@ export default function NhatKyNguoiDungPage() {
     };
     const data = await gettnhatkynguoidung(
       loginedUser.ctaikhoan,
-      popt,
+      "1",
       formatDate(searchTuNgay),
       formatDate(searchDenNgay)
     );
@@ -90,60 +70,6 @@ export default function NhatKyNguoiDungPage() {
     );
   };
 
-  const handleRefresh = () => {
-    //console.log("Refresh clicked!");
-  };
-
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelecteds = mockData.map((n) => n.cid);
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event: React.MouseEvent<unknown>, id: string) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly string[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
-  };
-
-  const isSelected = (id: string) => selected.indexOf(id) !== -1;
-
-  // Lấy dữ liệu cho trang hiện tại
-  const paginatedData = mockData.slice(
-    (page - 1) * rowsPerPage,
-    (page - 1) * rowsPerPage + rowsPerPage
-  );
-  const totalPages = Math.ceil(mockData.length / rowsPerPage);
-
-  const handleChangePage = (
-    event: React.ChangeEvent<unknown>,
-    newPage: number
-  ) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(1); // Reset về trang 1 khi thay đổi số hàng mỗi trang
-  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
