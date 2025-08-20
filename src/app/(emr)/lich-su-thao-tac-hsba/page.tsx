@@ -140,7 +140,7 @@ export default function LichSuThaoTacHsbaPage() {
         </Typography>
 
         {/* Bộ lọc */}
-        <Box display="flex" gap={2} mb={1}>
+        <Box display="flex" gap={2} mb={2}>
           <Box flex={2}>
             <DatePicker
               label="Từ ngày"

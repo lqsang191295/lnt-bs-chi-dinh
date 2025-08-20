@@ -122,7 +122,7 @@ export default function NhatKyNguoiDungPage() {
         </Box>
 
         {/* Main Content Area (Padding around the table) */}
-        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+        <Box className="flex-1 w-full h-full overflow-hidden">
           <DataGrid
             rows={mockData}
             columns={columns}
