@@ -5,7 +5,7 @@ import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
-import { ToastError, ToastSuccess } from "@/utils/toast";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {
@@ -109,7 +109,7 @@ export default function DongMoHsbaPage() {
     danhSachHSBA: IHoSoBenhAn[]
   ) => {
     if (!danhSachHSBA || danhSachHSBA.length === 0) {
-      alert("Vui lòng chọn ít nhất một hồ sơ bệnh án!");
+      ToastWarning("Vui lòng chọn ít nhất một hồ sơ bệnh án!");
       return;
     }
 

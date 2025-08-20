@@ -19,6 +19,7 @@ import {
   Typography,
 } from "@mui/material";
 
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { capnhathosobenhan, getHosobenhan } from "@/actions/act_thosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ILoaiLuuTru } from "@/model/tloailuutru";
@@ -125,7 +126,7 @@ export default function LuuTruHsbaPage() {
   const fetchLoaiLuuTru = async () => {
     try {
       const result = await DataManager.getDmLoaiLuuTru();
-      console.log("Loai luu tru:", result);
+      // console.log("Loai luu tru:", result);
       setLoaiLuuTruList(result || []);
     } catch {
       setLoaiLuuTruList([]);
@@ -141,7 +142,7 @@ export default function LuuTruHsbaPage() {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
     } catch (error) {
-      console.error("Error fetching khoa list:", error);
+      // console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
   };
@@ -170,7 +171,7 @@ export default function LuuTruHsbaPage() {
   // Mở dialog cập nhật lưu trữ
   const handleOpenDialog = () => {
     if (!selectedRow) {
-      alert("Vui lòng chọn một hồ sơ bệnh án!");
+      ToastWarning("Vui lòng chọn một hồ sơ bệnh án!");
       return;
     }
 
@@ -220,10 +221,10 @@ export default function LuuTruHsbaPage() {
       await handleSearch();
 
       setOpenDialog(false);
-      alert("Cập nhật thông tin lưu trữ thành công!");
+      ToastSuccess("Cập nhật thông tin lưu trữ thành công!");
     } catch (error) {
       console.error("Error updating storage info:", error);
-      alert("Có lỗi xảy ra khi cập nhật thông tin lưu trữ!");
+      ToastError("Có lỗi xảy ra khi cập nhật thông tin lưu trữ!");
     }
   };
 

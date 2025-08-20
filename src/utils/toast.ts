@@ -19,3 +19,14 @@ export const ToastError = (mess: string) => {
     },
   });
 };
+
+
+export const ToastWarning = (mess: string) => {
+  toast.warning(mess, {
+    style: {
+      background: "#d6ec0eff", // 🌿 Màu vàng nhạt (#d6ec0eff là màu vàng của Tailwind)
+      color: "#000", // Chữ đen
+      border: "1px solid #531cb9ff", // Viền tím đậm hơn
+    },
+  });
+};

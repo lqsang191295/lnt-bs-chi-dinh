@@ -26,6 +26,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useCallback, useEffect, useState } from "react";
 import DialogPhanQuyen from "./components/dialog-phan-quyen";
 import HeadMetadata from "./head-metadata";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 
 const columns: GridColDef[] = [
   {
@@ -79,7 +80,7 @@ export default function PageQuanLyNguoiDung() {
         setSelectedUser(result[0] as IUserItem);
       }
     } catch (error) {
-      console.error("Error fetching users:", error);
+      // console.error("Error fetching users:", error);
       setUsers([]);
     } finally {
       setLoadingUser(false);
@@ -90,7 +91,7 @@ export default function PageQuanLyNguoiDung() {
     try {
       const result = await gettnhomnguoidung(loginedUser.ctaikhoan, "1");
 
-      console.log("-------- Nhom nguoi dung result:", result);
+      // console.log("-------- Nhom nguoi dung result:", result);
 
       if (Array.isArray(result)) {
         const mapped = result.map((item: ITnhomNguoiDung) => ({
@@ -114,7 +115,7 @@ export default function PageQuanLyNguoiDung() {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
     } catch (error) {
-      console.error("Error fetching khoa list:", error);
+      // console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
   }, []);
@@ -130,7 +131,7 @@ export default function PageQuanLyNguoiDung() {
   };
   // xử lý khi giá trị 1 trường thay đổi
   const handleChange = (field: string, value: string) => {
-    console.log("handleChange", field, value);
+    // console.log("handleChange", field, value);
     setSelectedUser((prev) => {
       if (!prev) return prev;
       return { ...prev, [field]: value } as IUserItem;
@@ -163,7 +164,7 @@ export default function PageQuanLyNguoiDung() {
   const handleLuu = async () => {
     if (newUserStatus === 1) {
       if (!selectedUser || !selectedUser.ctaikhoan || !selectedUser.cmatkhau) {
-        alert("Vui lòng nhập đầy đủ thông tin tài khoản và mật khẩu");
+        ToastWarning("Vui lòng nhập đầy đủ thông tin tài khoản và mật khẩu");
         return;
       }
       const result = await instnguoidung(
@@ -178,48 +179,48 @@ export default function PageQuanLyNguoiDung() {
         typeof arr === "string" &&
         arr === "Authorization has been denied for this request."
       ) {
-        alert("Bạn không có quyền thêm người dùng!");
+        ToastError("Bạn không có quyền thêm người dùng!");
       } else if (
         Array.isArray(arr) &&
         arr.length > 0 &&
         typeof arr[0]._ID !== "undefined"
       ) {
-        alert("Thêm người dùng thành công");
+        ToastSuccess("Thêm người dùng thành công");
         setUsers((prev) => [...prev, selectedUser]);
         setSelectedUser(null);
         setNewUserStatus(0);
       } else {
-        alert("Thêm người dùng thất bại");
+        ToastError("Thêm người dùng thất bại");
       }
     } else if (newUserStatus === 0) {
       if (!selectedUser) return;
-      console.log("user cập nhật:", selectedUser);
+      // console.log("user cập nhật:", selectedUser);
       const result = await instnguoidung(
         loginedUser.ctaikhoan,
         "2",
         selectedUser
       );
-      console.log("kq cập nhật", result);
+      // console.log("kq cập nhật", result);
       const arr = result as Array<{ ROW_COUNT: number }>;
 
       if (
         typeof arr === "string" &&
         arr === "Authorization has been denied for this request."
       ) {
-        alert("Bạn không có quyền cập nhật thông tin người dùng!");
+        ToastError("Bạn không có quyền cập nhật thông tin người dùng!");
       } else if (
         Array.isArray(arr) &&
         arr.length > 0 &&
         typeof arr[0].ROW_COUNT !== "undefined"
       ) {
-        alert("Cập nhật người dùng thành công");
+        ToastSuccess("Cập nhật người dùng thành công");
         setUsers((prev) =>
           prev.map((user) =>
             user.cid === selectedUser.cid ? selectedUser : user
           )
         );
       } else {
-        alert("Cập nhật người dùng thất bại");
+        ToastError("Cập nhật người dùng thất bại");
       }
     }
   };
@@ -238,13 +239,13 @@ export default function PageQuanLyNguoiDung() {
         selectedUser
       );
       if (result) {
-        alert("Xóa người dùng thành công");
+        ToastSuccess("Xóa người dùng thành công");
         setUsers((prev) =>
           prev.filter((user) => user.cid !== selectedUser.cid)
         );
         setSelectedUser(null);
       } else {
-        alert("Xóa người dùng thất bại");
+        ToastError("Xóa người dùng thất bại");
       }
     }
   };
@@ -257,11 +258,11 @@ export default function PageQuanLyNguoiDung() {
       selectedUser
     );
     if (result) {
-      alert("Đổi mật khẩu người dùng thành công");
+      ToastSuccess("Đổi mật khẩu người dùng thành công");
       setUsers((prev) => prev.filter((user) => user.cid !== selectedUser.cid));
       setSelectedUser(null);
     } else {
-      alert("Đổi mật khẩu người dùng thất bại");
+      ToastError("Đổi mật khẩu người dùng thất bại");
     }
   };
   // xử lý phân quyền người dùng mở dialog phân quyền
