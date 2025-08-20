@@ -14,11 +14,10 @@ export const instnguoidung = async (
   user: IUserItem
 ) => {
   try {
-    console.log("=======debug update user==================", "");
-    console.log("puser", pUser);
-    console.log("popt", pOpt);
-    console.log("user", user);
-
+    // console.log("=======debug update user==================", "");
+    // console.log("puser", pUser);
+    // console.log("popt", pOpt);
+    // console.log("user", user);
     const response = await post(`/api/callService`, {
       userId: "",
       option: "",
@@ -43,7 +42,7 @@ export const instnguoidung = async (
         { paraName: "ctrangthai", paraValue: user.ctrangthai },
       ],
     });
-    console.log("instnguoidung response:", response);
+    //console.log("instnguoidung response:", response);
     if (response.status === "error") {
       return [];
     }

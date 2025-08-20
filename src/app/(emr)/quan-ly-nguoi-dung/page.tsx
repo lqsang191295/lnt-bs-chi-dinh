@@ -62,15 +62,7 @@ export default function PageQuanLyNguoiDung() {
   const [password, setPassword] = useState("");
   const [openPhanQuyen, setOpenPhanQuyen] = useState(false);
   const [loadingUser, setLoadingUser] = useState<boolean>(false);
-  
-  const handlePhanQuyen = () => {
-    if (!selectedUser) return;
-    setOpenPhanQuyen(true);
-  };
 
-  const handleClosePhanQuyen = () => {
-    setOpenPhanQuyen(false);
-  };
 
   const fetchUsers = useCallback(async () => {
     if (!loginedUser || !loginedUser.ctaikhoan) return;
@@ -132,11 +124,11 @@ export default function PageQuanLyNguoiDung() {
     fetchNhomNguoiDungList();
     fetchKhoaList();
   }, [fetchUsers, fetchNhomNguoiDungList, fetchKhoaList]);
-
+  // xử lý chọn người dùng từ ds người dùng
   const handleRowClick = (user: IUserItem) => {
     setSelectedUser(user);
   };
-
+  // xử lý khi giá trị 1 trường thay đổi
   const handleChange = (field: string, value: string) => {
     console.log("handleChange", field, value);
     setSelectedUser((prev) => {
@@ -144,7 +136,7 @@ export default function PageQuanLyNguoiDung() {
       return { ...prev, [field]: value } as IUserItem;
     });
   };
-
+  // xử lý thêm mới người dùng set trạng thái mới các trường về mac định
   const handleThem = async () => {
     setNewUserStatus(1);
     setSelectedUser({
@@ -167,7 +159,7 @@ export default function PageQuanLyNguoiDung() {
       cnguoitao: loginedUser.ctaikhoan,
     } as IUserItem);
   };
-
+  // xử lý lưu thông tin người dùng
   const handleLuu = async () => {
     if (newUserStatus === 1) {
       if (!selectedUser || !selectedUser.ctaikhoan || !selectedUser.cmatkhau) {
@@ -231,11 +223,12 @@ export default function PageQuanLyNguoiDung() {
       }
     }
   };
-
+  // xử lý hủy thao tác
   const handleHuy = () => {
     setSelectedUser(null);
     setNewUserStatus(0);
   };
+  // xử lý xóa người dùng
   const handleXoa = async () => {
     if (!selectedUser) return;
     if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
@@ -255,6 +248,7 @@ export default function PageQuanLyNguoiDung() {
       }
     }
   };
+  // xử lý đổi mật khẩu người dùng
   const handleDoiMatKhau = async () => {
     if (!selectedUser) return;
     const result = await instnguoidung(
@@ -269,6 +263,15 @@ export default function PageQuanLyNguoiDung() {
     } else {
       alert("Đổi mật khẩu người dùng thất bại");
     }
+  };
+  // xử lý phân quyền người dùng mở dialog phân quyền
+  const handlePhanQuyen = () => {
+    if (!selectedUser) return;
+    setOpenPhanQuyen(true);
+  };
+  // xử lý đóng dialog phân quyền
+  const handleClosePhanQuyen = () => {
+    setOpenPhanQuyen(false);
   };
 
   return (
@@ -412,8 +415,7 @@ export default function PageQuanLyNguoiDung() {
                     value={newUserStatus === 1 ? password : ""}
                     type="password"
                     placeholder="********"
-                    onChange={(e) => {
-                      setPassword(e.target.value);
+                    onChange={(e) => {                      
                       handleChange("cmatkhau", e.target.value);
                     }}
                     disabled={false}
