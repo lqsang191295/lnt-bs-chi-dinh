@@ -25,8 +25,8 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useCallback, useEffect, useState } from "react";
 import DialogPhanQuyen from "./components/dialog-phan-quyen";
-import HeadMetadata from "./head-metadata";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
+import HeadMetadata from "@/components/HeadMetadata";
 
 const columns: GridColDef[] = [
   {
@@ -277,7 +277,7 @@ export default function PageQuanLyNguoiDung() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <HeadMetadata />
+      <HeadMetadata title="Danh sách người dùng" />
       <Grid container spacing={1} p={1} className="h-full overflow-hidden">
         {/* Bảng danh sách */}
         <Grid

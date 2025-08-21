@@ -9,6 +9,7 @@ import { useUserStore } from "@/store/user";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
+import HeadMetadata from "@/components/HeadMetadata";
 import {
   Box,
   Button,
@@ -181,6 +182,8 @@ export default function TraCuuHsbaPage() {
   // Render component
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <HeadMetadata title="Tra cứu hồ sơ bệnh án" />
+
       <Box p={2} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"

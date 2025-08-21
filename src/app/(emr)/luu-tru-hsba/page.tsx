@@ -19,13 +19,14 @@ import {
   Typography,
 } from "@mui/material";
 
-import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { capnhathosobenhan, getHosobenhan } from "@/actions/act_thosobenhan";
+import HeadMetadata from "@/components/HeadMetadata";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ILoaiLuuTru } from "@/model/tloailuutru";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
@@ -265,6 +266,8 @@ export default function LuuTruHsbaPage() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <HeadMetadata title="Quản lý lưu trữ hồ sơ bệnh án" />
+
       <Box p={2} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"

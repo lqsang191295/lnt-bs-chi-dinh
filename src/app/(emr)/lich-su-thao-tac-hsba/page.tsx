@@ -5,6 +5,7 @@ import { Box, Button, Typography } from "@mui/material";
 import React, { useState } from "react";
 
 import { getnhatkythaotacba } from "@/actions/act_tnguoidung";
+import HeadMetadata from "@/components/HeadMetadata";
 import { useUserStore } from "@/store/user";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
@@ -37,7 +38,7 @@ const columns: GridColDef[] = [
     headerName: "Điện thoại",
     width: 100,
     filterable: true,
-  },  
+  },
   { field: "cthaotac", headerName: "Thao tác", width: 200, filterable: true },
   {
     field: "tngaythaotac",
@@ -128,7 +129,9 @@ export default function LichSuThaoTacHsbaPage() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box p={2} className="w-full h-full flex flex-col">
+      <HeadMetadata title="Lịch sử thao tác hồ sơ bệnh án" />
+
+      <Box p={2} className="w-full h-full flex flex-col overflow-hidden">
         <Typography
           variant="h6"
           gutterBottom
@@ -179,7 +182,7 @@ export default function LichSuThaoTacHsbaPage() {
         </Box>
 
         {/* Main Content Area (Padding around the table) */}
-        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+        <Box className="flex-1 w-full h-full overflow-hidden">
           <DataGrid
             rows={mockData}
             columns={columns}

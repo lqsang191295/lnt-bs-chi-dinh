@@ -68,7 +68,7 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
         className={
           item.clink ===
           (pathname?.replace(/^\/+|\/+$/g, "").toLowerCase() ?? "")
-            ? "bg-blue-300 hover:bg-blue-400"
+            ? "!bg-blue-200 !border-l-4 !border-blue-500"
             : ""
         }>
         <ListItemIcon>
