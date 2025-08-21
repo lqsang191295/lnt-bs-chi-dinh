@@ -4,7 +4,7 @@
 import { Box, Button, Typography } from "@mui/material";
 import React, { useState } from "react";
 
-import { getnhatkythaotacba } from "@/actions/act_tnguoidung";
+import { getnhatkythaotacba } from "@/actions/act_thosobenhan";
 import HeadMetadata from "@/components/HeadMetadata";
 import { useUserStore } from "@/store/user";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";

@@ -1,13 +1,15 @@
 // app/ket-xuat-hsba/page.tsx
 "use client";
+
+import HeadMetadata from "@/components/HeadMetadata";
 import {
   capnhathosobenhan,
   getChiTietHSBA,
   getHosobenhan,
+  getnhatkyketxuatba,
+  IHoSoBenhAn,
 } from "@/actions/act_thosobenhan";
-import HeadMetadata from "@/components/HeadMetadata";
 import { IPDFItem } from "@/model/ipdf";
-import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
@@ -38,8 +40,8 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import React, { useEffect, useState } from "react";
 // ----------------- MOCK DATA -----------------
-
-const columns: GridColDef[] = [
+ // Columns cho tab Kết xuất (giữ nguyên)
+const columnsKetXuat: GridColDef[] = [
   { field: "ID", headerName: "ID", width: 60 },
   {
     field: "TrangThaiKetXuat",
@@ -49,7 +51,7 @@ const columns: GridColDef[] = [
       <Box
         sx={{
           backgroundColor: "transparent",
-          color: params.value === 1 ? "#f44336" : "#8200fcff", // Màu vàng cho MO, màu đỏ cho DONG,
+          color: params.value === 1 ? "#f44336" : "#8200fcff",
           padding: "4px 8px",
           borderRadius: "4px",
           fontSize: "12px",
@@ -93,10 +95,137 @@ const columns: GridColDef[] = [
   { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
   { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
 ];
+
+// Columns mới cho tab Lịch sử
+const columnsLichSu: GridColDef[] = [
+  { field: "cid", headerName: "ID", width: 60 },
+  {
+    field: "cnoidungketxuat",
+    headerName: "Trạng thái",
+    width: 120,
+    renderCell: (params) => (
+      <Box
+        sx={{
+          backgroundColor: "transparent",
+          color: "#4caf50",
+          padding: "4px 8px",
+          borderRadius: "4px",
+          fontSize: "12px",
+          fontWeight: "bold",
+          textAlign: "center",
+          minWidth: "60px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "4px",
+          cursor: "pointer",
+        }}>
+        <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
+        <button 
+          onClick={() => handleDownloadLichSu(params.row)}
+          style={{ 
+            background: "none", 
+            border: "none", 
+            color: "inherit", 
+            cursor: "pointer",
+            fontSize: "12px"
+          }}>
+          Tải xuống
+        </button>
+      </Box>
+    ),
+  },
+  { field: "cmabenhan", headerName: "Mã bệnh án", width: 130 },
+  { field: "Hoten", headerName: "Họ và tên BN", width: 200 },
+  { field: "MaBN", headerName: "Mã BN", width: 130 },
+  { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+  { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
+  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 150 },
+  { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 150 },
+  { field: "SoLuuTru", headerName: "Số lưu trữ", width: 130 },
+  { field: "ctaikhoan", headerName: "Người kết xuất", width: 130 },
+  { field: "choten", headerName: "Tên người kết xuất", width: 180 },
+  { field: "tngayketxuat", headerName: "Ngày kết xuất", width: 170 },
+];
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+}
+// Cập nhật interface cho dữ liệu lịch sử kết xuất
+interface INhatKyKetXuat {
+  cid: number;
+  cmabenhan: string;
+  ctaikhoan: string;
+  choten: string;
+  cngaysinh: string;
+  cdiachi: string;
+  cdienthoai: string;
+  SoBenhAn: string;
+  MaBN: string;
+  Hoten: string;
+  Ngaysinh: string;
+  Gioitinh: string;
+  Dienthoai: string;
+  Diachi: string;
+  SoCCCD: string;
+  SoNhapVien: string;
+  SoVaoVien: string;
+  SoLuuTru: string;
+  KhoaVaoVien: string;
+  KhoaDieuTri: string;
+  cnoidungketxuat: string; // Base64 PDF content
+  cngayketxuat: string;
+  tngayketxuat: string; // Formatted date
+}
+
+// Function để download PDF từ lịch sử
+function handleDownloadLichSu(lichSu: INhatKyKetXuat) {
+  try {
+    if (!lichSu.cnoidungketxuat) {
+      ToastWarning("Không có nội dung PDF để tải xuống!");
+      return;
+    }
+
+    // Validate and clean base64 string
+    const cleanBase64 = lichSu.cnoidungketxuat.replace(/[^A-Za-z0-9+/]/g, "");
+
+    // Add padding if needed
+    const paddedBase64 =
+      cleanBase64 + "=".repeat((4 - (cleanBase64.length % 4)) % 4);
+
+    // Convert base64 to binary using a safer method
+    const binaryString = atob(paddedBase64);
+    const bytes = new Uint8Array(binaryString.length);
+
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    // Tạo blob để download
+    const blob = new Blob([bytes], { type: "application/pdf" });
+
+    const url = URL.createObjectURL(blob);
+
+    // Tạo tên file với thông tin bệnh án
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+    const fileName = `HSBA_${lichSu.MaBN || lichSu.cmabenhan}_${lichSu.SoVaoVien || 'NA'}_${timestamp}.pdf`;
+
+    // Download file
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    ToastSuccess("Tải xuống thành công!");
+  } catch (error) {
+    console.error("Error downloading PDF from history:", error);
+    ToastError("Lỗi khi tải xuống hồ sơ bệnh án. Vui lòng thử lại.");
+  }
 }
 
 function CustomTabPanel(props: TabPanelProps) {
@@ -182,10 +311,62 @@ export default function KetXuatHsbaPage() {
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
+  // Thêm state cho lịch sử kết xuất
+  const [lichSuRows, setLichSuRows] = useState<INhatKyKetXuat[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
   const { data: loginedUser } = useUserStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
+  const [searchingLichSu, setSearchingLichSu] = useState<boolean>(false);
 
+  // Function để lấy dữ liệu lịch sử kết xuất
+  const handleSearchLichSu = async () => {
+    try {
+      if (!tuNgay || !denNgay) return;
+
+      setSearchingLichSu(true);
+
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      const data = await getnhatkyketxuatba(
+        loginedUser.ctaikhoan,
+        popt,
+        selectedKhoa,
+        formatDate(tuNgay),
+        formatDate(denNgay)
+      );
+
+      console.log("Fetched history data:", data); // For debugging
+      
+      setLichSuRows(
+        (data || []).map((item: INhatKyKetXuat, index: number) => ({
+          id: item.cid || index, // Use cid or index as row ID
+          ...item,
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching history data:", error);
+      ToastError("Lỗi khi tải dữ liệu lịch sử kết xuất!");
+    } finally {
+      setSearchingLichSu(false);
+    }
+  };
+
+  // Cập nhật handleChange để load data khi chuyển tab
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+    
+    // Nếu chuyển sang tab lịch sử và chưa có dữ liệu, tự động load
+    if (newValue === 1 && lichSuRows.length === 0) {
+      handleSearchLichSu();
+    }
+  };
+ 
+  // Fetch khoa list from API
   const fetchKhoaList = async () => {
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
@@ -199,10 +380,6 @@ export default function KetXuatHsbaPage() {
   useEffect(() => {
     fetchKhoaList();
   }, []);
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-  };
 
   // Hàm xử lý kết xuất
   const handleKetXuat = async () => {
@@ -522,11 +699,11 @@ export default function KetXuatHsbaPage() {
               {error}
             </Alert>
           )}
-          {/* DataGrid */}
+          {/* DataGrid Danh sách kết xuất HSBA */}
           <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
             <DataGrid
               rows={rows}
-              columns={columns}
+              columns={columnsKetXuat}
               loading={searchingData}
               pagination
               checkboxSelection
@@ -557,27 +734,43 @@ export default function KetXuatHsbaPage() {
         {/* Tab Lịch sử */}
         <CustomTabPanel value={value} index={1}>
           <Box className="bg-white flex gap-2 p-2">
-            <Button variant="contained" startIcon={<Refresh />} size="small">
+            <Button 
+              variant="contained" 
+              startIcon={<Refresh />} 
+              size="small"
+              onClick={handleSearchLichSu}>
               Làm mới
             </Button>
-            <Button variant="contained" startIcon={<Download />} size="small">
-              Download
+            <Button variant="outlined" startIcon={<Download />} size="small">
+              Xuất Excel
             </Button>
           </Box>
 
-          {/* DataGrid */}
+          {/* DataGrid lịch sử kết xuất HSBA */}
           <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
             <DataGrid
-              rows={rows}
-              columns={columns}
+              rows={lichSuRows}
+              columns={columnsLichSu}
+              loading={searchingLichSu}
               pagination
-              checkboxSelection
               disableRowSelectionOnClick
               density="compact"
               sx={{
                 "& .MuiDataGrid-columnHeaders": {
-                  backgroundColor: "#f5f5f5",
+                  backgroundColor: "#e8f5e8",
                   fontWeight: "bold",
+                },
+                "& .MuiDataGrid-cell": {
+                  border: "1px solid #e0e0e0",
+                },
+                "& .MuiDataGrid-row:nth-of-type(odd)": {
+                  backgroundColor: "#f9fff9",
+                },
+                "& .MuiDataGrid-row:nth-of-type(even)": {
+                  backgroundColor: "white",
+                },
+                "& .MuiDataGrid-row:hover": {
+                  backgroundColor: "#e8f5e8 !important",
                 },
               }}
             />
