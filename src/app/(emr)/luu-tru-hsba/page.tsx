@@ -31,6 +31,7 @@ import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
+import DialogCapNhatLuuTru from "./components/dialog-cap-nhat-luu-tru";
 import {
   DatePicker,
   DateTimePicker,
@@ -175,26 +176,6 @@ export default function LuuTruHsbaPage() {
       ToastWarning("Vui lòng chọn một hồ sơ bệnh án!");
       return;
     }
-
-    // Fill form with selected row data
-    setFormData({
-      ID: selectedRow.ID,
-      SoVaoVien: selectedRow.SoVaoVien || "",
-      NgayVaoVien: (selectedRow.NgayVao as Date) || new Date(),
-      NgayRaVien: (selectedRow.NgayRa as Date) || new Date(),
-      HoTen: selectedRow.Hoten || "",
-      NgaySinh: selectedRow.Ngaysinh || "",
-      GioiTinh: selectedRow.Gioitinh || "",
-      DiaChi: selectedRow.Diachi || "",
-      KhoaDieuTri: selectedRow.TenKhoaDieuTri || "",
-      SoLuuTru: selectedRow.SoLuuTru || "",
-      ViTriLuuTru: selectedRow.ViTriLuuTru || "",
-      NgayLuuTru: selectedRow.NgayLuuTru
-        ? new Date(selectedRow.NgayLuuTru)
-        : new Date(),
-      LoaiLuuTru: selectedRow.LoaiLuuTru || "",
-    });
-
     setOpenDialog(true);
   };
 
@@ -203,30 +184,9 @@ export default function LuuTruHsbaPage() {
     setOpenDialog(false);
   };
 
-  // Lưu thông tin lưu trữ
-  const handleSaveLuuTru = async () => {
-    if (!selectedRow) return;
-
-    try {
-      const updatedHsba = {
-        ...selectedRow,
-        SoLuuTru: formData.SoLuuTru,
-        ViTriLuuTru: formData.ViTriLuuTru,
-        NgayLuuTru: formData.NgayLuuTru,
-        LoaiLuuTru: formData.LoaiLuuTru,
-      };
-
-      await capnhathosobenhan(loginedUser.ctaikhoan, "3", updatedHsba);
-
-      // Refresh data after update
-      await handleSearch();
-
-      setOpenDialog(false);
-      ToastSuccess("Cập nhật thông tin lưu trữ thành công!");
-    } catch (error) {
-      console.error("Error updating storage info:", error);
-      ToastError("Có lỗi xảy ra khi cập nhật thông tin lưu trữ!");
-    }
+  // Callback khi cập nhật thành công
+  const handleUpdateSuccess = async () => {
+    await handleSearch(); // Refresh data
   };
 
   // Hàm tìm kiếm hồ sơ bệnh án
@@ -412,207 +372,15 @@ export default function LuuTruHsbaPage() {
             }}
           />
         </Box>
-
-        {/* Dialog cập nhật lưu trữ */}
-        <Dialog
+ 
+        {/* Dialog Component */}
+        <DialogCapNhatLuuTru
           open={openDialog}
           onClose={handleCloseDialog}
-          maxWidth="sm"
-          fullWidth>
-          <DialogTitle
-            sx={{
-              fontWeight: "bold",
-              fontSize: "18px",
-              backgroundColor: "#1976d2",
-              color: "white",
-              textAlign: "center",
-              letterSpacing: 1,
-            }}>
-            CẬP NHẬT THÔNG TIN LƯU TRỮ
-          </DialogTitle>
-          <DialogContent>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 2 }}>
-              {/* Khung thông tin chỉ xem */}
-              <Box
-                sx={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px",
-                  padding: 2,
-                  backgroundColor: "#f9f9f9",
-                }}>
-                <Typography
-                  variant="h6"
-                  sx={{ mb: 2, color: "#1976d2", fontWeight: "bold" }}>
-                  Thông tin bệnh nhân
-                </Typography>
-
-                {/* ID */}
-                <Box sx={{ mb: 2 }}>
-                  <TextField
-                    InputProps={{ readOnly: true }}
-                    label="ID"
-                    value={formData.ID}
-                    fullWidth
-                    size="small"
-                    sx={{ backgroundColor: "white" }}
-                  />
-                </Box>
-
-                {/* Số vào viện, Ngày vào viện, Ngày ra viện - cùng 1 hàng */}
-                <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-                  <TextField
-                    InputProps={{ readOnly: true }}
-                    label="Số vào viện"
-                    value={formData.SoVaoVien}
-                    size="small"
-                    sx={{ flex: 1, backgroundColor: "white" }}
-                  />
-                  <TextField
-                    InputProps={{ readOnly: true }}
-                    label="Ngày vào viện"
-                    value={formData.NgayVaoVien ? formData.NgayVaoVien : ""}
-                    size="small"
-                    sx={{ flex: 2, backgroundColor: "white" }}
-                  />
-                  <TextField
-                    InputProps={{ readOnly: true }}
-                    label="Ngày ra viện"
-                    value={formData.NgayRaVien ? formData.NgayRaVien : ""}
-                    size="small"
-                    sx={{ flex: 2, backgroundColor: "white" }}
-                  />
-                </Box>
-
-                {/* Họ tên, Ngày sinh, Giới tính - cùng 1 hàng */}
-                <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-                  <TextField
-                    InputProps={{ readOnly: true }}
-                    label="Họ và tên"
-                    value={formData.HoTen}
-                    size="small"
-                    sx={{ flex: 2, backgroundColor: "white" }}
-                  />
-                  <TextField
-                    InputProps={{ readOnly: true }}
-                    label="Ngày sinh"
-                    value={formData.NgaySinh}
-                    size="small"
-                    sx={{ flex: 1, backgroundColor: "white" }}
-                  />
-                  <TextField
-                    InputProps={{ readOnly: true }}
-                    label="Giới tính"
-                    value={formData.GioiTinh}
-                    size="small"
-                    sx={{ flex: 1, backgroundColor: "white" }}
-                  />
-                </Box>
-
-                {/* Địa chỉ */}
-                <Box sx={{ mb: 2 }}>
-                  <TextField
-                    InputProps={{ readOnly: true }}
-                    label="Địa chỉ"
-                    value={formData.DiaChi}
-                    fullWidth
-                    size="small"
-                    sx={{ backgroundColor: "white" }}
-                  />
-                </Box>
-
-                {/* Khoa điều trị */}
-                <Box>
-                  <TextField
-                    InputProps={{ readOnly: true }}
-                    label="Khoa điều trị"
-                    value={formData.KhoaDieuTri}
-                    fullWidth
-                    size="small"
-                    sx={{ backgroundColor: "white" }}
-                  />
-                </Box>
-              </Box>
-
-              {/* Khung thông tin cập nhật */}
-              <Box
-                sx={{
-                  border: "1px solid #1976d2",
-                  borderRadius: "8px",
-                  padding: 2,
-                  backgroundColor: "#f3f7ff",
-                }}>
-                <Typography
-                  variant="h6"
-                  sx={{ mb: 2, color: "#1976d2", fontWeight: "bold" }}>
-                  Thông tin lưu trữ
-                </Typography>
-
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <TextField
-                    label="Số lưu trữ"
-                    value={formData.SoLuuTru}
-                    onChange={(e) =>
-                      setFormData({ ...formData, SoLuuTru: e.target.value })
-                    }
-                    fullWidth
-                    size="small"
-                    sx={{ backgroundColor: "white" }}
-                  />
-
-                  <TextField
-                    label="Vị trí lưu trữ"
-                    value={formData.ViTriLuuTru}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ViTriLuuTru: e.target.value })
-                    }
-                    fullWidth
-                    size="small"
-                    sx={{ backgroundColor: "white" }}
-                  />
-
-                  <DateTimePicker
-                    label="Ngày lưu trữ"
-                    value={formData.NgayLuuTru}
-                    onChange={(value) =>
-                      setFormData({ ...formData, NgayLuuTru: value as Date })
-                    }
-                    format="dd/MM/yyyy HH:mm:ss"
-                    slotProps={{
-                      textField: {
-                        size: "small",
-                        fullWidth: true,
-                        sx: { backgroundColor: "white" },
-                      },
-                    }}
-                  />
-
-                  <FormControl fullWidth size="small">
-                    <Select
-                      value={formData.LoaiLuuTru}
-                      onChange={(e) =>
-                        setFormData({ ...formData, LoaiLuuTru: e.target.value })
-                      }
-                      displayEmpty
-                      sx={{ backgroundColor: "white" }}>
-                      {loaiLuuTruList.map((item) => (
-                        <MenuItem key={item.cid} value={item.cid}>
-                          {item.ctenloai} ({item.csonamluutru} năm)
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-              </Box>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Hủy</Button>
-            <Button onClick={handleSaveLuuTru} variant="contained">
-              Lưu
-            </Button>
-          </DialogActions>
-        </Dialog>
+          selectedRow={selectedRow}
+          loaiLuuTruList={loaiLuuTruList}
+          onSuccess={handleUpdateSuccess}
+        />
       </Box>
     </LocalizationProvider>
   );

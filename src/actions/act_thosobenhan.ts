@@ -249,3 +249,36 @@ export const getnhatkyketxuatba = async (
     return [];
   }
 };
+
+///
+/// Kiểm tra số lưu trữ đã tồn tại hay chưa
+/// pUser: Tên người dùng
+/// pOpt: Tùy chọn kiểm tra
+/// "1" - Tự động tạo số lưu trữ mới
+/// "2" - Kiểm tra số lưu trữ đã tồn tại
+/// soluutru: Số lưu trữ cần kiểm tra
+export const checkSoLuuTru = async (
+  pUser: string,
+  pOpt: string,
+  soluutru: string, 
+) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_soluutru",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "soluutru", paraValue: soluutru }, 
+      ],
+    });
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};

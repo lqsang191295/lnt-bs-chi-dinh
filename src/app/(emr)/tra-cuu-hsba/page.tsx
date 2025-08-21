@@ -8,6 +8,7 @@ import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { History, NoteAdd, Search } from "@mui/icons-material";
 
 import HeadMetadata from "@/components/HeadMetadata";
 import {
@@ -276,7 +277,7 @@ export default function TraCuuHsbaPage() {
             />
           </Box>
           <Box flex={1}>
-            <Button fullWidth variant="contained" onClick={handleSearch}>
+            <Button fullWidth startIcon={<Search />} variant="contained" onClick={handleSearch}>
               Tìm kiếm
             </Button>
           </Box>

@@ -1,4 +1,5 @@
-// src/app/quan-ly-nguoi-dung/page.tsx
+// src/app/quan-ly-nguoi-dung/components/dialog-doi-mat-khau.tsx
+
 "use client";
 
 import {

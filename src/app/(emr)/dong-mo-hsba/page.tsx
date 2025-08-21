@@ -9,6 +9,7 @@ import { useUserStore } from "@/store/user";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { History, NoteAdd, Search } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -289,6 +290,7 @@ export default function DongMoHsbaPage() {
           <Box flex={1}>
             <Button
               fullWidth
+              startIcon={<Search />}
               variant="contained"
               size="small"
               onClick={handleSearch}>
