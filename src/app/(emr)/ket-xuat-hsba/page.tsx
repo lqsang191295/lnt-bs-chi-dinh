@@ -171,7 +171,6 @@ export default function KetXuatHsbaPage() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-
   const [value, setValue] = React.useState(0);
   const [selectedRows, setSelectedRows] = useState<IHoSoBenhAn[]>([]);
   const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
@@ -254,7 +253,7 @@ export default function KetXuatHsbaPage() {
           true,
           (current, total, currentHSBA) => {
             setProgress((current / total) * 100);
-            console.log(`Processing ${current}/${total}: ${currentHSBA}`);
+            // console.log(`Processing ${current}/${total}: ${currentHSBA}`);
           }
         );
 
@@ -262,7 +261,7 @@ export default function KetXuatHsbaPage() {
           try {
             // XỬ LÝ LƯU TRỮ PDF VÀO BLOB VÀ TẢI VỀ
             try {
-                console.log(`Updating HSBA ID: ${hsba.ID} with merged PDF`);
+                // console.log(`Updating HSBA ID: ${hsba.ID} with merged PDF`);
                 const updatedHsba = {
                   ...hsba,
                   NoiDungPdf: mergedPdfBase64 // Cập nhật trường Nội dung PDF với base64 đã hợp nhất
@@ -280,17 +279,17 @@ export default function KetXuatHsbaPage() {
                 // } 
 
             } catch (error) {
-              console.error("Error updating HSBA:", error);
-              //ToastError(`Có lỗi xảy ra khi cập nhật kết xuất HSBA! ${error instanceof Error ? error.message : 'Unknown error'}`);
+              // console.error("Error updating HSBA:", error);
+              ToastError(`Có lỗi xảy ra khi cập nhật kết xuất HSBA! ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
  
           } catch (conversionError) {
-            console.error('Error converting base64 to blob:', conversionError);
+            // console.error('Error converting base64 to blob:', conversionError);
             ToastError('Lỗi khi chuyển đổi dữ liệu PDF. Vui lòng thử lại.');
           }
         }
       } catch (error) {
-        console.error(`Error getting PDF for HSBA ${hsba.ID}:`, error);
+        // console.error(`Error getting PDF for HSBA ${hsba.ID}:`, error);
         continue;
       }
     }
@@ -303,7 +302,7 @@ export default function KetXuatHsbaPage() {
     await handleSearch();
 
   } catch (error) {
-    console.error("Error in handleKetXuat:", error);
+    // console.error("Error in handleKetXuat:", error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     setError(errorMessage);
     ToastError(`Lỗi kết xuất: ${errorMessage}`);
@@ -358,7 +357,7 @@ export default function KetXuatHsbaPage() {
           ...item,
         }))
       );
-      //console.log("Search results:", data);
+      // console.log("Search results:", data);
     } catch (error) {
       //console.error("Error fetching HSBA data:", error);
     } finally {
@@ -369,10 +368,9 @@ export default function KetXuatHsbaPage() {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
 
-      
-    <Box p={2} className="w-full h-full flex flex-col">
-      <Typography
-        variant="h6"
+      <Box p={2} className="w-full h-full flex flex-col">
+        <Typography
+          variant="h6"
         gutterBottom
         sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
         QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN

@@ -18,7 +18,7 @@ const loadVietnameseWebFont = async (pdfDoc: PDFDocument) => {
 
     for (const fontUrl of fontUrls) {
       try {
-        console.log(`Trying to load font from: ${fontUrl}`);
+        // console.log(`Trying to load font from: ${fontUrl}`);
         
         // Thêm timeout để tránh hang
         const controller = new AbortController();
@@ -34,22 +34,22 @@ const loadVietnameseWebFont = async (pdfDoc: PDFDocument) => {
         if (response.ok) {
           const fontBytes = await response.arrayBuffer();
           const font = await pdfDoc.embedFont(fontBytes);
-          console.log(`Successfully loaded font from: ${fontUrl}`);
+          // console.log(`Successfully loaded font from: ${fontUrl}`);
           return { font, supportsVietnamese: true };
         }
       } catch (error) {
-        console.log(`Failed to load font from ${fontUrl}:`, error);
+        // console.log(`Failed to load font from ${fontUrl}:`, error);
         continue;
       }
     }
 
     // Fallback ngay lập tức nếu không load được
-    console.log('Using fallback font');
+    // console.log('Using fallback font');
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     return { font, supportsVietnamese: false };
 
   } catch (error) {
-    console.error('Error loading Vietnamese web font:', error);
+    // console.error('Error loading Vietnamese web font:', error);
     
     // Fallback cuối cùng
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -150,13 +150,13 @@ const addWatermarkToPage = (
           rotate: degrees(45),
         });
       } catch (lineError) {
-        console.error('Error drawing line:', lineError);
+        // console.error('Error drawing line:', lineError);
       }
     });
     
   } catch (error) {
-    console.error('Error adding watermark:', error);
-    
+    // console.error('Error adding watermark:', error);
+
     // Fallback đơn giản nhất
     try {
       const simpleText = "HO SO BENH AN";
@@ -171,7 +171,7 @@ const addWatermarkToPage = (
         opacity: 0.3,
       });
     } catch (fallbackError) {
-      console.error('Even fallback watermark failed:', fallbackError);
+      // console.error('Even fallback watermark failed:', fallbackError);
     }
   }
 };
@@ -199,7 +199,7 @@ export const mergePDFsWithProgress = async (
   onProgress?: (current: number, total: number, currentHSBA: string) => void
 ): Promise<string> => {
   try {
-    console.log(`Starting merge for ${pdfList.length} PDFs`);
+    // console.log(`Starting merge for ${pdfList.length} PDFs`);
     
     const mergedPdf = await PDFDocument.create();
     
@@ -215,7 +215,7 @@ export const mergePDFsWithProgress = async (
       ]);
       font = fontResult.font;
     } catch (error) {
-      console.log('Font loading failed, using Helvetica:', error);
+      // console.log('Font loading failed, using Helvetica:', error);
       font = await mergedPdf.embedFont(StandardFonts.Helvetica);
     }
     
@@ -238,8 +238,8 @@ export const mergePDFsWithProgress = async (
     // Process PDFs one by one
     for (let i = 0; i < pdfList.length; i++) {
       const item = pdfList[i];
-      
-      console.log(`Processing ${i + 1}/${total}: ${item.maHSBA}`);
+
+      // console.log(`Processing ${i + 1}/${total}: ${item.maHSBA}`);
       onProgress?.(i + 1, total, item.maHSBA);
       
       try {
@@ -247,7 +247,7 @@ export const mergePDFsWithProgress = async (
         
         // Validate base64
         if (!cleanBase64 || cleanBase64.length === 0) {
-          console.error(`Empty PDF data for ${item.maHSBA}`);
+          // console.error(`Empty PDF data for ${item.maHSBA}`);
           continue;
         }
         
@@ -262,39 +262,39 @@ export const mergePDFsWithProgress = async (
             mergedPdf.addPage(page);
             addWatermarkToPage(page, fullWatermarkText, font);
             } catch (pageError) {
-            console.error(`Error processing page ${pageIndex} of ${item.maHSBA}:`, pageError);
+            // console.error(`Error processing page ${pageIndex} of ${item.maHSBA}:`, pageError);
           }
         });
         
-        console.log(`Successfully processed ${pageIndices.length} pages from ${item.maHSBA}`);
+        // console.log(`Successfully processed ${pageIndices.length} pages from ${item.maHSBA}`);
         
       } catch (error) {
-        console.error(`Error processing PDF ${i + 1}/${total} (${item.maHSBA}):`, error);
+        // console.error(`Error processing PDF ${i + 1}/${total} (${item.maHSBA}):`, error);
         continue;
       }
     }
 
-    console.log('Saving merged PDF...');
+    // console.log('Saving merged PDF...');
     const pdfBytes = await mergedPdf.save();
-    
-    console.log('Converting to base64...');
-    
+
+    // console.log('Converting to base64...');
+
     // Try the alternative method first
     try {
       const base64String = arrayBufferToBase64Alternative(pdfBytes);
-      console.log(`Successfully merged ${pdfList.length} PDFs with alternative method`);
+      // console.log(`Successfully merged ${pdfList.length} PDFs with alternative method`);
       return base64String;
     } catch (error) {
-      console.error('Alternative base64 conversion failed, trying fallback:', error);
+      // console.error('Alternative base64 conversion failed, trying fallback:', error);
       
       // Fallback to original method
       const base64String = arrayBufferToBase64(pdfBytes);
-      console.log(`Successfully merged ${pdfList.length} PDFs with fallback method`);
+      // console.log(`Successfully merged ${pdfList.length} PDFs with fallback method`);
       return base64String;
     }
     
   } catch (error) {
-    console.error('Error in mergePDFsWithProgress:', error);
+    // console.error('Error in mergePDFsWithProgress:', error);
     throw new Error(`Failed to merge PDFs: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
