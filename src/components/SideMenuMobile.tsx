@@ -1,16 +1,15 @@
 "use client";
-import * as React from "react";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Drawer, { drawerClasses } from "@mui/material/Drawer";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
+import CardAlert from "./CardAlert";
 import MenuButton from "./MenuButton";
 import MenuContent from "./MenuContent";
-import CardAlert from "./CardAlert";
 
 interface SideMenuMobileProps {
   open: boolean | undefined;
@@ -23,7 +22,7 @@ export default function SideMenuMobile({
 }: SideMenuMobileProps) {
   return (
     <Drawer
-      anchor="right"
+      anchor="left"
       open={open}
       onClose={toggleDrawer(false)}
       sx={{

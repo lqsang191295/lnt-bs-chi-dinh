@@ -57,6 +57,12 @@ export default function RootLayout({
       <HeadMetadata title="Hồ sơ bệnh án" />
       <Box className="flex w-screen h-screen">
         <SideMenu />
+        {/* <SideMenuMobile
+          open={true}
+          toggleDrawer={(newOpen) => () => {
+            console.log("Toggle drawer:", newOpen);
+          }}
+        /> */}
         {/* <AppNavbar /> */}
         <Box className="w-full h-full flex flex-col flex-1 overflow-hidden">
           <AppBarTop />
