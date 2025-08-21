@@ -331,8 +331,8 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 3 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <DialogContent sx={{ pt: 4 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 2 }}>
           {/* Khung thông tin chỉ xem */}
           <Box
             sx={{
