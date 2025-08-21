@@ -13,9 +13,7 @@ import HeadMetadata from "@/components/HeadMetadata";
 import {
   Box,
   Button,
-  FormControl,
   FormControlLabel,
-  FormLabel,
   MenuItem,
   Radio,
   RadioGroup,
@@ -192,7 +190,7 @@ export default function TraCuuHsbaPage() {
           TRA CỨU HỒ SƠ BỆNH ÁN
         </Typography>
         <Box display="flex" gap={2} mb={2}>
-          <Box flex={3}>
+          <Box flex={1}>
             <Select
               fullWidth
               value={selectedKhoa}
@@ -206,50 +204,44 @@ export default function TraCuuHsbaPage() {
               ))}
             </Select>
           </Box>
-          <Box flex={2}>
-            <FormControl>
-              <FormLabel
-                id="popt-radio-group-label"
+          <Box flex={1}>
+            <RadioGroup
+              row
+              aria-labelledby="popt-radio-group-label"
+              name="popt-radio-group"
+              value={popt}
+              onChange={(e) => setPopt(e.target.value)}>
+              <FormControlLabel
+                value="1"
+                control={
+                  <Radio
+                    sx={{
+                      color: "#1976d2",
+                      "&.Mui-checked": { color: "#1976d2" },
+                    }}
+                    size="small"
+                  />
+                }
+                label="Ngày vào viện"
                 sx={{ color: "#1976d2", fontWeight: "bold" }}
               />
-              <RadioGroup
-                row
-                aria-labelledby="popt-radio-group-label"
-                name="popt-radio-group"
-                value={popt}
-                onChange={(e) => setPopt(e.target.value)}>
-                <FormControlLabel
-                  value="1"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
-                  label="Ngày vào viện"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
-                />
-                <FormControlLabel
-                  value="2"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
-                  label="Ngày ra viện"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
-                />
-              </RadioGroup>
-            </FormControl>
+              <FormControlLabel
+                value="2"
+                control={
+                  <Radio
+                    sx={{
+                      color: "#1976d2",
+                      "&.Mui-checked": { color: "#1976d2" },
+                    }}
+                    size="small"
+                  />
+                }
+                label="Ngày ra viện"
+                sx={{ color: "#1976d2", fontWeight: "bold" }}
+              />
+            </RadioGroup>
           </Box>
-          <Box flex={1}>
+          <Box flex={0.5}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
@@ -262,7 +254,7 @@ export default function TraCuuHsbaPage() {
               }}
             />
           </Box>
-          <Box flex={1}>
+          <Box flex={0.5}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}

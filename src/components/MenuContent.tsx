@@ -20,7 +20,7 @@ export default function MenuContent() {
   const { data: menuData } = useMenuStore();
   const menuTree = buildMenuTree(menuData);
   return (
-    <Stack sx={{ flexGrow: 1, p: 1 }}>
+    <Stack sx={{ flexGrow: 1 }}>
       <List component="nav">
         <ListItemButton>
           <ListItemIcon>
@@ -38,12 +38,8 @@ export default function MenuContent() {
 }
 
 function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const pathname = usePathname();
-  // console.log(
-  //   'pathname.replace(/^/+|/+$/g, "").toLowerCase() ============= ',
-  //   pathname.replace(/^\/+|\/+$/g, "").toLowerCase()
-  // );
 
   const hasChildren = item.children && item.children.length > 0;
 
@@ -92,7 +88,7 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
       </ListItemButton>
 
       {hasChildren && (
-        <Collapse in={true} timeout="auto" unmountOnExit>
+        <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {item.children!.map((child) => (
               <Link key={child.cid} href={child.clink || ""} passHref>

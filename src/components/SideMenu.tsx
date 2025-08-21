@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import MuiDrawer, { drawerClasses } from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
-import * as React from "react";
 import CardAlert from "./CardAlert";
 import MenuContent from "./MenuContent";
 import SelectContent from "./SelectContent";
@@ -48,32 +47,27 @@ const Logged = () => {
 };
 
 export default function SideMenu() {
-  const [user] = React.useState(false);
-
-  if (!user) {
-    return (
-      <Drawer variant="permanent">
-        <Box
-          sx={{
-            display: "flex",
-            mt: "calc(var(--template-frame-height, 0px) + 4px)",
-            p: 1.5,
-          }}>
-          <SelectContent />
-        </Box>
-        <Divider />
-        <Box
-          sx={{
-            overflow: "auto",
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-          }}>
-          <MenuContent />
-          <CardAlert />
-        </Box>
-      </Drawer>
-    );
-  }
-  return <Logged />;
+  return (
+    <Drawer variant="permanent">
+      <Box
+        sx={{
+          display: "flex",
+          mt: "calc(var(--template-frame-height, 0px) + 4px)",
+          p: 1.5,
+        }}>
+        <SelectContent />
+      </Box>
+      <Divider />
+      <Box
+        sx={{
+          overflow: "auto",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+        }}>
+        <MenuContent />
+        <CardAlert />
+      </Box>
+    </Drawer>
+  );
 }
