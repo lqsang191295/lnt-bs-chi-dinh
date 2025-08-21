@@ -191,3 +191,61 @@ export const getmuontraHSBA = async (pUser: string, pOpt: string, cmaba: string,
   }
 };
  
+
+export const getnhatkythaotacba = async (
+  pUser: string,
+  pOpt: string,
+  sTuNgay: string,
+  sDenNgay: string
+) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tnhatkythaotacba",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "tungay", paraValue: sTuNgay },
+        { paraName: "denngay", paraValue: sDenNgay },
+      ],
+    });
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
+
+export const getnhatkyketxuatba = async (
+  pUser: string,
+  pOpt: string,
+  KhoaDieuTri: string,
+  sTuNgay: string,
+  sDenNgay: string
+) => {
+  try {
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tnhatkyketxuatba",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "khoadieutri", paraValue: KhoaDieuTri },
+        { paraName: "tungay", paraValue: sTuNgay },
+        { paraName: "denngay", paraValue: sDenNgay },
+      ],
+    });
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
