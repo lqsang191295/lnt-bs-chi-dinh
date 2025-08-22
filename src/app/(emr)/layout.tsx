@@ -18,17 +18,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const { setData } = useMenuStore();
-  const { setUserData } = useUserStore();
+  const { data: userData, setUserData } = useUserStore();
 
   const initMenu = useCallback(async () => {
+    if (!userData) return;
+
     try {
-      const menu = await getMenuItems();
+      const menu = await getMenuItems(userData);
       //console.log("Menu items fetched:", menu);
       setData(menu);
     } catch {
       //console.error("Error fetching menu items:", error);
     }
-  }, [setData]);
+  }, [setData, userData]);
 
   const initUser = useCallback(async () => {
     try {

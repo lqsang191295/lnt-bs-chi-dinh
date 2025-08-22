@@ -1,6 +1,7 @@
 import { post } from "@/api/client";
+import { IUserItem } from "@/model/tuser";
 
-export const getMenuItems = async () => {
+export const getMenuItems = async (userData: IUserItem) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
