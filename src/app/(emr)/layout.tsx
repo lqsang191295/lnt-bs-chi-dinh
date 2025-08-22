@@ -21,11 +21,13 @@ export default function RootLayout({
   const { data: userData, setUserData } = useUserStore();
 
   const initMenu = useCallback(async () => {
+    console.log("userData ==== ", userData);
+
     if (!userData) return;
 
     try {
       const menu = await getMenuItems(userData);
-      //console.log("Menu items fetched:", menu);
+      console.log("Menu items fetched:", menu);
       setData(menu);
     } catch {
       //console.error("Error fetching menu items:", error);

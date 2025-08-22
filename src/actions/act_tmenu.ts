@@ -8,8 +8,8 @@ export const getMenuItems = async (userData: IUserItem) => {
       option: "",
       funcName: "dbo.emr_pget_tmenu",
       paraData: [
-        { paraName: "puser", paraValue: "0" },
-        { paraName: "popt", paraValue: "0" },
+        { paraName: "puser", paraValue: userData.ctaikhoan },
+        { paraName: "popt", paraValue: "1" },
       ],
     });
 
