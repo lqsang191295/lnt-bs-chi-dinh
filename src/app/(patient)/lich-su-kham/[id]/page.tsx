@@ -1,27 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from "react";
-import MainContent from "../../_components/main-content";
-import Navbar from "../../_components/nav-bar";
-import { sidebarItems } from "@/constant/nav-bar";
-import { iNavbarItemType } from "@/types/nav-bar";
-import NavbarMobile from "../../_components/nav-bar-mobile";
-import { usePatientStore } from "@/store/patient-store";
-import { useRouter } from "next/navigation";
+import { getPatientToken } from "@/utils/patient";
+import { useParams, useRouter } from "next/navigation";
 
 export default function Page() {
-  const router = useRouter()
-  const [navbarItem, setNavbarItem] = useState<iNavbarItemType>(sidebarItems[0])
-  const { patient: patientData } = usePatientStore();
+  const params = useParams();
+  const id = params?.id;
+  const router = useRouter();
+  const token = getPatientToken();
 
-  if (!patientData || !patientData.logged) {
-    router.push('/patient/login')
+  console.log("= ==token ", token);
+  if (!token || !token.logged) {
+    return router.push(`/lich-su-kham?mabn=${id}`);
   }
 
-  return <div className="flex h-screen flex-col md:flex-row">
-    <Navbar navbarData={sidebarItems} navbarItem={navbarItem} onClick={setNavbarItem} />
-    <NavbarMobile navbarData={sidebarItems} navbarItem={navbarItem} onClick={setNavbarItem} />
-
-    <MainContent navbarItem={navbarItem} />
-  </div>;
+  return <div className="flex h-screen flex-col md:flex-row">Lich su kham</div>;
 }

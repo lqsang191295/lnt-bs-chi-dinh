@@ -47,7 +47,7 @@ export async function sha256(message: string): Promise<string> {
     const { createHash } = await import("crypto");
     return createHash("sha256").update(message).digest("hex");
   }
-  
+
   const encoder = new TextEncoder();
   const data = encoder.encode(message);
   const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
