@@ -342,14 +342,6 @@ export default function PageQuanLyNguoiDung() {
             </Button>
             <Button
               variant="outlined"
-              startIcon={<PasswordIcon />}
-              onClick={() => handleDoiMatKhau()}
-              disabled={!selectedUser || newUserStatus === 1}
-            >
-              ĐỔI MẬT KHẨU
-            </Button>
-            <Button
-              variant="outlined"
               startIcon={<CloseOutlinedIcon />}
               onClick={() => handleHuy()}
             >
@@ -363,6 +355,14 @@ export default function PageQuanLyNguoiDung() {
               onClick={() => handleXoa()}
             >
               XOÁ
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<PasswordIcon />}
+              onClick={() => handleDoiMatKhau()}
+              disabled={!selectedUser || newUserStatus === 1}
+            >
+              ĐỔI MẬT KHẨU
             </Button>
             <Button
               variant="outlined"
