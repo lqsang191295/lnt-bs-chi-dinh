@@ -64,7 +64,10 @@ export const getChiTietHSBA = async (pUser: string, pOpt: string, ID: string) =>
 //  "5" - Cập nhật PDF KẾT XUẤT hồ sơ bệnh án 
 export const capnhathosobenhan = async (pUser: string, pOpt: string, hsba: IHoSoBenhAn) => {
   try {
-    //console.log("Fetching HoSoBenhAn...");
+    console.log("Fetching HoSoBenhAn...");
+    console.log("pOpt:", pOpt);
+    console.log("pUser:", pUser);
+    console.log("pUser:", hsba);
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
@@ -105,7 +108,7 @@ export const capnhathosobenhan = async (pUser: string, pOpt: string, hsba: IHoSo
         { paraName: "NguoiKetXuat", paraValue: hsba.NguoiKetXuat },
       ],
     });
-
+    console.log("Response from capnhathosobenhan:", response);
     if (response.status === "error") {
       return [];
     }

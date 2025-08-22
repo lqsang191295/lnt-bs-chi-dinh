@@ -1,4 +1,3 @@
-// app/dong-mo-hsba/page.tsx
 "use client";
 import { getChiTietHSBA, getHosobenhan } from "@/actions/act_thosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
@@ -6,8 +5,11 @@ import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
+import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { History, NoteAdd, Search } from "@mui/icons-material";
 
 import HeadMetadata from "@/components/HeadMetadata";
@@ -20,65 +22,13 @@ import {
   RadioGroup,
   Select,
   Typography,
+  IconButton,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import DialogDetail from "./components/dialog-detail";
-const columns: GridColDef[] = [
-  { field: "ID", headerName: "ID", width: 60 },
-  {
-    field: "TrangThaiBA",
-    headerName: "Trạng thái",
-    width: 100,
-    renderCell: (params) => (
-      <Box
-        sx={{
-          backgroundColor: "transparent",
-          color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
-          padding: "4px 8px",
-          borderRadius: "4px",
-          fontSize: "12px",
-          fontWeight: "bold",
-          textAlign: "center",
-          minWidth: "60px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "4px",
-        }}>
-        {params.value === "MO" ? (
-          <>
-            <LockOpenIcon sx={{ fontSize: "14px" }} />
-            Mở
-          </>
-        ) : (
-          <>
-            <LockOutlinedIcon sx={{ fontSize: "14px" }} />
-            Đóng
-          </>
-        )}
-      </Box>
-    ),
-  },
-  // { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
-  { field: "Hoten", headerName: "Họ và tên", width: 200 },
-  { field: "MaBN", headerName: "Mã BN", width: 130 },
-  { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-  { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-  { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-  { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
-  { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
-  { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
-  { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
-  { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
-  { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
-  { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
-  { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
-  { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
-];
 
 export default function TraCuuHsbaPage() {
   const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
@@ -95,10 +45,152 @@ export default function TraCuuHsbaPage() {
   const [phieuList, setPhieuList] = useState<IHoSoBenhAnChiTiet[]>([]);
   const { data: loginedUser } = useUserStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
+
+  // Sử dụng PdfComponents hook
+  const { downloadPdf, isLoading } = PdfComponents(useMemo(() => ({
+    onSuccess: (message: string) => {
+      console.log("PDF downloaded successfully:", message);
+      // Có thể thêm toast notification ở đây
+    },
+    onError: (error: string) => {
+      console.error("PDF download error:", error);
+      alert(error);
+    }
+  }), []));
+
+  // Hàm xử lý download PDF
+  const handleDownload = useCallback((row: IHoSoBenhAn) => {
+    if (!row.NoiDungPdf) {
+      alert("Không có dữ liệu PDF để tải!");
+      return;
+    }
+
+    // Kiểm tra trạng thái kết xuất
+    if (row.TrangThaiKetXuat !== 1) {
+      alert("Hồ sơ này chưa được kết xuất!");
+      return;
+    }
+
+    const fileName = `HSBA_${row.MaBN}_${row.Hoten}`;
+    downloadPdf(row.NoiDungPdf, fileName);
+  }, [downloadPdf]);
+
+  // Cập nhật columns để sử dụng handleDownload mới
+  const columns: GridColDef[] = useMemo(() => [
+    { field: "ID", headerName: "ID", width: 60 },
+    {
+      field: "TrangThaiBA",
+      headerName: "Trạng thái",
+      width: 100,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            backgroundColor: "transparent",
+            color: params.value === "MO" ? "#8200fcff" : "#f44336",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            fontWeight: "bold",
+            textAlign: "center",
+            minWidth: "60px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "4px",
+          }}>
+          {params.value === "MO" ? (
+            <>
+              <LockOpenIcon sx={{ fontSize: "14px" }} />
+              Mở
+            </>
+          ) : (
+            <>
+              <LockOutlinedIcon sx={{ fontSize: "14px" }} />
+              Đóng
+            </>
+          )}
+        </Box>
+      ),
+    },
+    {
+      field: "TrangThaiKetXuat",
+      headerName: "Kết xuất",
+      width: 120,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            backgroundColor: "transparent",
+            color: params.value === 1 ? "#4caf50" : "#ff9800",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            fontWeight: params.value === 1 ? "bold" : "normal",
+            textAlign: "center",
+            minWidth: "100px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "4px",
+          }}>
+          {params.value === 1 ? (
+            <>
+              <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent row selection
+                  handleDownload(params.row);
+                }}
+                disabled={isLoading || !params.row.NoiDungPdf}
+                sx={{ 
+                  color: "inherit",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  p: 0.5,
+                  "&:hover": {
+                    backgroundColor: "rgba(76, 175, 80, 0.1)"
+                  }
+                }}
+                title={
+                  !params.row.NoiDungPdf 
+                    ? "Không có dữ liệu PDF" 
+                    : isLoading 
+                      ? "Đang tải..." 
+                      : "Tải xuống PDF"
+                }
+              >
+                {isLoading ? "..." : "Tải xuống"}
+              </IconButton>
+            </>
+          ) : (
+            <>
+              <KeyboardArrowDownOutlinedIcon sx={{ fontSize: "14px" }} />
+              Chưa kết xuất
+            </>
+          )}
+        </Box>
+      ),
+    },
+    { field: "Hoten", headerName: "Họ và tên", width: 200 },
+    { field: "MaBN", headerName: "Mã BN", width: 130 },
+    { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+    { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
+    { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
+    { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
+    { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+    { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+    { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
+    { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
+    { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
+    { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
+    { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
+    { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
+    { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+  ], [handleDownload, isLoading]);
+
   // Hàm xử lý double click trên lưới chính
   const handleRowDoubleClick = async (params: GridRowParams) => {
     const hsba = params.row;
-    // console.log("Selected HSBA for detail:", hsba);
     setSelectedHsbaForDetail(hsba);
 
     try {
@@ -109,14 +201,14 @@ export default function TraCuuHsbaPage() {
       );
       const mappedData = (chiTietData || []).map(
         (item: IHoSoBenhAnChiTiet, index: number) => ({
-          id: item.ID || index + 1, // Sử dụng ID từ data hoặc index làm id
+          id: item.ID || index + 1,
           ...item,
         })
       );
 
       setPhieuList(mappedData);
     } catch (error) {
-      // console.error("Lỗi khi lấy chi tiết HSBA:", error);
+      console.error("Lỗi khi lấy chi tiết HSBA:", error);
       setPhieuList([]);
     }
 
@@ -135,10 +227,11 @@ export default function TraCuuHsbaPage() {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
     } catch (error) {
-      // console.error("Error fetching khoa list:", error);
+      console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
   };
+
   // Fetch khoa list from API
   useEffect(() => {
     fetchKhoaList();
@@ -157,6 +250,7 @@ export default function TraCuuHsbaPage() {
         const day = String(date.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
       };
+      
       const data = await getHosobenhan(
         loginedUser.ctaikhoan,
         popt,
@@ -171,13 +265,13 @@ export default function TraCuuHsbaPage() {
           ...item,
         }))
       );
-      //console.log("Search results:", data);
     } catch (error) {
-      // console.error("Error fetching HSBA data:", error);
+      console.error("Error fetching HSBA data:", error);
     } finally {
       setSearchingData(false);
     }
   };
+
   // Render component
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -190,6 +284,7 @@ export default function TraCuuHsbaPage() {
           sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           TRA CỨU HỒ SƠ BỆNH ÁN
         </Typography>
+        
         <Box display="flex" gap={2} mb={2}>
           <Box flex={1}>
             <Select
@@ -269,8 +364,14 @@ export default function TraCuuHsbaPage() {
             />
           </Box>
           <Box flex={1}>
-            <Button fullWidth startIcon={<Search />} variant="contained" onClick={handleSearch}>
-              Tìm kiếm
+            <Button 
+              fullWidth 
+              startIcon={<Search />} 
+              variant="contained" 
+              onClick={handleSearch}
+              disabled={searchingData}
+            >
+              {searchingData ? "Đang tìm..." : "Tìm kiếm"}
             </Button>
           </Box>
         </Box>
@@ -283,7 +384,7 @@ export default function TraCuuHsbaPage() {
             checkboxSelection
             disableRowSelectionOnClick
             density="compact"
-            onRowDoubleClick={handleRowDoubleClick} // Thêm sự kiện double click
+            onRowDoubleClick={handleRowDoubleClick}
             sx={{
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
