@@ -133,7 +133,7 @@ export default function MuonTraHsbaPage() {
         }))
       );
       //console.log("Search results:", data);
-    } catch (error) {
+    } catch {
       // console.error("Error fetching HSBA data:", error);
     } finally {
       setSearchingData(false);
@@ -144,7 +144,7 @@ export default function MuonTraHsbaPage() {
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
-    } catch (error) {
+    } catch {
       // console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
@@ -175,7 +175,7 @@ export default function MuonTraHsbaPage() {
           } else {
             setPhieumuontraHSBA(null);
           }
-        } catch (error) {
+        } catch {
           // console.error("Error fetching phieu muon tra:", error);
           setPhieumuontraHSBA(null);
         }

@@ -1,7 +1,6 @@
 // app/ket-xuat-hsba/page.tsx
 "use client";
 
-import HeadMetadata from "@/components/HeadMetadata";
 import {
   capnhathosobenhan,
   getChiTietHSBA,
@@ -9,6 +8,7 @@ import {
   getnhatkyketxuatba,
 } from "@/actions/act_thosobenhan";
 import { IPDFItem } from "@/model/ipdf";
+import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
@@ -342,13 +342,13 @@ export default function KetXuatHsbaPage() {
   // Cập nhật handleChange để load data khi chuyển tab
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
-    
+
     // Nếu chuyển sang tab lịch sử và chưa có dữ liệu, tự động load
     if (newValue === 1 && lichSuRows.length === 0) {
       handleSearchLichSu();
     }
   };
- 
+
   // Fetch khoa list from API
   const fetchKhoaList = async () => {
     try {
@@ -519,6 +519,10 @@ export default function KetXuatHsbaPage() {
       <Box p={2} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"
+          gutterBottom
+          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+          QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
+        </Typography>
           gutterBottom
           sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
@@ -706,9 +710,9 @@ export default function KetXuatHsbaPage() {
         {/* Tab Lịch sử */}
         <CustomTabPanel value={value} index={1}>
           <Box className="bg-white flex gap-2 p-2">
-            <Button 
-              variant="contained" 
-              startIcon={<Refresh />} 
+            <Button
+              variant="contained"
+              startIcon={<Refresh />}
               size="small"
               onClick={handleSearchLichSu}
               disabled={searchingLichSu}>

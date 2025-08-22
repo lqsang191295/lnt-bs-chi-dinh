@@ -7,6 +7,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Skeleton,
   Stack,
 } from "@mui/material";
 import { useState } from "react";
@@ -16,10 +17,42 @@ import { useMenuStore } from "@/store/menu";
 import { buildMenuTree } from "@/utils/menu";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+const MenuSkeleton = () => {
+  // giả sử ta muốn hiển thị 5 item skeleton
+  const skeletonItems = Array.from({ length: 5 });
+
+  return (
+    <Stack sx={{ flexGrow: 1 }}>
+      <List component="nav">
+        {/* Skeleton cho item CHỨC NĂNG */}
+        <ListItemButton>
+          <ListItemIcon>
+            <Skeleton variant="circular" width={24} height={24} />
+          </ListItemIcon>
+          <ListItemText primary={<Skeleton variant="text" width={120} />} />
+        </ListItemButton>
+
+        {/* Skeleton cho menu tree */}
+        {skeletonItems.map((_, index) => (
+          <ListItemButton key={index}>
+            <ListItemIcon>
+              <Skeleton variant="circular" width={24} height={24} />
+            </ListItemIcon>
+            <ListItemText
+              primary={<Skeleton variant="text" width={100 + index * 10} />}
+            />
+          </ListItemButton>
+        ))}
+      </List>
+    </Stack>
+  );
+};
+
 export default function MenuContent() {
   const { data: menuData } = useMenuStore();
 
-  if (!menuData || menuData.length == 0) return;
+  if (!menuData || menuData.length == 0) return <MenuSkeleton />;
 
   const menuTree = buildMenuTree(menuData);
   return (

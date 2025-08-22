@@ -6,11 +6,19 @@ import {
   gettnhomnguoidung,
   instnguoidung,
 } from "@/actions/act_tnguoidung";
+import HeadMetadata from "@/components/HeadMetadata";
 import { ITnhomNguoiDung } from "@/model/tnhomnguoidung";
 import { IUserItem } from "@/model/tuser";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
+import PasswordIcon from "@mui/icons-material/Password";
+import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
+import PersonRemoveOutlinedIcon from "@mui/icons-material/PersonRemoveOutlined";
+import SaveAsOutlinedIcon from "@mui/icons-material/SaveAsOutlined";
 import {
   Box,
   Button,
@@ -20,20 +28,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import PasswordIcon from "@mui/icons-material/Password";
-import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
-import PersonRemoveOutlinedIcon from "@mui/icons-material/PersonRemoveOutlined";
-import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
-import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
-import SaveAsOutlinedIcon from "@mui/icons-material/SaveAsOutlined";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useCallback, useEffect, useState } from "react";
-import DialogPhanQuyen from "./components/dialog-phan-quyen";
 import DialogDoiMatKhau from "./components/dialog-doi-mat-khau";
-import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
-import HeadMetadata from "@/components/HeadMetadata";
+import DialogPhanQuyen from "./components/dialog-phan-quyen";
 
 const columns: GridColDef[] = [
   {
@@ -89,7 +89,7 @@ export default function PageQuanLyNguoiDung() {
         );
         setSelectedUser(result[0] as IUserItem);
       }
-    } catch (error) {
+    } catch {
       // console.error("Error fetching users:", error);
       setUsers([]);
     } finally {
@@ -124,7 +124,7 @@ export default function PageQuanLyNguoiDung() {
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
-    } catch (error) {
+    } catch {
       // console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
@@ -314,21 +314,18 @@ export default function PageQuanLyNguoiDung() {
         {/* Bảng danh sách */}
         <Grid
           size={8}
-          className="h-full flex flex-col overflow-hidden bg-white p-4"
-        >
+          className="h-full flex flex-col overflow-hidden bg-white p-4">
           <Typography
             variant="h6"
             mb={1}
-            sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}
-          >
+            sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
             DANH SÁCH NGƯỜI DÙNG
           </Typography>
           <Box display="flex" gap={1} flexWrap="wrap" mb={2} minHeight={40}>
             <Button
               variant="outlined"
               startIcon={<PersonAddOutlinedIcon />}
-              onClick={() => handleThem()}
-            >
+              onClick={() => handleThem()}>
               THÊM
             </Button>
             <Button
@@ -336,15 +333,13 @@ export default function PageQuanLyNguoiDung() {
               startIcon={<SaveAsOutlinedIcon />}
               disabled={!selectedUser || newUserStatus === 1}
               color="primary"
-              onClick={() => handleLuu()}
-            >
+              onClick={() => handleLuu()}>
               LƯU
             </Button>
             <Button
               variant="outlined"
               startIcon={<CloseOutlinedIcon />}
-              onClick={() => handleHuy()}
-            >
+              onClick={() => handleHuy()}>
               HUỶ
             </Button>
             <Button
@@ -352,24 +347,21 @@ export default function PageQuanLyNguoiDung() {
               startIcon={<PersonRemoveOutlinedIcon />}
               disabled={!selectedUser || selectedUser.cid === "0"}
               color="error"
-              onClick={() => handleXoa()}
-            >
+              onClick={() => handleXoa()}>
               XOÁ
             </Button>
             <Button
               variant="outlined"
               startIcon={<PasswordIcon />}
               onClick={() => handleDoiMatKhau()}
-              disabled={!selectedUser || newUserStatus === 1}
-            >
+              disabled={!selectedUser || newUserStatus === 1}>
               ĐỔI MẬT KHẨU
             </Button>
             <Button
               variant="outlined"
               startIcon={<ManageAccountsOutlinedIcon />}
               onClick={() => handlePhanQuyen()}
-              disabled={!selectedUser || newUserStatus === 1}
-            >
+              disabled={!selectedUser || newUserStatus === 1}>
               PHÂN QUYỀN
             </Button>
           </Box>
@@ -388,14 +380,12 @@ export default function PageQuanLyNguoiDung() {
         {/* Form chi tiết */}
         <Grid
           size={4}
-          className="h-full flex flex-col overflow-hidden bg-white"
-        >
+          className="h-full flex flex-col overflow-hidden bg-white">
           <Typography
             variant="h6"
             mb={1}
             sx={{ color: "#1976d2", letterSpacing: 1 }}
-            className="px-4 pt-4"
-          >
+            className="px-4 pt-4">
             THÔNG TIN NGƯỜI DÙNG
           </Typography>
           <form className="h-full flex flex-col flex-1 overflow-hidden">
@@ -403,8 +393,7 @@ export default function PageQuanLyNguoiDung() {
               <Grid
                 container
                 spacing={2}
-                className="flex-1 overflow-y-auto px-4"
-              >
+                className="flex-1 overflow-y-auto px-4">
                 <Grid size={12}>
                   <Typography
                     component="label"
@@ -414,8 +403,7 @@ export default function PageQuanLyNguoiDung() {
                       lineHeight: 1.2,
                       color: "#4d5052ff",
                       letterSpacing: 1,
-                    }}
-                  >
+                    }}>
                     Khoa phòng
                   </Typography>
                   <Select
@@ -423,8 +411,7 @@ export default function PageQuanLyNguoiDung() {
                     size="small"
                     value={selectedUser?.cmadonvi || ""}
                     onChange={(e) => handleChange("cmadonvi", e.target.value)}
-                    displayEmpty
-                  >
+                    displayEmpty>
                     {khoaList.map((item) => (
                       <MenuItem key={item.value} value={item.value}>
                         {item.label}
@@ -441,8 +428,7 @@ export default function PageQuanLyNguoiDung() {
                       lineHeight: 1.2,
                       color: "#4d5052ff",
                       letterSpacing: 1,
-                    }}
-                  >
+                    }}>
                     Nhóm người dùng
                   </Typography>
                   <Select
@@ -452,8 +438,7 @@ export default function PageQuanLyNguoiDung() {
                     onChange={(e) =>
                       handleChange("cmanhomnguoidung", e.target.value)
                     }
-                    displayEmpty
-                  >
+                    displayEmpty>
                     {nhomNguoiDungList.map((item) => (
                       <MenuItem key={item.value} value={item.value}>
                         {item.label}
@@ -480,8 +465,7 @@ export default function PageQuanLyNguoiDung() {
                         display: "flex",
                         alignItems: "center",
                         flexGrow: 1,
-                      }}
-                    >
+                      }}>
                       <input
                         type="checkbox"
                         checked={selectedUser?.cxacthuc2lop === "1"}
@@ -500,8 +484,7 @@ export default function PageQuanLyNguoiDung() {
                           lineHeight: 1.2,
                           color: "#191a1bff",
                           letterSpacing: 1,
-                        }}
-                      >
+                        }}>
                         Xác thực 2 lớp
                       </Typography>
                     </Box>

@@ -7,9 +7,9 @@ import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
+import { Search } from "@mui/icons-material";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { History, NoteAdd, Search } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -134,7 +134,7 @@ export default function DongMoHsbaPage() {
           danhSachHSBA.length
         } hồ sơ!`
       );
-    } catch (error) {
+    } catch {
       //console.error("Error updating HSBA:", error);
       ToastError(`Có lỗi xảy ra khi ${loai === "DONG" ? "đóng" : "mở"} HSBA!`);
     }
@@ -186,7 +186,7 @@ export default function DongMoHsbaPage() {
         }))
       );
       //console.log("Search results:", data);
-    } catch (error) {
+    } catch {
       //console.error("Error fetching HSBA data:", error);
     } finally {
       setSearchingData(false);

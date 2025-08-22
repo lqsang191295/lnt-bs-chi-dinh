@@ -1,9 +1,14 @@
 import { post } from "@/api/client";
-import { IHoSoBenhAn} from "@/model/thosobenhan";
+import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
-import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 
-export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: string, TuNgay: string, DenNgay: string) => {
+export const getHosobenhan = async (
+  pUser: string,
+  pOpt: string,
+  KhoaDieuTri: string,
+  TuNgay: string,
+  DenNgay: string
+) => {
   try {
     //console.log("Fetching HoSoBenhAn...");
     // Gọi API để lấy danh sách hồ sơ bệnh án
@@ -30,7 +35,11 @@ export const getHosobenhan = async (pUser: string, pOpt: string,KhoaDieuTri: str
   }
 };
 
-export const getChiTietHSBA = async (pUser: string, pOpt: string, ID: string) => {
+export const getChiTietHSBA = async (
+  pUser: string,
+  pOpt: string,
+  ID: string
+) => {
   try {
     //console.log("Fetching HoSoBenhAn...");
     // Gọi API để lấy danh sách hồ sơ bệnh án
@@ -56,13 +65,17 @@ export const getChiTietHSBA = async (pUser: string, pOpt: string, ID: string) =>
 };
 ///
 /// Cập nhật hồ sơ bệnh án
-/// popt: 
-//  "1" - Thêm mới, 
-//  "2" - Cập nhật, 
+/// popt:
+//  "1" - Thêm mới,
+//  "2" - Cập nhật,
 //  "3" - Cập nhật lưu trữ hsba SoLuuTru,VitriLuuTru,LoaiLuuTru,NgayLuuTru,
 //  "4" - Cập nhật trạng thái hồ sơ bệnh án [đóng/mở]
-//  "5" - Cập nhật PDF KẾT XUẤT hồ sơ bệnh án 
-export const capnhathosobenhan = async (pUser: string, pOpt: string, hsba: IHoSoBenhAn) => {
+//  "5" - Cập nhật PDF KẾT XUẤT hồ sơ bệnh án
+export const capnhathosobenhan = async (
+  pUser: string,
+  pOpt: string,
+  hsba: IHoSoBenhAn
+) => {
   try {
     console.log("Fetching HoSoBenhAn...");
     console.log("pOpt:", pOpt);
@@ -121,13 +134,17 @@ export const capnhathosobenhan = async (pUser: string, pOpt: string, hsba: IHoSo
 
 ///
 /// Thêm phiếu mượn - trả hồ sơ bệnh án
-/// popt: 
-//  "1" - Thêm mới, 
-//  "2" - Cập nhật, 
+/// popt:
+//  "1" - Thêm mới,
+//  "2" - Cập nhật,
 //  hsba.cthaotac: - THAO TÁC MƯỢN TRẢ
 //  "MUON" - mượn hsba
 //  "TRA" - trả hsba
-export const themmuontraHSBA = async (pUser: string, pOpt: string, hsba: ITMuonTraHSBA) => {
+export const themmuontraHSBA = async (
+  pUser: string,
+  pOpt: string,
+  hsba: ITMuonTraHSBA
+) => {
   try {
     // Gọi API để them phiếu mượn - trả hồ sơ bệnh án
     const response = await post(`/api/callService`, {
@@ -159,16 +176,21 @@ export const themmuontraHSBA = async (pUser: string, pOpt: string, hsba: ITMuonT
   }
 };
 
-
 ///
 /// Lấy lịch sử phiếu mượn - trả hồ sơ bệnh án
-/// popt: 
+/// popt:
 // "1" - Lấy danh sách phiếu mượn - trả hồ sơ bệnh án theo mã bệnh án
 // "2" - Lấy danh sách phiếu mượn - trả hồ sơ bệnh án theo ngày
 //  cmaba: Mã bệnh án
 //  ctungay: Ngày bắt đầu,
 //  cdenngay: Ngày kết thúc
-export const getmuontraHSBA = async (pUser: string, pOpt: string, cmaba: string, ctungay: string, cdenngay: string) => {
+export const getmuontraHSBA = async (
+  pUser: string,
+  pOpt: string,
+  cmaba: string,
+  ctungay: string,
+  cdenngay: string
+) => {
   try {
     // Gọi API để them phiếu mượn - trả hồ sơ bệnh án
     const response = await post(`/api/callService`, {
@@ -193,7 +215,6 @@ export const getmuontraHSBA = async (pUser: string, pOpt: string, cmaba: string,
     return [];
   }
 };
- 
 
 export const getnhatkythaotacba = async (
   pUser: string,
@@ -263,7 +284,7 @@ export const getnhatkyketxuatba = async (
 export const checkSoLuuTru = async (
   pUser: string,
   pOpt: string,
-  soluutru: string, 
+  soluutru: string
 ) => {
   try {
     const response = await post(`/api/callService`, {
@@ -273,7 +294,7 @@ export const checkSoLuuTru = async (
       paraData: [
         { paraName: "puser", paraValue: pUser },
         { paraName: "popt", paraValue: pOpt },
-        { paraName: "soluutru", paraValue: soluutru }, 
+        { paraName: "soluutru", paraValue: soluutru },
       ],
     });
     if (response.status === "error") {

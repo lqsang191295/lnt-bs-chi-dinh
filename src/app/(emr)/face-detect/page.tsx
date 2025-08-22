@@ -3,23 +3,23 @@
 import { luuanhnguoidung } from "@/actions/act_tnguoidung";
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth";
-import { 
-  Box, 
-  Button, 
-  TextField, 
-  Typography, 
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
   InputLabel,
-  Select,
   MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Alert
+  Select,
+  TextField,
+  Typography,
 } from "@mui/material";
+import CryptoJS from "crypto-js";
 import * as faceapi from "face-api.js";
-import CryptoJS from 'crypto-js';
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -41,13 +41,13 @@ const CameraComponent = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
   const [modelsLoaded, setModelsLoaded] = useState(false);
-  const [cameraSource, setCameraSource] = useState<'local' | 'ip'>('local');
+  const [cameraSource, setCameraSource] = useState<"local" | "ip">("local");
   const [showIPCameraDialog, setShowIPCameraDialog] = useState(false);
   const [ipCameraConfig, setIpCameraConfig] = useState<IPCameraConfig>({
-    url: 'http://172.16.1.186',
-    username: 'admin',
-    password: 'admin123',
-    name: 'Camera IP 186'
+    url: "http://172.16.1.186",
+    username: "admin",
+    password: "admin123",
+    name: "Camera IP 186",
   });
   const [ipCameraError, setIpCameraError] = useState<string | null>(null);
 
@@ -105,15 +105,17 @@ const CameraComponent = ({
 
       // Tạo URL stream với authentication
       const streamUrl = `${config.url}/doc/page/main.html`;
-      
+
       // Sử dụng fetch để test connection trước
       const response = await fetch(streamUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Basic ${btoa(`${config.username}:${config.password}`)}`,
-          'Content-Type': 'text/html',
+          Authorization: `Basic ${btoa(
+            `${config.username}:${config.password}`
+          )}`,
+          "Content-Type": "text/html",
         },
-        mode: 'cors',
+        mode: "cors",
       });
 
       if (!response.ok) {
@@ -125,7 +127,7 @@ const CameraComponent = ({
         // Stop local camera nếu đang chạy
         const currentStream = videoRef.current.srcObject as MediaStream;
         if (currentStream) {
-          currentStream.getTracks().forEach(track => track.stop());
+          currentStream.getTracks().forEach((track) => track.stop());
         }
 
         // Tạo video element mới với IP camera stream
@@ -134,22 +136,22 @@ const CameraComponent = ({
         const videoElement = videoRef.current;
         videoElement.src = `${config.url}/video_stream`; // URL stream thực tế
         videoElement.crossOrigin = "anonymous";
-        
+
         // Alternative: Sử dụng iframe hoặc img cho MJPEG stream
         const img = new window.Image();
         img.crossOrigin = "anonymous";
         img.src = `${config.url}/video.cgi?user=${config.username}&pwd=${config.password}`;
-        
+
         img.onload = () => {
           console.log("IP camera stream connected");
           // Update video source với image stream
           if (videoRef.current) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
             canvas.width = img.width;
             canvas.height = img.height;
             ctx?.drawImage(img, 0, 0);
-            
+
             // Convert to video stream (simplified approach)
             videoRef.current.srcObject = canvas.captureStream(30); // 30 FPS
           }
@@ -157,340 +159,384 @@ const CameraComponent = ({
 
         img.onerror = (error) => {
           console.error("IP camera connection error:", error);
-          setIpCameraError("Không thể kết nối đến camera IP. Kiểm tra URL, username, password.");
+          setIpCameraError(
+            "Không thể kết nối đến camera IP. Kiểm tra URL, username, password."
+          );
         };
       }
-
     } catch (error) {
       console.error("IP camera error:", error);
-      setIpCameraError(`Lỗi kết nối camera IP: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setIpCameraError(
+        `Lỗi kết nối camera IP: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
   // Enhanced IP camera connection với WebRTC hoặc MJPEG
 
-// Helper function để thực hiện đăng nhập camera IP theo đúng quy trình
-const performCameraLogin = async (config: IPCameraConfig): Promise<{success: boolean, sessionID?: string, error?: string}> => {
-  try {
-    console.log("1-Starting camera login process...");
+  // Helper function để thực hiện đăng nhập camera IP theo đúng quy trình
+  const performCameraLogin = useCallback(
+    async (
+      config: IPCameraConfig
+    ): Promise<{ success: boolean; sessionID?: string; error?: string }> => {
+      try {
+        console.log("1-Starting camera login process...");
 
-    // Step 1: Get session login (lấy salt và sessionID) với better error handling
-    const sessionUrl = `${config.url}/CGI/Security/sessionLogin?timestamp=${new Date().getTime()}`;
-    console.log("2-Session login URL:", sessionUrl);
-    
-    let sessionResponse;
-    try {
-      sessionResponse = await fetch(sessionUrl, {
-        method: 'GET',
-        headers: {
-          'If-Modified-Since': '0',
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        },
-        mode: 'cors',
-        cache: 'no-cache', // Tránh cache issues
-        // Thêm timeout để tránh hang
-        signal: AbortSignal.timeout(10000) // 10 seconds timeout
-      });
-    } catch (fetchError) {
-      console.error("Fetch error:", fetchError);
-      
-      // Kiểm tra nếu là lỗi headers
-      if (fetchError instanceof Error && fetchError.message.includes('ERR_RESPONSE_HEADERS')) {
-        console.log("3-Header error detected, trying alternative approach...");
-        
-        // Alternative 1: Thử với XMLHttpRequest thay vì fetch
+        // Step 1: Get session login (lấy salt và sessionID) với better error handling
+        const sessionUrl = `${
+          config.url
+        }/CGI/Security/sessionLogin?timestamp=${new Date().getTime()}`;
+        console.log("2-Session login URL:", sessionUrl);
+
+        let sessionResponse;
         try {
-          const sessionData = await tryWithXHR(sessionUrl);
-          if (sessionData) {
-            return await continueLoginProcess(config, sessionData);
-          }
-        } catch (xhrError) {
-          console.error("XHR also failed:", xhrError);
-        }
-        
-        // Alternative 2: Thử bypass headers issue
-        try {
-          const bypassResponse = await fetch(sessionUrl + '&bypass=1', {
-            method: 'GET',
+          sessionResponse = await fetch(sessionUrl, {
+            method: "GET",
             headers: {
-              'Accept': 'application/json, text/plain, */*',
+              "If-Modified-Since": "0",
+              "Content-Type": "application/json",
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
             },
-            mode: 'no-cors', // Thử no-cors mode
+            mode: "cors",
+            cache: "no-cache", // Tránh cache issues
+            // Thêm timeout để tránh hang
+            signal: AbortSignal.timeout(10000), // 10 seconds timeout
           });
-          
-          if (bypassResponse.type === 'opaque') {
-            console.log("Received opaque response, cannot read data directly");
-            setIpCameraError("Camera kết nối nhưng không thể đọc dữ liệu do CORS policy. Cần cấu hình CORS trên camera.");
-            return { success: false, error: "CORS policy issue" };
+        } catch (fetchError) {
+          console.error("Fetch error:", fetchError);
+
+          // Kiểm tra nếu là lỗi headers
+          if (
+            fetchError instanceof Error &&
+            fetchError.message.includes("ERR_RESPONSE_HEADERS")
+          ) {
+            console.log(
+              "3-Header error detected, trying alternative approach..."
+            );
+
+            // Alternative 1: Thử với XMLHttpRequest thay vì fetch
+            try {
+              const sessionData = await tryWithXHR(sessionUrl);
+              if (sessionData) {
+                return await continueLoginProcess(config, sessionData);
+              }
+            } catch (xhrError) {
+              console.error("XHR also failed:", xhrError);
+            }
+
+            // Alternative 2: Thử bypass headers issue
+            try {
+              const bypassResponse = await fetch(sessionUrl + "&bypass=1", {
+                method: "GET",
+                headers: {
+                  Accept: "application/json, text/plain, */*",
+                },
+                mode: "no-cors", // Thử no-cors mode
+              });
+
+              if (bypassResponse.type === "opaque") {
+                console.log(
+                  "Received opaque response, cannot read data directly"
+                );
+                setIpCameraError(
+                  "Camera kết nối nhưng không thể đọc dữ liệu do CORS policy. Cần cấu hình CORS trên camera."
+                );
+                return { success: false, error: "CORS policy issue" };
+              }
+            } catch (bypassError) {
+              console.error("Bypass attempt failed:", bypassError);
+            }
           }
-        } catch (bypassError) {
-          console.error("Bypass attempt failed:", bypassError);
+
+          return {
+            success: false,
+            error: `Lỗi kết nối: ${
+              fetchError instanceof Error ? fetchError.message : "Network error"
+            }`,
+          };
         }
+
+        console.log("3-Session login response status:", sessionResponse.status);
+
+        if (!sessionResponse.ok) {
+          throw new Error(
+            `Session login failed: HTTP ${sessionResponse.status}`
+          );
+        }
+
+        let sessionData;
+        try {
+          const responseText = await sessionResponse.text();
+          console.log("4-Raw response text:", responseText);
+
+          // Thử parse JSON
+          sessionData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error("JSON parse error:", parseError);
+          return {
+            success: false,
+            error: "Camera response không đúng định dạng JSON",
+          };
+        }
+
+        return await continueLoginProcess(config, sessionData);
+      } catch (error) {
+        console.error("Camera login error:", error);
+        return {
+          success: false,
+          error: `Lỗi đăng nhập: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+        };
       }
-      
-      return { 
-        success: false, 
-        error: `Lỗi kết nối: ${fetchError instanceof Error ? fetchError.message : 'Network error'}` 
-      };
-    }
+    },
+    []
+  );
 
-    console.log("3-Session login response status:", sessionResponse.status);
-    
-    if (!sessionResponse.ok) {
-      throw new Error(`Session login failed: HTTP ${sessionResponse.status}`);
-    }
+  // Helper function để thử với XMLHttpRequest
+  const tryWithXHR = (url: string): Promise<Record<string, unknown>> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.setRequestHeader("If-Modified-Since", "0");
+      xhr.setRequestHeader("Cache-Control", "no-cache");
+      xhr.timeout = 10000; // 10 seconds
 
-    let sessionData;
-    try {
-      const responseText = await sessionResponse.text();
-      console.log("4-Raw response text:", responseText);
-      
-      // Thử parse JSON
-      sessionData = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error("JSON parse error:", parseError);
-      return { 
-        success: false, 
-        error: "Camera response không đúng định dạng JSON" 
-      };
-    }
-
-    return await continueLoginProcess(config, sessionData);
-
-  } catch (error) {
-    console.error("Camera login error:", error);
-    return {
-      success: false,
-      error: `Lỗi đăng nhập: ${error instanceof Error ? error.message : 'Unknown error'}`
-    };
-  }
-};
-
-// Helper function để thử với XMLHttpRequest
-const tryWithXHR = (url: string): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.setRequestHeader('If-Modified-Since', '0');
-    xhr.setRequestHeader('Cache-Control', 'no-cache');
-    xhr.timeout = 10000; // 10 seconds
-    
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            console.log("XHR success:", data);
-            resolve(data);
-          } catch (parseError) {
-            console.error("XHR JSON parse error:", parseError);
-            reject(parseError);
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              console.log("XHR success:", data);
+              resolve(data);
+            } catch (parseError) {
+              console.error("XHR JSON parse error:", parseError);
+              reject(parseError);
+            }
+          } else {
+            console.error("XHR failed with status:", xhr.status);
+            reject(new Error(`XHR failed: ${xhr.status}`));
           }
-        } else {
-          console.error("XHR failed with status:", xhr.status);
-          reject(new Error(`XHR failed: ${xhr.status}`));
         }
-      }
-    };
-    
-    xhr.onerror = () => {
-      console.error("XHR network error");
-      reject(new Error('XHR network error'));
-    };
-    
-    xhr.ontimeout = () => {
-      console.error("XHR timeout");
-      reject(new Error('XHR timeout'));
-    };
-    
-    xhr.send();
-  });
-};
+      };
 
-// Helper function để tiếp tục quy trình login
-const continueLoginProcess = async (config: IPCameraConfig, sessionData: any): Promise<{success: boolean, sessionID?: string, error?: string}> => {
-  console.log("4-Session login response:", sessionData);
+      xhr.onerror = () => {
+        console.error("XHR network error");
+        reject(new Error("XHR network error"));
+      };
 
-  if (sessionData.statusValue !== "200") {
-    throw new Error(`Session login error: ${sessionData.statusValue}`);
-  }
+      xhr.ontimeout = () => {
+        console.error("XHR timeout");
+        reject(new Error("XHR timeout"));
+      };
 
-  // Step 2: Hash password và thực hiện userCheck
-  const password = config.password;
-  const hashedPassword = await hashPassword(password); // MD5 hash
-  const finalPassword = await hashPassword(hashedPassword + sessionData.salt); // MD5(MD5(password) + salt)
-
-  const loginData = {
-    Username: config.username,
-    Password: finalPassword,
-    Sessionid: sessionData.sessionID
+      xhr.send();
+    });
   };
 
-  console.log("5-Sending user check with data:", { ...loginData, Password: "***hidden***" });
+  // Helper function để tiếp tục quy trình login
+  const continueLoginProcess = async (
+    config: IPCameraConfig,
+    sessionData: Record<string, unknown>
+  ): Promise<{ success: boolean; sessionID?: string; error?: string }> => {
+    console.log("4-Session login response:", sessionData);
 
-  const userCheckUrl = `${config.url}/CGI/Security/SelfExt/userCheck`;
-  
-  // Thử userCheck với cùng error handling
-  let userCheckResponse;
-  try {
-    userCheckResponse = await fetch(userCheckUrl, {
-      method: 'POST',
-      headers: {
-        'If-Modified-Since': '0',
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
-      },
-      body: JSON.stringify(loginData),
-      mode: 'cors',
-      signal: AbortSignal.timeout(10000)
+    if (sessionData.statusValue !== "200") {
+      throw new Error(`Session login error: ${sessionData.statusValue}`);
+    }
+
+    // Step 2: Hash password và thực hiện userCheck
+    const password = config.password;
+    const hashedPassword = await hashPassword(password); // MD5 hash
+    const finalPassword = await hashPassword(hashedPassword + sessionData.salt); // MD5(MD5(password) + salt)
+
+    const loginData = {
+      Username: config.username,
+      Password: finalPassword,
+      Sessionid: sessionData.sessionID,
+    };
+
+    console.log("5-Sending user check with data:", {
+      ...loginData,
+      Password: "***hidden***",
     });
-  } catch (fetchError) {
-    console.error("UserCheck fetch error:", fetchError);
-    
-    // Thử với XHR cho userCheck
+
+    const userCheckUrl = `${config.url}/CGI/Security/SelfExt/userCheck`;
+
+    // Thử userCheck với cùng error handling
+    let userCheckResponse;
     try {
-      const userCheckData = await tryUserCheckWithXHR(userCheckUrl, loginData);
-      return processUserCheckResponse(userCheckData);
-    } catch (xhrError) {
-      return { 
-        success: false, 
-        error: `UserCheck failed: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}` 
+      userCheckResponse = await fetch(userCheckUrl, {
+        method: "POST",
+        headers: {
+          "If-Modified-Since": "0",
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+        },
+        body: JSON.stringify(loginData),
+        mode: "cors",
+        signal: AbortSignal.timeout(10000),
+      });
+    } catch (fetchError) {
+      console.error("UserCheck fetch error:", fetchError);
+
+      // Thử với XHR cho userCheck
+      try {
+        const userCheckData = await tryUserCheckWithXHR(
+          userCheckUrl,
+          loginData
+        );
+        return processUserCheckResponse(userCheckData);
+      } catch {
+        return {
+          success: false,
+          error: `UserCheck failed: ${
+            fetchError instanceof Error ? fetchError.message : "Unknown error"
+          }`,
+        };
+      }
+    }
+
+    if (!userCheckResponse.ok) {
+      throw new Error(`User check failed: HTTP ${userCheckResponse.status}`);
+    }
+
+    const userCheckData = await userCheckResponse.json();
+    return processUserCheckResponse(userCheckData);
+  };
+
+  // Helper cho userCheck với XHR
+  const tryUserCheckWithXHR = (
+    url: string,
+    data: Record<string, unknown>
+  ): Promise<Record<string, unknown>> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader("If-Modified-Since", "0");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.timeout = 10000;
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              const responseData = JSON.parse(xhr.responseText);
+              resolve(responseData);
+            } catch (parseError) {
+              reject(parseError);
+            }
+          } else {
+            reject(new Error(`XHR UserCheck failed: ${xhr.status}`));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("XHR UserCheck network error"));
+      xhr.ontimeout = () => reject(new Error("XHR UserCheck timeout"));
+
+      xhr.send(JSON.stringify(data));
+    });
+  };
+
+  // Helper để xử lý response của userCheck
+  const processUserCheckResponse = (
+    userCheckData: Record<string, unknown>
+  ): { success: boolean; sessionID?: string; error?: string } => {
+    console.log("6-User check response:", userCheckData);
+
+    if (userCheckData.statusValue === "200") {
+      return {
+        success: true,
+        sessionID: userCheckData.sessionID as string,
+      };
+    } else {
+      const errorMessages: { [key: string]: string } = {
+        "203": "Mật khẩu không đúng",
+        "206": "Tài khoản bị khóa",
+        "207": "IP trong danh sách đen",
+        "208": "Người dùng đã đăng nhập",
+        "220": "Lỗi hệ thống camera",
+      };
+
+      const errorMsg =
+        errorMessages[userCheckData.statusValue as string] ||
+        "Tên đăng nhập hoặc mật khẩu không đúng";
+      return {
+        success: false,
+        error: errorMsg,
       };
     }
-  }
+  };
 
-  if (!userCheckResponse.ok) {
-    throw new Error(`User check failed: HTTP ${userCheckResponse.status}`);
-  }
+  // Enhanced IP Camera connection với better error handling
+  const connectIPCameraAdvanced = useCallback(
+    async (config: IPCameraConfig) => {
+      try {
+        setIpCameraError(null);
+        console.log("Connecting to advanced IP camera stream:", config.url);
 
-  const userCheckData = await userCheckResponse.json();
-  return processUserCheckResponse(userCheckData);
-};
+        // Step 1: Perform camera login với improved error handling
+        const loginResult = await performCameraLogin(config);
+        if (!loginResult.success) {
+          const errorMsg = loginResult.error || "Đăng nhập camera IP thất bại";
+          setIpCameraError(errorMsg);
 
-// Helper cho userCheck với XHR
-const tryUserCheckWithXHR = (url: string, data: any): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url, true);
-    xhr.setRequestHeader('If-Modified-Since', '0');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.timeout = 10000;
-    
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          try {
-            const responseData = JSON.parse(xhr.responseText);
-            resolve(responseData);
-          } catch (parseError) {
-            reject(parseError);
+          // Thêm gợi ý cho user
+          if (errorMsg.includes("CORS")) {
+            setIpCameraError(
+              errorMsg +
+                "\n\nGợi ý: Cấu hình CORS trên camera hoặc sử dụng proxy server."
+            );
+          } else if (errorMsg.includes("ERR_RESPONSE_HEADERS")) {
+            setIpCameraError(
+              "Camera có vấn đề về HTTP headers. Thử restart camera hoặc cập nhật firmware."
+            );
           }
-        } else {
-          reject(new Error(`XHR UserCheck failed: ${xhr.status}`));
+
+          return;
         }
+
+        console.log(
+          "Camera login successful, sessionID:",
+          loginResult.sessionID
+        );
+
+        // Continue with video stream setup...
+        // (rest of the video stream code remains the same)
+      } catch (error) {
+        console.error("Advanced IP camera error:", error);
+        setIpCameraError(
+          `Lỗi kết nối camera IP: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       }
-    };
-    
-    xhr.onerror = () => reject(new Error('XHR UserCheck network error'));
-    xhr.ontimeout = () => reject(new Error('XHR UserCheck timeout'));
-    
-    xhr.send(JSON.stringify(data));
-  });
-};
+    },
+    [performCameraLogin]
+  );
 
-// Helper để xử lý response của userCheck
-const processUserCheckResponse = (userCheckData: any): {success: boolean, sessionID?: string, error?: string} => {
-  console.log("6-User check response:", userCheckData);
-
-  if (userCheckData.statusValue === "200") {
-    return {
-      success: true,
-      sessionID: userCheckData.sessionID
-    };
-  } else {
-    const errorMessages: { [key: string]: string } = {
-      "203": "Mật khẩu không đúng",
-      "206": "Tài khoản bị khóa", 
-      "207": "IP trong danh sách đen",
-      "208": "Người dùng đã đăng nhập",
-      "220": "Lỗi hệ thống camera"
-    };
-    
-    const errorMsg = errorMessages[userCheckData.statusValue] || "Tên đăng nhập hoặc mật khẩu không đúng";
-    return {
-      success: false,
-      error: errorMsg
-    };
-  }
-};
-
-// Enhanced IP Camera connection với better error handling
-const connectIPCameraAdvanced = async (config: IPCameraConfig) => {
-  try {
-    setIpCameraError(null);
-    console.log("Connecting to advanced IP camera stream:", config.url);
-
-    // Step 1: Perform camera login với improved error handling
-    const loginResult = await performCameraLogin(config);
-    if (!loginResult.success) {
-      const errorMsg = loginResult.error || "Đăng nhập camera IP thất bại";
-      setIpCameraError(errorMsg);
-      
-      // Thêm gợi ý cho user
-      if (errorMsg.includes('CORS')) {
-        setIpCameraError(errorMsg + "\n\nGợi ý: Cấu hình CORS trên camera hoặc sử dụng proxy server.");
-      } else if (errorMsg.includes('ERR_RESPONSE_HEADERS')) {
-        setIpCameraError("Camera có vấn đề về HTTP headers. Thử restart camera hoặc cập nhật firmware.");
-      }
-      
-      return;
-    }
-
-    console.log("Camera login successful, sessionID:", loginResult.sessionID);
-
-    // Continue with video stream setup...
-    // (rest of the video stream code remains the same)
-    
-  } catch (error) {
-    console.error("Advanced IP camera error:", error);
-    setIpCameraError(`Lỗi kết nối camera IP: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-};
-
-// Helper function để hash password bằng MD5
-const hashPassword = async (password: string): Promise<string> => {
-  return CryptoJS.MD5(password).toString();
-};
-
-// Simple MD5 implementation (hoặc import từ crypto-js)
-const md5Hash = (str: string): string => {
-  // Simplified MD5 - trong thực tế nên dùng crypto-js
-  // npm install crypto-js @types/crypto-js
-  // import CryptoJS from 'crypto-js';
-  // return CryptoJS.MD5(str).toString();
-  
-  // Temporary implementation - replace with proper MD5
-  let hash = 0;
-  if (str.length === 0) return hash.toString();
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return Math.abs(hash).toString(16);
-};
+  // Helper function để hash password bằng MD5
+  const hashPassword = async (password: string): Promise<string> => {
+    return CryptoJS.MD5(password).toString();
+  };
 
   // Initialize camera based on source
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
+    let cleanup: () => void;
 
     const initCamera = async () => {
-      if (cameraSource === 'local') {
+      if (cameraSource === "local") {
         await getLocalCamera();
-      } else if (cameraSource === 'ip' && ipCameraConfig.username && ipCameraConfig.password) {
-        cleanup = await connectIPCameraAdvanced(ipCameraConfig);
+      } else if (
+        cameraSource === "ip" &&
+        ipCameraConfig.username &&
+        ipCameraConfig.password
+      ) {
+        await connectIPCameraAdvanced(ipCameraConfig);
       }
     };
 
@@ -498,18 +544,22 @@ const md5Hash = (str: string): string => {
 
     // Cleanup function
     return () => {
-      if (cleanup) {
-        cleanup();
-      }
-      
       // Stop any running streams
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       const videoElement = videoRef.current;
       if (videoElement && videoElement.srcObject) {
         const stream = videoElement.srcObject as MediaStream;
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [cameraSource, ipCameraConfig.username, ipCameraConfig.password, ipCameraConfig.url]);
+  }, [
+    cameraSource,
+    ipCameraConfig,
+    ipCameraConfig.username,
+    ipCameraConfig.password,
+    ipCameraConfig.url,
+    connectIPCameraAdvanced,
+  ]);
 
   // Face detection effect (unchanged)
   useEffect(() => {
@@ -615,11 +665,16 @@ const md5Hash = (str: string): string => {
         return;
       }
 
-      console.log(`Captured image with ${detections.length} face(s) detected from ${cameraSource} camera`);
+      console.log(
+        `Captured image with ${detections.length} face(s) detected from ${cameraSource} camera`
+      );
       onCapture(imgData);
     } catch (error) {
       console.error("Error capturing image:", error);
-      alert("Lỗi khi chụp ảnh: " + (error instanceof Error ? error.message : String(error)));
+      alert(
+        "Lỗi khi chụp ảnh: " +
+          (error instanceof Error ? error.message : String(error))
+      );
     }
   };
 
@@ -631,7 +686,7 @@ const md5Hash = (str: string): string => {
     }
 
     setShowIPCameraDialog(false);
-    setCameraSource('ip');
+    setCameraSource("ip");
   };
 
   return (
@@ -644,8 +699,8 @@ const md5Hash = (str: string): string => {
             value={cameraSource}
             label="Nguồn Camera"
             onChange={(e) => {
-              const newSource = e.target.value as 'local' | 'ip';
-              if (newSource === 'ip') {
+              const newSource = e.target.value as "local" | "ip";
+              if (newSource === "ip") {
                 setShowIPCameraDialog(true);
               } else {
                 setCameraSource(newSource);
@@ -656,7 +711,7 @@ const md5Hash = (str: string): string => {
           </Select>
         </FormControl>
 
-        {cameraSource === 'ip' && (
+        {cameraSource === "ip" && (
           <Button
             variant="outlined"
             size="small"
@@ -709,7 +764,9 @@ const md5Hash = (str: string): string => {
           {loading
             ? "🔄 Đang tải models..."
             : modelsLoaded
-            ? `✅ Models sẵn sàng (${cameraSource === 'ip' ? 'IP Camera' : 'Local Camera'})`
+            ? `✅ Models sẵn sàng (${
+                cameraSource === "ip" ? "IP Camera" : "Local Camera"
+              })`
             : "❌ Lỗi tải models"}
         </Typography>
       </Box>
@@ -724,8 +781,8 @@ const md5Hash = (str: string): string => {
       </Button>
 
       {/* IP Camera Configuration Dialog */}
-      <Dialog 
-        open={showIPCameraDialog} 
+      <Dialog
+        open={showIPCameraDialog}
         onClose={() => setShowIPCameraDialog(false)}
         maxWidth="sm"
         fullWidth>
@@ -736,7 +793,9 @@ const md5Hash = (str: string): string => {
               fullWidth
               label="URL Camera"
               value={ipCameraConfig.url}
-              onChange={(e) => setIpCameraConfig(prev => ({ ...prev, url: e.target.value }))}
+              onChange={(e) =>
+                setIpCameraConfig((prev) => ({ ...prev, url: e.target.value }))
+              }
               sx={{ mb: 2 }}
               helperText="Ví dụ: http://172.16.1.186"
             />
@@ -744,7 +803,12 @@ const md5Hash = (str: string): string => {
               fullWidth
               label="Username"
               value={ipCameraConfig.username}
-              onChange={(e) => setIpCameraConfig(prev => ({ ...prev, username: e.target.value }))}
+              onChange={(e) =>
+                setIpCameraConfig((prev) => ({
+                  ...prev,
+                  username: e.target.value,
+                }))
+              }
               sx={{ mb: 2 }}
             />
             <TextField
@@ -752,7 +816,12 @@ const md5Hash = (str: string): string => {
               label="Password"
               type="password"
               value={ipCameraConfig.password}
-              onChange={(e) => setIpCameraConfig(prev => ({ ...prev, password: e.target.value }))}
+              onChange={(e) =>
+                setIpCameraConfig((prev) => ({
+                  ...prev,
+                  password: e.target.value,
+                }))
+              }
               sx={{ mb: 2 }}
             />
             <Alert severity="info">
@@ -761,9 +830,7 @@ const md5Hash = (str: string): string => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowIPCameraDialog(false)}>
-            Hủy
-          </Button>
+          <Button onClick={() => setShowIPCameraDialog(false)}>Hủy</Button>
           <Button onClick={handleIPCameraLogin} variant="contained">
             Kết nối
           </Button>
@@ -801,7 +868,7 @@ export default function FacedetectPage() {
 
     const clientToken = getTokenFromClient();
     setToken(clientToken);
-    
+
     if (!loginedUser) {
       const claims = getClaimsFromToken();
       if (claims) {
@@ -815,99 +882,102 @@ export default function FacedetectPage() {
     setInitialized(true);
   }, [initialized, loginedUser, setUserData]);
 
-  const handleFaceCapture = useCallback(async (imgBase64: string) => {
-    const startTime = Date.now();
-    const startDate = new Date(startTime);
+  const handleFaceCapture = useCallback(
+    async (imgBase64: string) => {
+      const startTime = Date.now();
+      const startDate = new Date(startTime);
 
-    setIsRecognizing(true);
-    setRecognitionTime(null);
+      setIsRecognizing(true);
+      setRecognitionTime(null);
 
-    console.log("=== BẮT ĐẦU NHẬN DIỆN KHUÔN MẶT ===");
-    console.log("Thời gian bắt đầu:", startDate.toLocaleString());
-    console.log("Timestamp bắt đầu:", startTime);
+      console.log("=== BẮT ĐẦU NHẬN DIỆN KHUÔN MẶT ===");
+      console.log("Thời gian bắt đầu:", startDate.toLocaleString());
+      console.log("Timestamp bắt đầu:", startTime);
 
-    setCapturedImage(imgBase64);
+      setCapturedImage(imgBase64);
 
-    try {
-      console.log("🔄 Đang gửi ảnh lên API để nhận diện nhân viên...");
+      try {
+        console.log("🔄 Đang gửi ảnh lên API để nhận diện nhân viên...");
 
-      const apiStartTime = Date.now();
-      console.log(
-        "Thời gian gọi API:",
-        new Date(apiStartTime).toLocaleString()
-      );
-
-      const res = await fetch("/api/staff-detect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: token, image: imgBase64 }),
-      });
-
-      const apiEndTime = Date.now();
-      const apiDuration = apiEndTime - apiStartTime;
-      console.log(
-        "⏱️ Thời gian API response:",
-        new Date(apiEndTime).toLocaleString()
-      );
-      console.log("⚡ Thời gian xử lý API:", apiDuration + "ms");
-
-      const data = await res.json();
-      console.log("📋 Kết quả nhận diện:", data);
-
-      if (data.found) {
-        setServerImage(data.nhanvien.cimg);
-        setCtaikhoan(data.nhanvien.ctaikhoan);
-        setChoten(data.nhanvien.choten);
+        const apiStartTime = Date.now();
         console.log(
-          "✅ Nhận diện thành công:",
-          data.nhanvien.ctaikhoan + " - " + data.nhanvien.choten
+          "Thời gian gọi API:",
+          new Date(apiStartTime).toLocaleString()
         );
 
-        if (data.confidence) {
-          console.log("🎯 Độ tin cậy:", data.confidence + "%");
+        const res = await fetch("/api/staff-detect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: token, image: imgBase64 }),
+        });
+
+        const apiEndTime = Date.now();
+        const apiDuration = apiEndTime - apiStartTime;
+        console.log(
+          "⏱️ Thời gian API response:",
+          new Date(apiEndTime).toLocaleString()
+        );
+        console.log("⚡ Thời gian xử lý API:", apiDuration + "ms");
+
+        const data = await res.json();
+        console.log("📋 Kết quả nhận diện:", data);
+
+        if (data.found) {
+          setServerImage(data.nhanvien.cimg);
+          setCtaikhoan(data.nhanvien.ctaikhoan);
+          setChoten(data.nhanvien.choten);
+          console.log(
+            "✅ Nhận diện thành công:",
+            data.nhanvien.ctaikhoan + " - " + data.nhanvien.choten
+          );
+
+          if (data.confidence) {
+            console.log("🎯 Độ tin cậy:", data.confidence + "%");
+          }
+        } else {
+          setChoten("Không tìm thấy nhân viên trùng khớp");
+          setServerImage(null);
+          console.log("❌ Không tìm thấy nhân viên trùng khớp");
         }
-      } else {
-        setChoten("Không tìm thấy nhân viên trùng khớp");
+      } catch (error) {
+        console.error("🚨 Lỗi trong quá trình nhận diện:", error);
+        setChoten(
+          "Lỗi khi nhận diện: " +
+            (error instanceof Error ? error.message : String(error))
+        );
         setServerImage(null);
-        console.log("❌ Không tìm thấy nhân viên trùng khớp");
+      } finally {
+        const endTime = Date.now();
+        const endDate = new Date(endTime);
+        const totalDuration = endTime - startTime;
+
+        setIsRecognizing(false);
+        setRecognitionTime(`${(totalDuration / 1000).toFixed(2)}s`);
+
+        console.log("=== KẾT THÚC NHẬN DIỆN KHUÔN MẶT ===");
+        console.log("Thời gian kết thúc:", endDate.toLocaleString());
+        console.log("Timestamp kết thúc:", endTime);
+        console.log("⏰ TỔNG THỜI GIAN NHẬN DIỆN:", totalDuration + "ms");
+        console.log(
+          "⏰ TỔNG THỜI GIAN NHẬN DIỆN:",
+          (totalDuration / 1000).toFixed(2) + " giây"
+        );
+
+        if (totalDuration < 1000) {
+          console.log("🚀 Hiệu suất: Rất nhanh");
+        } else if (totalDuration < 3000) {
+          console.log("⚡ Hiệu suất: Nhanh");
+        } else if (totalDuration < 5000) {
+          console.log("⏳ Hiệu suất: Trung bình");
+        } else {
+          console.log("🐌 Hiệu suất: Chậm");
+        }
+
+        console.log("================================================");
       }
-    } catch (error) {
-      console.error("🚨 Lỗi trong quá trình nhận diện:", error);
-      setChoten(
-        "Lỗi khi nhận diện: " +
-          (error instanceof Error ? error.message : String(error))
-      );
-      setServerImage(null);
-    } finally {
-      const endTime = Date.now();
-      const endDate = new Date(endTime);
-      const totalDuration = endTime - startTime;
-
-      setIsRecognizing(false);
-      setRecognitionTime(`${(totalDuration / 1000).toFixed(2)}s`);
-
-      console.log("=== KẾT THÚC NHẬN DIỆN KHUÔN MẶT ===");
-      console.log("Thời gian kết thúc:", endDate.toLocaleString());
-      console.log("Timestamp kết thúc:", endTime);
-      console.log("⏰ TỔNG THỜI GIAN NHẬN DIỆN:", totalDuration + "ms");
-      console.log(
-        "⏰ TỔNG THỜI GIAN NHẬN DIỆN:",
-        (totalDuration / 1000).toFixed(2) + " giây"
-      );
-
-      if (totalDuration < 1000) {
-        console.log("🚀 Hiệu suất: Rất nhanh");
-      } else if (totalDuration < 3000) {
-        console.log("⚡ Hiệu suất: Nhanh");
-      } else if (totalDuration < 5000) {
-        console.log("⏳ Hiệu suất: Trung bình");
-      } else {
-        console.log("🐌 Hiệu suất: Chậm");
-      }
-
-      console.log("================================================");
-    }
-  }, [token]);
+    },
+    [token]
+  );
 
   const handleSendCapture = async (imgBase64: string) => {
     if (!loginedUser) {
@@ -1092,9 +1162,9 @@ export default function FacedetectPage() {
                 src={capturedImage}
                 alt="Ảnh chụp"
                 fill
-                style={{ 
+                style={{
                   objectFit: "cover",
-                  borderRadius: "4px"
+                  borderRadius: "4px",
                 }}
                 priority
               />
@@ -1170,9 +1240,9 @@ export default function FacedetectPage() {
                 src={serverImage}
                 alt="Ảnh từ server"
                 fill
-                style={{ 
+                style={{
                   objectFit: "cover",
-                  borderRadius: "4px"
+                  borderRadius: "4px",
                 }}
                 priority
               />
