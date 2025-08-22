@@ -18,6 +18,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 export default function MenuContent() {
   const { data: menuData } = useMenuStore();
+
+  if (!menuData || menuData.length == 0) return;
+
   const menuTree = buildMenuTree(menuData);
   return (
     <Stack sx={{ flexGrow: 1 }}>
