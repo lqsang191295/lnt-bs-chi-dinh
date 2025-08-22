@@ -5,6 +5,7 @@ import { Box, Button, Typography } from "@mui/material";
 import React, { useState } from "react";
 
 import { getnhatkythaotacba } from "@/actions/act_thosobenhan";
+import { History, NoteAdd, Search, Refresh } from "@mui/icons-material";
 import HeadMetadata from "@/components/HeadMetadata";
 import { useUserStore } from "@/store/user";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -170,12 +171,12 @@ export default function LichSuThaoTacHsbaPage() {
             />
           </Box>
           <Box flex={1}>
-            <Button fullWidth variant="contained" onClick={handleSearch}>
+            <Button fullWidth startIcon={<Search />} variant="contained" onClick={handleSearch}>
               Tìm kiếm
             </Button>
           </Box>
           <Box flex={1}>
-            <Button fullWidth variant="contained" onClick={handleRefresh}>
+            <Button fullWidth startIcon={<Refresh />} variant="contained" onClick={handleRefresh}>
               Làm mới
             </Button>
           </Box>

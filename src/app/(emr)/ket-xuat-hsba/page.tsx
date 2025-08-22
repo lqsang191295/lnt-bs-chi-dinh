@@ -7,7 +7,6 @@ import {
   getChiTietHSBA,
   getHosobenhan,
   getnhatkyketxuatba,
-  IHoSoBenhAn,
 } from "@/actions/act_thosobenhan";
 import { IPDFItem } from "@/model/ipdf";
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
@@ -16,7 +15,7 @@ import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import { mergePDFsWithProgress } from "@/utils/pdflib";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
-import { Download, NoteAdd, Refresh } from "@mui/icons-material";
+import { Download, NoteAdd, Refresh, Search  } from "@mui/icons-material"; 
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import {
@@ -340,7 +339,7 @@ export default function KetXuatHsbaPage() {
         formatDate(denNgay)
       );
 
-      console.log("Fetched history data:", data); // For debugging
+      //console.log("Fetched history data:", data); // For debugging
       
       setLichSuRows(
         (data || []).map((item: INhatKyKetXuat, index: number) => ({
@@ -648,6 +647,7 @@ export default function KetXuatHsbaPage() {
           <Box flex={1}>
             <Button
               fullWidth
+              startIcon={<Search />}
               variant="contained"
               size="small"
               onClick={handleSearch}>

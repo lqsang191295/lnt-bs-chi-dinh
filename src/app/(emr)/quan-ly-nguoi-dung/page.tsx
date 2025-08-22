@@ -20,11 +20,18 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import PasswordIcon from "@mui/icons-material/Password";
+import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
+import PersonRemoveOutlinedIcon from "@mui/icons-material/PersonRemoveOutlined";
+import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import SaveAsOutlinedIcon from "@mui/icons-material/SaveAsOutlined";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useCallback, useEffect, useState } from "react";
 import DialogPhanQuyen from "./components/dialog-phan-quyen";
+import DialogDoiMatKhau from "./components/dialog-doi-mat-khau";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import HeadMetadata from "@/components/HeadMetadata";
 
@@ -57,13 +64,16 @@ export default function PageQuanLyNguoiDung() {
   const [users, setUsers] = useState<IUserItem[]>([]);
   const [selectedUser, setSelectedUser] = useState<IUserItem | null>(null);
   const { data: loginedUser } = useUserStore();
-  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<ISelectOption[]>([]);
+  const [nhomNguoiDungList, setNhomNguoiDungList] = useState<ISelectOption[]>(
+    []
+  );
+  const [password, setPassword] = useState("");
   const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
   const [newUserStatus, setNewUserStatus] = useState(0);
-  const [password, setPassword] = useState("");
   const [openPhanQuyen, setOpenPhanQuyen] = useState(false);
+  const [openChangePasswordDialog, setOpenChangePasswordDialog] =
+    useState(false);
   const [loadingUser, setLoadingUser] = useState<boolean>(false);
-
 
   const fetchUsers = useCallback(async () => {
     if (!loginedUser || !loginedUser.ctaikhoan) return;
@@ -125,9 +135,12 @@ export default function PageQuanLyNguoiDung() {
     fetchNhomNguoiDungList();
     fetchKhoaList();
   }, [fetchUsers, fetchNhomNguoiDungList, fetchKhoaList]);
+
   // xử lý chọn người dùng từ ds người dùng
   const handleRowClick = (user: IUserItem) => {
     setSelectedUser(user);
+    setNewUserStatus(0); // Reset về chế độ sửa
+    setPassword(""); // Reset password khi chọn user khác
   };
   // xử lý khi giá trị 1 trường thay đổi
   const handleChange = (field: string, value: string) => {
@@ -140,12 +153,13 @@ export default function PageQuanLyNguoiDung() {
   // xử lý thêm mới người dùng set trạng thái mới các trường về mac định
   const handleThem = async () => {
     setNewUserStatus(1);
+    setPassword("");
     setSelectedUser({
       cid: "0",
       ctaikhoan: "",
       cmatkhau: "",
       choten: "",
-      cngaysinh: "",
+      cngaysinh: new Date().toISOString().split("T")[0], // Ngày sinh mặc định là hôm nay
       cdienthoai: "",
       cdiachi: "",
       ccchn: "",
@@ -167,10 +181,19 @@ export default function PageQuanLyNguoiDung() {
         ToastWarning("Vui lòng nhập đầy đủ thông tin tài khoản và mật khẩu");
         return;
       }
+
+      if (!password || password.length < 6) {
+        ToastWarning("Vui lòng nhập mật khẩu có ít nhất 6 ký tự");
+        return;
+      }
+
+      // Đảm bảo password được set vào selectedUser
+      const userToSave = { ...selectedUser, cmatkhau: password };
+
       const result = await instnguoidung(
         loginedUser.ctaikhoan,
         "1",
-        selectedUser
+        userToSave
       );
 
       const arr = result as Array<{ _ID: number }>;
@@ -186,9 +209,13 @@ export default function PageQuanLyNguoiDung() {
         typeof arr[0]._ID !== "undefined"
       ) {
         ToastSuccess("Thêm người dùng thành công");
-        setUsers((prev) => [...prev, selectedUser]);
+        setUsers((prev) => [
+          ...prev,
+          { ...userToSave, cid: arr[0]._ID.toString() },
+        ]);
         setSelectedUser(null);
         setNewUserStatus(0);
+        setPassword(""); // Reset password sau khi lưu thành công
       } else {
         ToastError("Thêm người dùng thất bại");
       }
@@ -228,6 +255,7 @@ export default function PageQuanLyNguoiDung() {
   const handleHuy = () => {
     setSelectedUser(null);
     setNewUserStatus(0);
+    setPassword(""); // Reset password khi hủy
   };
   // xử lý xóa người dùng
   const handleXoa = async () => {
@@ -251,20 +279,24 @@ export default function PageQuanLyNguoiDung() {
   };
   // xử lý đổi mật khẩu người dùng
   const handleDoiMatKhau = async () => {
-    if (!selectedUser) return;
-    const result = await instnguoidung(
-      loginedUser.ctaikhoan,
-      "4",
-      selectedUser
-    );
-    if (result) {
-      ToastSuccess("Đổi mật khẩu người dùng thành công");
-      setUsers((prev) => prev.filter((user) => user.cid !== selectedUser.cid));
-      setSelectedUser(null);
-    } else {
-      ToastError("Đổi mật khẩu người dùng thất bại");
+    if (!selectedUser) {
+      ToastWarning("Vui lòng chọn người dùng cần đổi mật khẩu!");
+      return;
     }
+    setOpenChangePasswordDialog(true);
   };
+
+  // Callback xử lý khi đổi mật khẩu thành công
+  const handlePasswordChangeSuccess = (updatedUser: IUserItem) => {
+    // Cập nhật selectedUser
+    setSelectedUser(updatedUser);
+
+    // Cập nhật danh sách users
+    setUsers((prev) =>
+      prev.map((user) => (user.cid === updatedUser.cid ? updatedUser : user))
+    );
+  };
+
   // xử lý phân quyền người dùng mở dialog phân quyền
   const handlePhanQuyen = () => {
     if (!selectedUser) return;
@@ -282,14 +314,65 @@ export default function PageQuanLyNguoiDung() {
         {/* Bảng danh sách */}
         <Grid
           size={8}
-          className="h-full flex flex-col overflow-hidden bg-white p-4">
+          className="h-full flex flex-col overflow-hidden bg-white p-4"
+        >
           <Typography
             variant="h6"
             mb={1}
-            sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+            sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}
+          >
             DANH SÁCH NGƯỜI DÙNG
           </Typography>
-
+          <Box display="flex" gap={1} flexWrap="wrap" mb={2} minHeight={40}>
+            <Button
+              variant="outlined"
+              startIcon={<PersonAddOutlinedIcon />}
+              onClick={() => handleThem()}
+            >
+              THÊM
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<SaveAsOutlinedIcon />}
+              disabled={!selectedUser || newUserStatus === 1}
+              color="primary"
+              onClick={() => handleLuu()}
+            >
+              LƯU
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<PasswordIcon />}
+              onClick={() => handleDoiMatKhau()}
+              disabled={!selectedUser || newUserStatus === 1}
+            >
+              ĐỔI MẬT KHẨU
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<CloseOutlinedIcon />}
+              onClick={() => handleHuy()}
+            >
+              HUỶ
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<PersonRemoveOutlinedIcon />}
+              disabled={!selectedUser || selectedUser.cid === "0"}
+              color="error"
+              onClick={() => handleXoa()}
+            >
+              XOÁ
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<ManageAccountsOutlinedIcon />}
+              onClick={() => handlePhanQuyen()}
+              disabled={!selectedUser || newUserStatus === 1}
+            >
+              PHÂN QUYỀN
+            </Button>
+          </Box>
           <Box className="w-full h-full overflow-hidden relative flex-1 box-shadow flex flex-col">
             <DataGrid
               rows={users}
@@ -299,18 +382,20 @@ export default function PageQuanLyNguoiDung() {
               onRowClick={(params) => handleRowClick(params.row as IUserItem)}
               loading={loadingUser}
             />
-          </Box>          
+          </Box>
         </Grid>
 
         {/* Form chi tiết */}
         <Grid
           size={4}
-          className="h-full flex flex-col overflow-hidden bg-white">
+          className="h-full flex flex-col overflow-hidden bg-white"
+        >
           <Typography
             variant="h6"
             mb={1}
             sx={{ color: "#1976d2", letterSpacing: 1 }}
-            className="px-4 pt-4">
+            className="px-4 pt-4"
+          >
             THÔNG TIN NGƯỜI DÙNG
           </Typography>
           <form className="h-full flex flex-col flex-1 overflow-hidden">
@@ -318,7 +403,8 @@ export default function PageQuanLyNguoiDung() {
               <Grid
                 container
                 spacing={2}
-                className="flex-1 overflow-y-auto px-4">
+                className="flex-1 overflow-y-auto px-4"
+              >
                 <Grid size={12}>
                   <Typography
                     component="label"
@@ -328,7 +414,8 @@ export default function PageQuanLyNguoiDung() {
                       lineHeight: 1.2,
                       color: "#4d5052ff",
                       letterSpacing: 1,
-                    }}>
+                    }}
+                  >
                     Khoa phòng
                   </Typography>
                   <Select
@@ -336,7 +423,8 @@ export default function PageQuanLyNguoiDung() {
                     size="small"
                     value={selectedUser?.cmadonvi || ""}
                     onChange={(e) => handleChange("cmadonvi", e.target.value)}
-                    displayEmpty>
+                    displayEmpty
+                  >
                     {khoaList.map((item) => (
                       <MenuItem key={item.value} value={item.value}>
                         {item.label}
@@ -353,7 +441,8 @@ export default function PageQuanLyNguoiDung() {
                       lineHeight: 1.2,
                       color: "#4d5052ff",
                       letterSpacing: 1,
-                    }}>
+                    }}
+                  >
                     Nhóm người dùng
                   </Typography>
                   <Select
@@ -363,7 +452,8 @@ export default function PageQuanLyNguoiDung() {
                     onChange={(e) =>
                       handleChange("cmanhomnguoidung", e.target.value)
                     }
-                    displayEmpty>
+                    displayEmpty
+                  >
                     {nhomNguoiDungList.map((item) => (
                       <MenuItem key={item.value} value={item.value}>
                         {item.label}
@@ -385,76 +475,59 @@ export default function PageQuanLyNguoiDung() {
                 ))}
                 <Grid size={12}>
                   <Box display="flex" alignItems="center" minHeight={40}>
-                    <input
-                      type="checkbox"
-                      checked={selectedUser?.cxacthuc2lop === "1"}
-                      onChange={(e) =>
-                        handleChange(
-                          "cxacthuc2lop",
-                          e.target.checked ? "1" : "0"
-                        )
-                      }
-                      style={{ marginRight: 8 }}
-                    />
-                    <Typography
-                      component="label"
+                    <Box
                       sx={{
-                        whiteSpace: "normal",
-                        lineHeight: 1.2,
-                        color: "#191a1bff",
-                        letterSpacing: 1,
-                      }}>
-                      Xác thực 2 lớp *
-                    </Typography>
+                        display: "flex",
+                        alignItems: "center",
+                        flexGrow: 1,
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedUser?.cxacthuc2lop === "1"}
+                        onChange={(e) =>
+                          handleChange(
+                            "cxacthuc2lop",
+                            e.target.checked ? "1" : "0"
+                          )
+                        }
+                        style={{ marginRight: 8 }}
+                      />
+                      <Typography
+                        component="label"
+                        sx={{
+                          whiteSpace: "normal",
+                          lineHeight: 1.2,
+                          color: "#191a1bff",
+                          letterSpacing: 1,
+                        }}
+                      >
+                        Xác thực 2 lớp
+                      </Typography>
+                    </Box>
                   </Box>
                 </Grid>
-                <Grid size={12}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Mật khẩu *"
-                    value={newUserStatus === 1 ? password : ""}
-                    type="password"
-                    placeholder="********"
-                    onChange={(e) => {                      
-                      handleChange("cmatkhau", e.target.value);
-                    }}
-                    disabled={false}
-                  />
-                </Grid>
+                {newUserStatus === 1 && (
+                  <Grid size={12}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Mật khẩu *"
+                      type="password"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        handleChange("cmatkhau", e.target.value);
+                      }}
+                      placeholder="Nhập mật khẩu mới"
+                      helperText="Mật khẩu phải có ít nhất 6 ký tự"
+                      error={password.length > 0 && password.length < 6}
+                    />
+                  </Grid>
+                )}
               </Grid>
 
-              <Grid size={12} className="px-4 py-2">
-                <Box display="flex" gap={1} flexWrap="wrap">
-                  <Button variant="contained" onClick={() => handleThem()}>
-                    THÊM
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => handleLuu()}>
-                    LƯU
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => handleDoiMatKhau()}>
-                    ĐỔI MẬT KHẨU
-                  </Button>
-                  <Button variant="outlined" onClick={() => handleHuy()}>
-                    HUỶ
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => handleXoa()}>
-                    XOÁ
-                  </Button>
-                  <Button variant="outlined" onClick={() => handlePhanQuyen()}>
-                    PHÂN QUYỀN
-                  </Button>
-                </Box>
-              </Grid>
+              <Grid size={12} className="px-4 py-2"></Grid>
             </Box>
           </form>
         </Grid>
@@ -463,6 +536,14 @@ export default function PageQuanLyNguoiDung() {
             open={openPhanQuyen}
             onClose={handleClosePhanQuyen}
             selectedUser={selectedUser}
+          />
+        )}
+        {openChangePasswordDialog && (
+          <DialogDoiMatKhau
+            open={openChangePasswordDialog}
+            onClose={() => setOpenChangePasswordDialog(false)}
+            selectedUser={selectedUser}
+            onSuccess={handlePasswordChangeSuccess}
           />
         )}
       </Grid>
