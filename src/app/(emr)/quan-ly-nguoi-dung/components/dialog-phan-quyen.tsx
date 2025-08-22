@@ -23,6 +23,11 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup,
   IconButton,
   MenuItem,
   Select,
@@ -73,6 +78,7 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
   const [selectedKhoaBA, setSelectedKhoaBA] = useState("all");
   const [fromDate, setFromDate] = useState<Date>(new Date());
   const [toDate, setToDate] = useState<Date>(new Date());
+  const [popt, setPopt] = useState("3"); // 3: Ngày vào viện, 4: Ngày ra viện (dùng để phân quyền)
   const [dsHSBA, setDsHSBA] = useState<IPhanQuyenHoSoBenhAn[]>([]);
   // state cho danh sách menu phân quyền
   const [dsMenu, setDsMenu] = useState<IMenuItem[]>([]);
@@ -90,7 +96,7 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
       // Gọi API lưu phân quyền menu cho từng menu
       await luuphanquyenmenu(
         loginedUser.ctaikhoan,
-        "1",
+        "2",
         selectedUser.ctaikhoan,
         item.cid,
         item.ctrangthai.toString()
@@ -119,7 +125,7 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
     // });
     const result = await getphanquyenba(
       loginedUser.ctaikhoan,
-      "1",
+      popt,
       selectedUser.ctaikhoan,
       selectedKhoaBA,
       formatDate(fromDate),
@@ -451,38 +457,145 @@ const DialogPhanQuyen: React.FC<DialogPhanQuyenProps> = ({
                 p: 2,
                 bgcolor: "#fff",
               }}>
-              <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+              <Box sx={{ 
+                display: "flex", 
+                gap: 2, 
+                mb: 2, 
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+                '& > *': {
+                  minHeight: 40, // Consistent height cho tất cả components
+                }
+              }}>
                 <Select
                   size="small"
                   value={selectedKhoaBA}
                   onChange={(e) => setSelectedKhoaBA(e.target.value)}
                   displayEmpty
-                  sx={{ minWidth: 200 }}>
+                  sx={{ 
+                    minWidth: 200,
+                    height: 40,
+                    '& .MuiSelect-select': {
+                      fontSize: '0.875rem',
+                    }
+                  }}>
                   {khoaList.map((item) => (
                     <MenuItem key={item.value} value={item.value}>
                       {item.label}
                     </MenuItem>
                   ))}
                 </Select>
-                <DatePicker
-                  label="Từ ngày"
-                  value={fromDate}
-                  onChange={(value) => {
-                    if (value !== null) setFromDate(value as Date);
-                  }}
-                  format="dd/MM/yyyy"
-                />
-                <DatePicker
-                  label="Đến ngày"
-                  value={toDate}
-                  onChange={(value) => {
-                    if (value !== null) setToDate(value as Date);
-                  }}
-                  format="dd/MM/yyyy"
-                />
-                <Button variant="contained" onClick={fetchHSBA}>
-                  Tìm kiếm
-                </Button>
+                
+                <Box sx={{ flex: 1, minWidth: 300 }}>
+                  <FormControl>
+                    <FormLabel
+                      id="popt-radio-group-label"
+                      sx={{ 
+                        color: "#1976d2", 
+                        fontWeight: "italic",
+                        fontSize: '0.675rem',
+                        mb: 0.5
+                      }}
+                    >
+                    </FormLabel>
+                    <RadioGroup
+                      row
+                      aria-labelledby="popt-radio-group-label"
+                      name="popt-radio-group"
+                      value={popt}
+                      onChange={(e) => setPopt(e.target.value)}>
+                      <FormControlLabel
+                        value="1"
+                        control={
+                          <Radio
+                            sx={{
+                              color: "#1976d2",
+                              "&.Mui-checked": { color: "#1976d2" },
+                            }}
+                            size="small"
+                          />
+                        }
+                        label={<Typography sx={{ fontSize: '0.875rem' }}>Ngày vào</Typography>}
+                      />
+                      <FormControlLabel
+                        value="2"
+                        control={
+                          <Radio
+                            sx={{
+                              color: "#1976d2",
+                              "&.Mui-checked": { color: "#1976d2" },
+                            }}
+                            size="small"
+                          />
+                        }
+                        label={<Typography sx={{ fontSize: '0.875rem' }}>Ngày ra</Typography>}
+                      />
+                    </RadioGroup>
+                      </FormControl>
+                    <DatePicker
+                      label="Từ ngày"
+                      value={fromDate}
+                      onChange={(value) => {
+                        if (value !== null) setFromDate(value as Date);
+                      }}
+                      format="dd/MM/yyyy"
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          sx: {
+                            width: 150,
+                            '& .MuiInputBase-root': {
+                              fontSize: '0.875rem',
+                              height: 40,
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: '0.875rem',
+                            }
+                          }
+                        }
+                      }}
+                    />
+                    
+                    <DatePicker
+                      label="Đến ngày"
+                      value={toDate}
+                      onChange={(value) => {
+                        if (value !== null) setToDate(value as Date);
+                      }}
+                      format="dd/MM/yyyy"
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          sx: {
+                            width: 150,
+                            '& .MuiInputBase-root': {
+                              fontSize: '0.875rem',
+                              height: 40,
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontSize: '0.875rem',
+                            }
+                          }
+                        }
+                      }}
+                    />
+                    
+                    <Button 
+                      variant="contained"
+                      startIcon={<MuiIcons.Search />} 
+                      onClick={fetchHSBA}
+                      size="small"
+                      sx={{ 
+                        height: 40,
+                        minWidth: 100,
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      Tìm kiếm
+                    </Button>
+
+                </Box>
+                
               </Box>
               <TableContainer
                 sx={{ maxHeight: 440, flex: 1, overflowY: "auto" }}>
