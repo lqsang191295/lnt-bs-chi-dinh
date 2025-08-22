@@ -8,7 +8,7 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useState } from "react";
 import PolicyDialog from "./PolicyDialog"; // Import component mới
-
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 export default function CardAlert() {
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -24,12 +24,12 @@ export default function CardAlert() {
     <>
       <Card variant="outlined" sx={{ m: 1.5, flexShrink: 0 }}>
         <CardContent>
-          <AutoAwesomeRoundedIcon fontSize="small" />
           <Typography gutterBottom sx={{ fontWeight: 600 }}>
-            Chính sách bảo vệ dữ liệu cá nhân
+          <AdminPanelSettingsOutlinedIcon fontSize="medium" />
+            THÔNG BÁO
           </Typography>
           <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-            Hệ thống quản lý hồ sơ bệnh án điện tử một cách hiệu quả và bảo mật.
+            CHẤP THUẬN VỀ VIỆC XỬ LÝ VÀ BẢO VỆ DỮ LIỆU CÁ NHÂN.
           </Typography>
           <Button 
             startIcon={<InfoOutlinedIcon />} 
