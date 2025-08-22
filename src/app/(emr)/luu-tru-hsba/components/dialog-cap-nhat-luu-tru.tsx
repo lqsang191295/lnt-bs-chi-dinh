@@ -4,14 +4,14 @@ import { capnhathosobenhan, checkSoLuuTru } from "@/actions/act_thosobenhan";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ILoaiLuuTru } from "@/model/tloailuutru";
 import { useUserStore } from "@/store/user";
-import CloseIcon from "@mui/icons-material/Close";
-import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
-import SaveAsOutlinedIcon from "@mui/icons-material/SaveAsOutlined";
-import FolderSharedOutlinedIcon from "@mui/icons-material/FolderSharedOutlined";
-import PermContactCalendarOutlinedIcon from "@mui/icons-material/PermContactCalendarOutlined";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
+import CloseIcon from "@mui/icons-material/Close";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import FolderSharedOutlinedIcon from "@mui/icons-material/FolderSharedOutlined";
+import PermContactCalendarOutlinedIcon from "@mui/icons-material/PermContactCalendarOutlined";
+import SaveAsOutlinedIcon from "@mui/icons-material/SaveAsOutlined";
 import {
   Box,
   Button,
@@ -21,12 +21,12 @@ import {
   DialogTitle,
   FormControl,
   IconButton,
+  InputAdornment,
   MenuItem,
   Select,
   TextField,
-  Typography,
-  InputAdornment,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import React, { useEffect, useState } from "react";
@@ -122,7 +122,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
           "Không thể tạo số lưu trữ mới! API không trả về dữ liệu hợp lệ."
         );
       }
-    } catch (error) {
+    } catch {
       // console.error("Error generating storage number:", error);
       ToastError("Lỗi khi tạo số lưu trữ từ API!");
     } finally {
@@ -170,7 +170,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
           "Lỗi khi kiểm tra số lưu trữ! API không trả về dữ liệu hợp lệ."
         );
       }
-    } catch (error) {
+    } catch {
       // console.error("Error checking storage number:", error);
       ToastError("Lỗi khi kiểm tra số lưu trữ từ API!");
     } finally {
@@ -263,7 +263,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
       } else {
         ToastError("Cập nhật thông tin lưu trữ thất bại!");
       }
-    } catch (error) {
+    } catch {
       // console.error("Error updating storage info:", error);
       ToastError("Có lỗi xảy ra khi cập nhật thông tin lưu trữ!");
     } finally {
@@ -308,8 +308,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
           borderRadius: 2,
           maxWidth: 800,
         },
-      }}
-    >
+      }}>
       <DialogTitle
         sx={{
           display: "flex",
@@ -321,8 +320,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
           color: "white",
           textAlign: "center",
           letterSpacing: 1,
-        }}
-      >
+        }}>
         <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
           CẬP NHẬT THÔNG TIN LƯU TRỮ
         </Typography>
@@ -340,12 +338,10 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
               borderRadius: "8px",
               padding: 2,
               backgroundColor: "#f9f9f9",
-            }}
-          >
+            }}>
             <Typography
               variant="h6"
-              sx={{ mb: 2, color: "#1976d2", fontWeight: "bold" }}
-            >
+              sx={{ mb: 2, color: "#1976d2", fontWeight: "bold" }}>
               <PermContactCalendarOutlinedIcon sx={{ mr: 1 }} />
               Thông tin bệnh án
             </Typography>
@@ -444,12 +440,10 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
               borderRadius: "8px",
               padding: 2,
               backgroundColor: "#f3f7ff",
-            }}
-          >
+            }}>
             <Typography
               variant="h6"
-              sx={{ mb: 2, color: "#1976d2", fontWeight: "bold" }}
-            >
+              sx={{ mb: 2, color: "#1976d2", fontWeight: "bold" }}>
               <FolderSharedOutlinedIcon sx={{ mr: 1 }} />
               Thông tin lưu trữ
             </Typography>
@@ -476,8 +470,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
                             <Tooltip
                               title="Tự động tạo số lưu trữ mới từ hệ thống"
                               placement="top"
-                              arrow
-                            >
+                              arrow>
                               <span>
                                 <Button
                                   size="small"
@@ -490,8 +483,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
                                     px: 1,
                                     fontSize: "11px",
                                     height: "28px",
-                                  }}
-                                >
+                                  }}>
                                   {generatingNumber ? (
                                     <AutorenewIcon
                                       sx={{ fontSize: 14 }}
@@ -512,8 +504,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
                                   : "Kiểm tra số lưu trữ đã tồn tại trong hệ thống"
                               }
                               placement="top"
-                              arrow
-                            >
+                              arrow>
                               <span>
                                 <Button
                                   size="small"
@@ -529,8 +520,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
                                     px: 1,
                                     fontSize: "11px",
                                     height: "28px",
-                                  }}
-                                >
+                                  }}>
                                   {generatingNumber ? (
                                     <AutorenewIcon
                                       sx={{ fontSize: 14 }}
@@ -578,8 +568,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
                   color: "#666",
                   display: "block",
                   fontStyle: "italic",
-                }}
-              >
+                }}>
                 💡 <strong>Tự động:</strong> Tạo số lưu trữ mới |
                 <strong> Kiểm tra:</strong> Xác minh số đã tồn tại
               </Typography>
@@ -599,8 +588,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
               <FormControl fullWidth size="small">
                 <Typography
                   variant="caption"
-                  sx={{ mb: 1, color: "#1976d2", fontWeight: "bold" }}
-                >
+                  sx={{ mb: 1, color: "#1976d2", fontWeight: "bold" }}>
                   Loại lưu trữ *
                 </Typography>
                 <Select
@@ -609,8 +597,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
                     setFormData({ ...formData, LoaiLuuTru: e.target.value })
                   }
                   displayEmpty
-                  sx={{ backgroundColor: "white" }}
-                >
+                  sx={{ backgroundColor: "white" }}>
                   <MenuItem value="">
                     <em>Chọn loại lưu trữ</em>
                   </MenuItem>
@@ -625,8 +612,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
                 {selectedLoaiLuuTru && (
                   <Typography
                     variant="caption"
-                    sx={{ mt: 1, color: "#666", fontStyle: "italic" }}
-                  >
+                    sx={{ mt: 1, color: "#666", fontStyle: "italic" }}>
                     📌 {selectedLoaiLuuTru.ctenloai} - Lưu trữ{" "}
                     {selectedLoaiLuuTru.csonamluutru} năm
                   </Typography>
@@ -643,8 +629,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
           startIcon={<CloseOutlinedIcon />}
           variant="outlined"
           disabled={loading}
-          sx={{ minWidth: 100 }}
-        >
+          sx={{ minWidth: 100 }}>
           Hủy
         </Button>
         <Button
@@ -657,8 +642,7 @@ const DialogCapNhatLuuTru: React.FC<DialogCapNhatLuuTruProps> = ({
             !formData.ViTriLuuTru ||
             !formData.LoaiLuuTru
           }
-          sx={{ minWidth: 120 }}
-        >
+          sx={{ minWidth: 120 }}>
           {loading ? "Đang lưu..." : " Lưu"}
         </Button>
       </DialogActions>

@@ -1,7 +1,6 @@
 // app/ket-xuat-hsba/page.tsx
 "use client";
 
-import HeadMetadata from "@/components/HeadMetadata";
 import {
   capnhathosobenhan,
   getChiTietHSBA,
@@ -9,13 +8,14 @@ import {
   getnhatkyketxuatba,
 } from "@/actions/act_thosobenhan";
 import { IPDFItem } from "@/model/ipdf";
+import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import { mergePDFsWithProgress } from "@/utils/pdflib";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
-import { Download, NoteAdd, Refresh, Search  } from "@mui/icons-material"; 
+import { Download, NoteAdd, Refresh, Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import {
@@ -39,7 +39,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import React, { useEffect, useState } from "react";
 // ----------------- MOCK DATA -----------------
- // Columns cho tab Kết xuất (giữ nguyên)
+// Columns cho tab Kết xuất (giữ nguyên)
 const columnsKetXuat: GridColDef[] = [
   { field: "ID", headerName: "ID", width: 60 },
   {
@@ -120,14 +120,14 @@ const columnsLichSu: GridColDef[] = [
           cursor: "pointer",
         }}>
         <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
-        <button 
+        <button
           onClick={() => handleDownloadLichSu(params.row)}
-          style={{ 
-            background: "none", 
-            border: "none", 
-            color: "inherit", 
+          style={{
+            background: "none",
+            border: "none",
+            color: "inherit",
             cursor: "pointer",
-            fontSize: "12px"
+            fontSize: "12px",
           }}>
           Tải xuống
         </button>
@@ -209,7 +209,9 @@ function handleDownloadLichSu(lichSu: INhatKyKetXuat) {
 
     // Tạo tên file với thông tin bệnh án
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
-    const fileName = `HSBA_${lichSu.MaBN || lichSu.cmabenhan}_${lichSu.SoVaoVien || 'NA'}_${timestamp}.pdf`;
+    const fileName = `HSBA_${lichSu.MaBN || lichSu.cmabenhan}_${
+      lichSu.SoVaoVien || "NA"
+    }_${timestamp}.pdf`;
 
     // Download file
     const a = document.createElement("a");
@@ -340,7 +342,7 @@ export default function KetXuatHsbaPage() {
       );
 
       //console.log("Fetched history data:", data); // For debugging
-      
+
       setLichSuRows(
         (data || []).map((item: INhatKyKetXuat, index: number) => ({
           id: item.cid || index, // Use cid or index as row ID
@@ -358,13 +360,13 @@ export default function KetXuatHsbaPage() {
   // Cập nhật handleChange để load data khi chuyển tab
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
-    
+
     // Nếu chuyển sang tab lịch sử và chưa có dữ liệu, tự động load
     if (newValue === 1 && lichSuRows.length === 0) {
       handleSearchLichSu();
     }
   };
- 
+
   // Fetch khoa list from API
   const fetchKhoaList = async () => {
     try {
@@ -426,21 +428,21 @@ export default function KetXuatHsbaPage() {
 
           //console.log(`Found ${pdfList.length} PDF files to merge`);
 
-        // Gọi trực tiếp mergePDFsWithProgress
-        const mergedPdfBase64 = await mergePDFsWithProgress(
-          pdfList,
-          "HỒ SƠ BỆNH ÁN ĐIỆN TỬ BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG", // Text không dấu
-          true,
-          (current, total, currentHSBA) => {
-            setProgress((current / total) * 100);
-            // console.log(`Processing ${current}/${total}: ${currentHSBA}`);
-          }
-        );
+          // Gọi trực tiếp mergePDFsWithProgress
+          const mergedPdfBase64 = await mergePDFsWithProgress(
+            pdfList,
+            "HỒ SƠ BỆNH ÁN ĐIỆN TỬ BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG", // Text không dấu
+            true,
+            (current, total) => {
+              setProgress((current / total) * 100);
+              // console.log(`Processing ${current}/${total}: ${currentHSBA}`);
+            }
+          );
 
-        if (mergedPdfBase64) {
-          try {
-            // XỬ LÝ LƯU TRỮ PDF VÀO BLOB VÀ TẢI VỀ
+          if (mergedPdfBase64) {
             try {
+              // XỬ LÝ LƯU TRỮ PDF VÀO BLOB VÀ TẢI VỀ
+              try {
                 // console.log(`Updating HSBA ID: ${hsba.ID} with merged PDF`);
                 const updatedHsba = {
                   ...hsba,
@@ -460,41 +462,44 @@ export default function KetXuatHsbaPage() {
                 }
                 // else {
                 //   console.error(`Cập nhật thất bại cho HSBA ID: ${hsba.ID}`);
-                // } 
-
-            } catch (error) {
-              // console.error("Error updating HSBA:", error);
-              ToastError(`Có lỗi xảy ra khi cập nhật kết xuất HSBA! ${error instanceof Error ? error.message : 'Unknown error'}`);
+                // }
+              } catch (error) {
+                // console.error("Error updating HSBA:", error);
+                ToastError(
+                  `Có lỗi xảy ra khi cập nhật kết xuất HSBA! ${
+                    error instanceof Error ? error.message : "Unknown error"
+                  }`
+                );
+              }
+            } catch {
+              // console.error('Error converting base64 to blob:', conversionError);
+              ToastError("Lỗi khi chuyển đổi dữ liệu PDF. Vui lòng thử lại.");
             }
- 
-          } catch (conversionError) {
-            // console.error('Error converting base64 to blob:', conversionError);
-            ToastError('Lỗi khi chuyển đổi dữ liệu PDF. Vui lòng thử lại.');
           }
+        } catch {
+          // console.error(`Error getting PDF for HSBA ${hsba.ID}:`, error);
+          continue;
         }
-      } catch (error) {
-        // console.error(`Error getting PDF for HSBA ${hsba.ID}:`, error);
-        continue;
       }
+      if (hsbaSuccess === selectedRows.length) {
+        ToastSuccess(`Kết xuất thành công ${selectedRows.length} HSBA!`);
+      } else {
+        ToastWarning(
+          `Kết xuất thành công ${hsbaSuccess} trong tổng số ${selectedRows.length} HSBA!`
+        );
+      }
+      await handleSearch();
+    } catch (error) {
+      // console.error("Error in handleKetXuat:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      setError(errorMessage);
+      ToastError(`Lỗi kết xuất: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+      setProgress(0);
     }
-    if (hsbaSuccess === selectedRows.length) {
-      ToastSuccess(`Kết xuất thành công ${selectedRows.length} HSBA!`);
-    }
-    else {
-      ToastWarning(`Kết xuất thành công ${hsbaSuccess} trong tổng số ${selectedRows.length} HSBA!`);
-    }
-    await handleSearch();
-
-  } catch (error) {
-    // console.error("Error in handleKetXuat:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    setError(errorMessage);
-    ToastError(`Lỗi kết xuất: ${errorMessage}`);
-  } finally {
-    setLoading(false);
-    setProgress(0);
-  }
-};
+  };
 
   // Hàm xử lý khi chọn rows trong DataGrid
   const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
@@ -542,7 +547,7 @@ export default function KetXuatHsbaPage() {
         }))
       );
       // console.log("Search results:", data);
-    } catch (error) {
+    } catch {
       //console.error("Error fetching HSBA data:", error);
     } finally {
       setSearchingData(false);
@@ -551,14 +556,13 @@ export default function KetXuatHsbaPage() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-
       <Box p={2} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"
-        gutterBottom
-        sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
-        QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
-      </Typography>
+          gutterBottom
+          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+          QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
+        </Typography>
 
         {/* Bộ lọc */}
         <Box display="flex" gap={2}>
@@ -734,9 +738,9 @@ export default function KetXuatHsbaPage() {
         {/* Tab Lịch sử */}
         <CustomTabPanel value={value} index={1}>
           <Box className="bg-white flex gap-2 p-2">
-            <Button 
-              variant="contained" 
-              startIcon={<Refresh />} 
+            <Button
+              variant="contained"
+              startIcon={<Refresh />}
               size="small"
               onClick={handleSearchLichSu}>
               Làm mới

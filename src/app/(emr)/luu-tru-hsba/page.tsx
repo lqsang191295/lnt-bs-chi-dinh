@@ -11,30 +11,25 @@ import {
   Radio,
   RadioGroup,
   Select,
-  TextField,
   Typography,
 } from "@mui/material";
 
-import { capnhathosobenhan, getHosobenhan } from "@/actions/act_thosobenhan";
+import { getHosobenhan } from "@/actions/act_thosobenhan";
 import HeadMetadata from "@/components/HeadMetadata";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ILoaiLuuTru } from "@/model/tloailuutru";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
-import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
+import { ToastWarning } from "@/utils/toast";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
-import DialogCapNhatLuuTru from "./components/dialog-cap-nhat-luu-tru";
-import {
-  DatePicker,
-  DateTimePicker,
-  LocalizationProvider,
-} from "@mui/x-date-pickers";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useEffect, useState } from "react";
+import DialogCapNhatLuuTru from "./components/dialog-cap-nhat-luu-tru";
 
 const columns: GridColDef[] = [
   { field: "ID", headerName: "ID", width: 60 },
@@ -104,22 +99,6 @@ export default function LuuTruHsbaPage() {
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
   const { data: loginedUser } = useUserStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
-  // Form data for dialog
-  const [formData, setFormData] = useState({
-    ID: "",
-    SoVaoVien: "",
-    NgayVaoVien: new Date(),
-    NgayRaVien: new Date(),
-    HoTen: "",
-    NgaySinh: "",
-    GioiTinh: "",
-    DiaChi: "",
-    KhoaDieuTri: "",
-    SoLuuTru: "",
-    ViTriLuuTru: "",
-    NgayLuuTru: new Date(),
-    LoaiLuuTru: "",
-  });
 
   const fetchLoaiLuuTru = async () => {
     try {
@@ -139,7 +118,7 @@ export default function LuuTruHsbaPage() {
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
-    } catch (error) {
+    } catch {
       // console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
@@ -368,7 +347,7 @@ export default function LuuTruHsbaPage() {
             }}
           />
         </Box>
- 
+
         {/* Dialog Component */}
         <DialogCapNhatLuuTru
           open={openDialog}

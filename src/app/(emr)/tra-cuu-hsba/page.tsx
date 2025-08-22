@@ -6,9 +6,9 @@ import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
+import { Search } from "@mui/icons-material";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { History, NoteAdd, Search } from "@mui/icons-material";
 
 import HeadMetadata from "@/components/HeadMetadata";
 import {
@@ -115,7 +115,7 @@ export default function TraCuuHsbaPage() {
       );
 
       setPhieuList(mappedData);
-    } catch (error) {
+    } catch {
       // console.error("Lỗi khi lấy chi tiết HSBA:", error);
       setPhieuList([]);
     }
@@ -134,7 +134,7 @@ export default function TraCuuHsbaPage() {
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
-    } catch (error) {
+    } catch {
       // console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
@@ -172,7 +172,7 @@ export default function TraCuuHsbaPage() {
         }))
       );
       //console.log("Search results:", data);
-    } catch (error) {
+    } catch {
       // console.error("Error fetching HSBA data:", error);
     } finally {
       setSearchingData(false);
@@ -269,7 +269,11 @@ export default function TraCuuHsbaPage() {
             />
           </Box>
           <Box flex={1}>
-            <Button fullWidth startIcon={<Search />} variant="contained" onClick={handleSearch}>
+            <Button
+              fullWidth
+              startIcon={<Search />}
+              variant="contained"
+              onClick={handleSearch}>
               Tìm kiếm
             </Button>
           </Box>

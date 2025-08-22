@@ -37,7 +37,10 @@ export const instnguoidung = async (
         { paraName: "cemail", paraValue: user.cemail },
         { paraName: "cchucdanh", paraValue: user.cchucdanh },
         { paraName: "cghichu", paraValue: user.cghichu },
-        { paraName: "cmatkhau", paraValue: (await sha256(user.cmatkhau)).toString() },
+        {
+          paraName: "cmatkhau",
+          paraValue: (await sha256(user.cmatkhau)).toString(),
+        },
         { paraName: "cxacthuc2lop", paraValue: user.cxacthuc2lop },
         { paraName: "ctrangthai", paraValue: user.ctrangthai },
       ],
@@ -89,7 +92,7 @@ export const instnguoidungdoimatkhau = async (
     }
     //console.log("instnguoidungdoimatkhau response:", response);
     return response.message;
-  } catch (error) {
+  } catch {
     //console.log("instnguoidungdoimatkhau error:", error);
     return [];
   }
@@ -181,7 +184,7 @@ export const login = async (username: string, password: string) => {
     return response.token
       ? { status: "success", token: response.token }
       : { status: "error", message: response.message };
-  } catch (error) {
+  } catch {
     return {
       status: "error",
       message: "Đăng nhập thất bại. Vui lòng thử lại.",
