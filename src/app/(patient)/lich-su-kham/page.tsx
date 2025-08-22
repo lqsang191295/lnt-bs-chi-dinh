@@ -1,11 +1,15 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ToastError, ToastSuccess } from "@/lib/toast";
 import { genOTP, sentOTP } from "@/utils/otp";
+import { ToastError, ToastSuccess } from "@/utils/toast";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from "@mui/material/CardHeader";
+import CircularProgress from "@mui/material/CircularProgress";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -26,12 +30,12 @@ export default function LoginPage() {
   // check login nếu có token
   useEffect(() => {
     const token = localStorage.getItem("token-patient");
-    console.log('Token ==== ', token)
+    console.log("Token ==== ", token);
 
     // if (token) {
-    //   router.push("/"); // đã login → redirect
+    //   router.push("/"); // đã login → redirect
     // }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -42,7 +46,7 @@ export default function LoginPage() {
   }, [cooldown]);
 
   const handleMobile = async () => {
-    if (cooldown > 0) return;
+    if (cooldown > 0 || sendingOTP) return;
 
     setSendingOTP(true);
     try {
@@ -64,7 +68,7 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setOtpError(false);
 
-    console.log('otpValue.current === ', otpValue.current)
+    console.log("otpValue.current === ", otpValue.current);
 
     if (otp !== otpValue.current) {
       setOtpError(true);
@@ -73,7 +77,9 @@ export default function LoginPage() {
 
     try {
       // demo: tạo token giả (bạn có thể thay bằng JWT thật)
-      const fakeToken = btoa(JSON.stringify({ phone, logged: true, loginAt: Date.now() }));
+      const fakeToken = btoa(
+        JSON.stringify({ phone, logged: true, loginAt: Date.now() })
+      );
       localStorage.setItem("token-patient", fakeToken);
 
       ToastSuccess("Đăng nhập thành công");
@@ -81,94 +87,172 @@ export default function LoginPage() {
     } catch (ex) {
       console.error("ex handleLogin", ex);
       ToastError("Đăng nhập không thành công");
-    } 
+    }
   };
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-      <div className="flex w-full max-w-sm flex-col gap-6">
-        <div className="flex gap-x-2 justify-center">
-          <div className="flex aspect-square size-8 items-center justify-center text-sidebar-primary-foreground border border-gray-400 rounded-xs">
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
+        bgcolor: (theme) => theme.palette.grey[200],
+        p: 3,
+      }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 3,
+          width: "100%",
+          maxWidth: 400,
+        }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "1px solid",
+              borderColor: (theme) => theme.palette.grey[400],
+              borderRadius: "4px",
+              flexShrink: 0,
+            }}>
             <Image src={"/imgs/logo.png"} width={36} height={36} alt="Logo" />
-          </div>
-          <div className="grid text-left text-sm leading-tight">
-            <span className="truncate text-[10px]">BỆNH VIỆN ĐA KHOA</span>
-            <span className="truncate text-base font-semibold">LÊ NGỌC TÙNG</span>
-          </div>
-        </div>
+          </Box>
+          <Box
+            sx={{
+              display: "grid",
+              textAlign: "left",
+              lineHeight: "tight",
+            }}>
+            <Typography
+              variant="caption"
+              sx={{ lineHeight: 1, whiteSpace: "nowrap" }}>
+              BỆNH VIỆN ĐA KHOA
+            </Typography>
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              sx={{ lineHeight: 1, whiteSpace: "nowrap" }}>
+              LÊ NGỌC TÙNG
+            </Typography>
+          </Box>
+        </Box>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl">Đăng nhập</CardTitle>
-            <CardDescription>
-              Nhập số điện thoại → Nhận mã OTP → Nhập OTP để đăng nhập
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <Card sx={{ width: "100%", maxWidth: 400, borderRadius: 2 }}>
+          <CardHeader
+            title="Đăng nhập"
+            subheader="Nhập số điện thoại → Nhận mã OTP → Nhập OTP để đăng nhập"
+            titleTypographyProps={{
+              variant: "h5",
+              align: "center",
+              fontWeight: "bold",
+            }}
+            subheaderTypographyProps={{
+              align: "center",
+              color: "text.secondary",
+            }}
+            sx={{ pb: 0 }}
+          />
+          <CardContent sx={{ pt: 2 }}>
             {form === "phone" && (
-              <form onSubmit={(e) => e.preventDefault()} className="grid gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="mobile">Số điện thoại</Label>
-                  <Input
+              <Box
+                component="form"
+                sx={{ display: "grid", gap: 3 }}
+                onSubmit={(e) => e.preventDefault()}
+                noValidate
+                autoComplete="off">
+                <Box sx={{ display: "grid", gap: 1 }}>
+                  <Typography
+                    variant="body2"
+                    component="label"
+                    htmlFor="mobile">
+                    Số điện thoại
+                  </Typography>
+                  <TextField
                     id="mobile"
+                    fullWidth
                     type="text"
                     placeholder="Ví dụ: 0911.xxx"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                   />
-                </div>
+                </Box>
                 <Button
-                  variant="secondary"
                   type="submit"
-                  className="w-full"
+                  variant="contained"
+                  fullWidth
                   onClick={handleMobile}
                   disabled={cooldown > 0 || sendingOTP}
-                >
-                  {cooldown > 0 ? `Vui lòng đợi ${cooldown}s` : "Nhận mã OTP"}
+                  sx={{ py: 1.5 }}>
+                  {sendingOTP ? (
+                    <CircularProgress size={24} sx={{ color: "white" }} />
+                  ) : cooldown > 0 ? (
+                    `Vui lòng đợi ${cooldown}s`
+                  ) : (
+                    "Nhận mã OTP"
+                  )}
                 </Button>
-              </form>
+              </Box>
             )}
 
             {form === "otp" && (
-              <form onSubmit={(e) => e.preventDefault()} className="grid gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="otp">Mã OTP</Label>
-                  <Input
+              <Box
+                component="form"
+                sx={{ display: "grid", gap: 3 }}
+                onSubmit={(e) => e.preventDefault()}
+                noValidate
+                autoComplete="off">
+                <Box sx={{ display: "grid", gap: 1 }}>
+                  <Typography variant="body2" component="label" htmlFor="otp">
+                    Mã OTP
+                  </Typography>
+                  <TextField
                     id="otp"
+                    fullWidth
                     type="text"
                     placeholder="Nhập mã OTP"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    className={otpError ? "border-red-500" : ""}
+                    error={otpError}
+                    helperText={otpError ? "Mã OTP không đúng" : ""}
                   />
-                  {otpError && (
-                    <span className="text-red-500 text-sm">Mã OTP không đúng</span>
-                  )}
-                </div>
-
+                </Box>
                 <Button
                   type="submit"
-                  variant="secondary"
-                  className="w-full"
+                  variant="contained"
+                  fullWidth
                   onClick={handleLogin}
-                >
+                  sx={{ py: 1.5 }}>
                   Đăng nhập
                 </Button>
 
                 <Button
-                  variant="secondary"
                   type="button"
-                  className="w-full"
+                  variant="text"
+                  fullWidth
                   onClick={handleMobile}
                   disabled={cooldown > 0 || sendingOTP}
-                >
-                  {cooldown > 0 ? `Gửi lại sau ${cooldown}s` : "Gửi lại mã OTP"}
+                  sx={{ py: 1.5 }}>
+                  {sendingOTP ? (
+                    <CircularProgress size={24} />
+                  ) : cooldown > 0 ? (
+                    `Gửi lại sau ${cooldown}s`
+                  ) : (
+                    "Gửi lại mã OTP"
+                  )}
                 </Button>
-              </form>
+              </Box>
             )}
           </CardContent>
         </Card>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
