@@ -20,32 +20,6 @@ const Drawer = styled(MuiDrawer)({
   },
 });
 
-const Logged = () => {
-  return (
-    <Drawer variant="permanent">
-      <Box
-        sx={{
-          display: "flex",
-          mt: "calc(var(--template-frame-height, 0px) + 4px)",
-          p: 1.5,
-        }}>
-        <SelectContent />
-      </Box>
-      <Divider />
-      <Box
-        sx={{
-          overflow: "auto",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-        }}>
-        <MenuContent />
-        <CardAlert />
-      </Box>
-    </Drawer>
-  );
-};
-
 export default function SideMenu() {
   return (
     <Drawer variant="permanent">
@@ -59,6 +33,7 @@ export default function SideMenu() {
       </Box>
       <Divider />
       <Box
+        className="h-full relative"
         sx={{
           overflow: "auto",
           height: "100%",
