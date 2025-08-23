@@ -12,16 +12,19 @@ import {
   RadioGroup,
   Select,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 
 import { getHosobenhan } from "@/actions/act_thosobenhan";
 import HeadMetadata from "@/components/HeadMetadata";
+import AccessDeniedPage from "@/components/AccessDeniedPage";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ILoaiLuuTru } from "@/model/tloailuutru";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
-import { ToastWarning } from "@/utils/toast";
+import { useMenuStore } from "@/store/menu";
+import { ToastError, ToastWarning } from "@/utils/toast";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
@@ -29,6 +32,7 @@ import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import DialogCapNhatLuuTru from "./components/dialog-cap-nhat-luu-tru";
 
 const columns: GridColDef[] = [
@@ -88,6 +92,7 @@ const columns: GridColDef[] = [
 ];
 
 export default function LuuTruHsbaPage() {
+  const router = useRouter();
   const [selectedRow, setSelectedRow] = useState<IHoSoBenhAn | null>(null); // Single row selection
   const [openDialog, setOpenDialog] = useState(false);
   const [loaiLuuTruList, setLoaiLuuTruList] = useState<ILoaiLuuTru[]>([]);
@@ -98,37 +103,66 @@ export default function LuuTruHsbaPage() {
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
   const { data: loginedUser } = useUserStore();
+  const { data: menuData } = useMenuStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
+
+  // Kiểm tra quyền truy cập
+  useEffect(() => {
+    const checkAccess = () => {
+      // Kiểm tra xem có quyền truy cập trang "luu-tru-hsba" không
+      if (menuData.find((item) => item.clink === "luu-tru-hsba")) {
+        setHasAccess(true);
+      } else {
+        setHasAccess(false);
+        // Không redirect, chỉ set hasAccess = false để hiển thị AccessDeniedPage
+      }
+      setIsCheckingAccess(false);
+    };
+
+    // Chỉ kiểm tra khi đã có dữ liệu từ store
+    if (loginedUser && menuData !== undefined) {
+      checkAccess();
+    }
+  }, [menuData, loginedUser, router]);
 
   const fetchLoaiLuuTru = async () => {
+    if (!hasAccess) return;
+    
     try {
       const result = await DataManager.getDmLoaiLuuTru();
       // console.log("Loai luu tru:", result);
       setLoaiLuuTruList(result || []);
-    } catch {
+    } catch (error) {
+      console.error("Error fetching loại lưu trữ:", error);
       setLoaiLuuTruList([]);
     }
   };
 
-  useEffect(() => {
-    fetchLoaiLuuTru();
-  }, []);
-
   const fetchKhoaList = async () => {
+    if (!hasAccess) return;
+    
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
-    } catch {
-      // console.error("Error fetching khoa list:", error);
+    } catch (error) {
+      console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
   };
-  // Fetch khoa list from API
+
+  // Fetch data khi có quyền truy cập
   useEffect(() => {
-    fetchKhoaList();
-  }, []);
+    if (hasAccess && !isCheckingAccess) {
+      fetchLoaiLuuTru();
+      fetchKhoaList();
+    }
+  }, [hasAccess, isCheckingAccess]);
 
   const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
+    if (!hasAccess) return;
+    
     let selectionArray: unknown[] = [];
 
     //console.log("Selected rows for update:", selectionModel);
@@ -147,6 +181,8 @@ export default function LuuTruHsbaPage() {
 
   // Mở dialog cập nhật lưu trữ
   const handleOpenDialog = () => {
+    if (!hasAccess) return;
+    
     if (!selectedRow) {
       ToastWarning("Vui lòng chọn một hồ sơ bệnh án!");
       return;
@@ -166,6 +202,8 @@ export default function LuuTruHsbaPage() {
 
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
+    if (!hasAccess) return;
+    
     if (!tuNgay || !denNgay) return;
 
     try {
@@ -192,26 +230,82 @@ export default function LuuTruHsbaPage() {
         }))
       );
       //console.log("Search results:", data);
-    } catch {
-      //console.error("Error fetching hồ sơ bệnh án:", error);
+    } catch (error) {
+      console.error("Error fetching hồ sơ bệnh án:", error);
+      ToastError("Lỗi khi tìm kiếm hồ sơ bệnh án!");
     } finally {
       setSearchingData(false);
     }
   };
 
+  // Hiển thị loading khi đang kiểm tra quyền truy cập
+  if (isCheckingAccess) {
+    return (
+      <Box
+        sx={{
+          height: 'calc(100vh - 64px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: 2
+        }}
+      >
+        <CircularProgress />
+        <Typography color="textSecondary">Đang kiểm tra quyền truy cập...</Typography>
+      </Box>
+    );
+  }
+
+  // Hiển thị trang Access Denied nếu không có quyền
+  if (!hasAccess) {
+    return (
+      <AccessDeniedPage
+        title="BẠN KHÔNG CÓ QUYỀN QUẢN LÝ LƯU TRỮ HSBA"
+        message="Bạn không có quyền truy cập chức năng quản lý lưu trữ hồ sơ bệnh án. Vui lòng liên hệ quản trị viên để được cấp quyền."
+        showBackButton={true}
+        showHomeButton={true}
+      />
+    );
+  }
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <HeadMetadata title="Quản lý lưu trữ hồ sơ bệnh án" />
 
-      <Box p={2} className="w-full h-full flex flex-col">
+      {/* Container chính với height cố định */}
+      <Box 
+        sx={{ 
+          height: 'calc(100vh - 64px)', // Trừ height của header/navbar
+          width: '100%',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          gap: 1
+        }}
+      >
         <Typography
           variant="h6"
-          gutterBottom
-          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+          sx={{ 
+            color: "#1976d2", 
+            fontWeight: "bold", 
+            letterSpacing: 1,
+            flexShrink: 0
+          }}
+        >
           QUẢN LÝ LƯU TRỮ HSBA
         </Typography>
+
         {/* Search Bar */}
-        <Box display="flex" gap={2} mb={2}>
+        <Box 
+          display="flex" 
+          gap={2} 
+          sx={{ 
+            flexShrink: 0,
+            flexWrap: 'wrap'
+          }}
+        >
           <Box flex={3}>
             <Select
               fullWidth
@@ -297,13 +391,22 @@ export default function LuuTruHsbaPage() {
           <Button
             variant="contained"
             startIcon={<Search />}
-            onClick={handleSearch}>
-            Tìm kiếm
+            onClick={handleSearch}
+            disabled={searchingData}>
+            {searchingData ? "Đang tìm..." : "Tìm kiếm"}
           </Button>
         </Box>
 
         {/* Tab Navigation */}
-        <Box className="bg-white flex gap-2 p-2">
+        <Box 
+          sx={{
+            bgcolor: 'white',
+            display: 'flex',
+            gap: 2,
+            p: 2,
+            flexShrink: 0
+          }}
+        >
           <Button
             startIcon={<SaveAltIcon />}
             variant="contained"
@@ -315,8 +418,17 @@ export default function LuuTruHsbaPage() {
           </Button>
         </Box>
 
-        {/* Main Content Area (Padding around the table) */}
-        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+        {/* Main Content Area - DataGrid với height cố định */}
+        <Box 
+          sx={{
+            flex: 1,
+            width: '100%',
+            minHeight: 400, // Đảm bảo có chiều cao tối thiểu
+            border: '1px solid #e0e0e0',
+            borderRadius: 1,
+            overflow: 'hidden'
+          }}
+        >
           <DataGrid
             rows={rows}
             columns={columns}
@@ -325,6 +437,7 @@ export default function LuuTruHsbaPage() {
             density="compact"
             onRowSelectionModelChange={handleRowSelectionChange}
             sx={{
+              height: '100%',
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
                 fontWeight: "bold",
@@ -344,6 +457,9 @@ export default function LuuTruHsbaPage() {
               "& .MuiDataGrid-row:hover": {
                 backgroundColor: "#e3f2fd !important",
               },
+              '& .MuiDataGrid-main': {
+                overflow: 'hidden'
+              }
             }}
           />
         </Box>

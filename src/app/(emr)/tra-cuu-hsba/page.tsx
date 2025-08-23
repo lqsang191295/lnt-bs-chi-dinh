@@ -5,12 +5,15 @@ import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
+import { useMenuStore } from "@/store/menu";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { History, NoteAdd, Search } from "@mui/icons-material";
+import AccessDeniedPage from "@/components/AccessDeniedPage";
 
 import HeadMetadata from "@/components/HeadMetadata";
 import {
@@ -23,14 +26,17 @@ import {
   Select,
   Typography,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import DialogDetail from "./components/dialog-detail";
 
 export default function TraCuuHsbaPage() {
+  const router = useRouter();
   const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
   const [selectedKhoa, setSelectedKhoa] = useState("all");
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
@@ -44,36 +50,58 @@ export default function TraCuuHsbaPage() {
     useState<IHoSoBenhAn | null>(null);
   const [phieuList, setPhieuList] = useState<IHoSoBenhAnChiTiet[]>([]);
   const { data: loginedUser } = useUserStore();
+  const { data: menuData } = useMenuStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
+
+  // Kiểm tra quyền truy cập
+  useEffect(() => {
+    const checkAccess = () => {
+      // Kiểm tra xem có quyền truy cập trang "tra-cuu-hsba" không
+      if (menuData.find((item) => item.clink === "tra-cuu-hsba")) {
+        setHasAccess(true);
+      } else {
+        setHasAccess(false);
+        // Không redirect, chỉ set hasAccess = false để hiển thị AccessDeniedPage
+      }
+      setIsCheckingAccess(false);
+    };
+
+    // Chỉ kiểm tra khi đã có dữ liệu từ store
+    if (loginedUser && menuData !== undefined) {
+      checkAccess();
+    }
+  }, [menuData, loginedUser, router]);
 
   // Sử dụng PdfComponents hook
   const { downloadPdf, isLoading } = PdfComponents(useMemo(() => ({
     onSuccess: (message: string) => {
-      console.log("PDF downloaded successfully:", message);
-      // Có thể thêm toast notification ở đây
+      ToastSuccess(message);
     },
     onError: (error: string) => {
-      console.error("PDF download error:", error);
-      alert(error);
+      ToastError(error);
     }
   }), []));
 
   // Hàm xử lý download PDF
   const handleDownload = useCallback((row: IHoSoBenhAn) => {
+    if (!hasAccess) return;
+    
     if (!row.NoiDungPdf) {
-      alert("Không có dữ liệu PDF để tải!");
+      ToastWarning("Không có dữ liệu PDF để tải!");
       return;
     }
 
     // Kiểm tra trạng thái kết xuất
-    if (row.TrangThaiKetXuat !== 1) {
-      alert("Hồ sơ này chưa được kết xuất!");
+    if (Number(row.TrangThaiKetXuat) !== 1) {
+      ToastWarning("Hồ sơ này chưa được kết xuất!");
       return;
     }
 
     const fileName = `HSBA_${row.MaBN}_${row.Hoten}`;
     downloadPdf(row.NoiDungPdf, fileName);
-  }, [downloadPdf]);
+  }, [downloadPdf, hasAccess]);
 
   // Cập nhật columns để sử dụng handleDownload mới
   const columns: GridColDef[] = useMemo(() => [
@@ -190,6 +218,8 @@ export default function TraCuuHsbaPage() {
 
   // Hàm xử lý double click trên lưới chính
   const handleRowDoubleClick = async (params: GridRowParams) => {
+    if (!hasAccess) return;
+    
     const hsba = params.row;
     setSelectedHsbaForDetail(hsba);
 
@@ -210,6 +240,7 @@ export default function TraCuuHsbaPage() {
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết HSBA:", error);
       setPhieuList([]);
+      ToastError("Lỗi khi tải chi tiết hồ sơ bệnh án!");
     }
 
     setOpenDetailDialog(true);
@@ -223,6 +254,8 @@ export default function TraCuuHsbaPage() {
   };
 
   const fetchKhoaList = async () => {
+    if (!hasAccess) return;
+    
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
@@ -234,11 +267,15 @@ export default function TraCuuHsbaPage() {
 
   // Fetch khoa list from API
   useEffect(() => {
-    fetchKhoaList();
-  }, []);
+    if (hasAccess && !isCheckingAccess) {
+      fetchKhoaList();
+    }
+  }, [hasAccess, isCheckingAccess]);
 
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
+    if (!hasAccess) return;
+    
     try {
       if (!tuNgay || !denNgay) return;
 
@@ -267,25 +304,81 @@ export default function TraCuuHsbaPage() {
       );
     } catch (error) {
       console.error("Error fetching HSBA data:", error);
+      ToastError("Lỗi khi tìm kiếm hồ sơ bệnh án!");
     } finally {
       setSearchingData(false);
     }
   };
+
+  // Hiển thị loading khi đang kiểm tra quyền truy cập
+  if (isCheckingAccess) {
+    return (
+      <Box
+        sx={{
+          height: 'calc(100vh - 64px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: 2
+        }}
+      >
+        <CircularProgress />
+        <Typography color="textSecondary">Đang kiểm tra quyền truy cập...</Typography>
+      </Box>
+    );
+  }
+
+  // Hiển thị trang Access Denied nếu không có quyền
+  if (!hasAccess) {
+    return (
+      <AccessDeniedPage
+        title="BẠN KHÔNG CÓ QUYỀN TRA CỨU HỒ SƠ BỆNH ÁN"
+        message="Bạn không có quyền truy cập chức năng tra cứu hồ sơ bệnh án. Vui lòng liên hệ quản trị viên để được cấp quyền."
+        showBackButton={true}
+        showHomeButton={true}
+      />
+    );
+  }
 
   // Render component
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <HeadMetadata title="Tra cứu hồ sơ bệnh án" />
 
-      <Box p={2} className="w-full h-full flex flex-col">
+      {/* Container chính với height cố định */}
+      <Box 
+        sx={{ 
+          height: 'calc(100vh - 64px)', // Trừ height của header/navbar
+          width: '100%',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          gap: 1
+        }}
+      >
         <Typography
           variant="h6"
-          gutterBottom
-          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+          sx={{ 
+            color: "#1976d2", 
+            fontWeight: "bold", 
+            letterSpacing: 1,
+            flexShrink: 0
+          }}
+        >
           TRA CỨU HỒ SƠ BỆNH ÁN
         </Typography>
         
-        <Box display="flex" gap={2} mb={2}>
+        {/* Bộ lọc */}
+        <Box 
+          display="flex" 
+          gap={2} 
+          sx={{ 
+            flexShrink: 0,
+            flexWrap: 'wrap'
+          }}
+        >
           <Box flex={1}>
             <Select
               fullWidth
@@ -376,7 +469,17 @@ export default function TraCuuHsbaPage() {
           </Box>
         </Box>
 
-        <Box className="w-full h-full overflow-hidden">
+        {/* Main Content Area - DataGrid với height cố định */}
+        <Box 
+          sx={{
+            flex: 1,
+            width: '100%',
+            minHeight: 400, // Đảm bảo có chiều cao tối thiểu
+            border: '1px solid #e0e0e0',
+            borderRadius: 1,
+            overflow: 'hidden'
+          }}
+        >
           <DataGrid
             rows={rows}
             columns={columns}
@@ -386,6 +489,7 @@ export default function TraCuuHsbaPage() {
             density="compact"
             onRowDoubleClick={handleRowDoubleClick}
             sx={{
+              height: '100%',
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
                 fontWeight: "bold",
@@ -402,6 +506,9 @@ export default function TraCuuHsbaPage() {
               "& .MuiDataGrid-row:hover": {
                 backgroundColor: "#e3f2fd !important",
               },
+              '& .MuiDataGrid-main': {
+                overflow: 'hidden'
+              }
             }}
             loading={searchingData}
           />
