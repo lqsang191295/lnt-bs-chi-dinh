@@ -1,5 +1,6 @@
 "use client";
 import { getChiTietHSBA, getHosobenhan } from "@/actions/act_thosobenhan";
+import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
@@ -20,6 +21,8 @@ import {
   Box,
   Button,
   FormControlLabel,
+  Grid,
+  IconButton,
   MenuItem,
   Radio,
   RadioGroup,
@@ -104,117 +107,119 @@ export default function TraCuuHsbaPage() {
   }, [downloadPdf, hasAccess]);
 
   // Cập nhật columns để sử dụng handleDownload mới
-  const columns: GridColDef[] = useMemo(() => [
-    { field: "ID", headerName: "ID", width: 60 },
-    {
-      field: "TrangThaiBA",
-      headerName: "Trạng thái",
-      width: 100,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            backgroundColor: "transparent",
-            color: params.value === "MO" ? "#8200fcff" : "#f44336",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontWeight: "bold",
-            textAlign: "center",
-            minWidth: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "4px",
-          }}>
-          {params.value === "MO" ? (
-            <>
-              <LockOpenIcon sx={{ fontSize: "14px" }} />
-              Mở
-            </>
-          ) : (
-            <>
-              <LockOutlinedIcon sx={{ fontSize: "14px" }} />
-              Đóng
-            </>
-          )}
-        </Box>
-      ),
-    },
-    {
-      field: "TrangThaiKetXuat",
-      headerName: "Kết xuất",
-      width: 120,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            backgroundColor: "transparent",
-            color: params.value === 1 ? "#4caf50" : "#ff9800",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontWeight: params.value === 1 ? "bold" : "normal",
-            textAlign: "center",
-            minWidth: "100px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "4px",
-          }}>
-          {params.value === 1 ? (
-            <>
-              <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent row selection
-                  handleDownload(params.row);
-                }}
-                disabled={isLoading || !params.row.NoiDungPdf}
-                sx={{ 
-                  color: "inherit",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  p: 0.5,
-                  "&:hover": {
-                    backgroundColor: "rgba(76, 175, 80, 0.1)"
-                  }
-                }}
-                title={
-                  !params.row.NoiDungPdf 
-                    ? "Không có dữ liệu PDF" 
-                    : isLoading 
-                      ? "Đang tải..." 
+  const columns: GridColDef[] = useMemo(
+    () => [
+      { field: "ID", headerName: "ID", width: 60 },
+      {
+        field: "TrangThaiBA",
+        headerName: "Trạng thái",
+        width: 100,
+        renderCell: (params) => (
+          <Box
+            sx={{
+              backgroundColor: "transparent",
+              color: params.value === "MO" ? "#8200fcff" : "#f44336",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: "bold",
+              textAlign: "center",
+              minWidth: "60px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "4px",
+            }}>
+            {params.value === "MO" ? (
+              <>
+                <LockOpenIcon sx={{ fontSize: "14px" }} />
+                Mở
+              </>
+            ) : (
+              <>
+                <LockOutlinedIcon sx={{ fontSize: "14px" }} />
+                Đóng
+              </>
+            )}
+          </Box>
+        ),
+      },
+      {
+        field: "TrangThaiKetXuat",
+        headerName: "Kết xuất",
+        width: 120,
+        renderCell: (params) => (
+          <Box
+            sx={{
+              backgroundColor: "transparent",
+              color: params.value === 1 ? "#4caf50" : "#ff9800",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: params.value === 1 ? "bold" : "normal",
+              textAlign: "center",
+              minWidth: "100px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "4px",
+            }}>
+            {params.value === 1 ? (
+              <>
+                <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent row selection
+                    handleDownload(params.row);
+                  }}
+                  disabled={isLoading || !params.row.NoiDungPdf}
+                  sx={{
+                    color: "inherit",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    p: 0.5,
+                    "&:hover": {
+                      backgroundColor: "rgba(76, 175, 80, 0.1)",
+                    },
+                  }}
+                  title={
+                    !params.row.NoiDungPdf
+                      ? "Không có dữ liệu PDF"
+                      : isLoading
+                      ? "Đang tải..."
                       : "Tải xuống PDF"
-                }
-              >
-                {isLoading ? "..." : "Tải xuống"}
-              </IconButton>
-            </>
-          ) : (
-            <>
-              <KeyboardArrowDownOutlinedIcon sx={{ fontSize: "14px" }} />
-              Chưa kết xuất
-            </>
-          )}
-        </Box>
-      ),
-    },
-    { field: "Hoten", headerName: "Họ và tên", width: 200 },
-    { field: "MaBN", headerName: "Mã BN", width: 130 },
-    { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-    { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-    { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-    { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-    { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
-    { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
-    { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
-    { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
-    { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
-    { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
-    { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
-    { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
-    { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
-  ], [handleDownload, isLoading]);
+                  }>
+                  {isLoading ? "..." : "Tải xuống"}
+                </IconButton>
+              </>
+            ) : (
+              <>
+                <KeyboardArrowDownOutlinedIcon sx={{ fontSize: "14px" }} />
+                Chưa kết xuất
+              </>
+            )}
+          </Box>
+        ),
+      },
+      { field: "Hoten", headerName: "Họ và tên", width: 200 },
+      { field: "MaBN", headerName: "Mã BN", width: 130 },
+      { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+      { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
+      { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
+      { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
+      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+      { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+      { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
+      { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
+      { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
+      { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
+      { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
+      { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
+      { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+    ],
+    [handleDownload, isLoading]
+  );
 
   // Hàm xử lý double click trên lưới chính
   const handleRowDoubleClick = async (params: GridRowParams) => {
@@ -287,7 +292,7 @@ export default function TraCuuHsbaPage() {
         const day = String(date.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
       };
-      
+
       const data = await getHosobenhan(
         loginedUser.ctaikhoan,
         popt,
@@ -436,38 +441,33 @@ export default function TraCuuHsbaPage() {
               value={tuNgay}
               onChange={(value) => setTuNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Box flex={0.5}>
+          </Grid>
+
+          {/* DatePicker "Đến ngày" */}
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
               onChange={(value) => setDenNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Box flex={1}>
-            <Button 
-              fullWidth 
-              startIcon={<Search />} 
-              variant="contained" 
+          </Grid>
+
+          {/* Nút "Tìm kiếm" */}
+          <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+            <Button
+              fullWidth
+              startIcon={<Search />}
+              variant="contained"
               onClick={handleSearch}
-              disabled={searchingData}
-            >
+              disabled={searchingData}>
               {searchingData ? "Đang tìm..." : "Tìm kiếm"}
             </Button>
-          </Box>
-        </Box>
+          </Grid>
+        </Grid>
 
         {/* Main Content Area - DataGrid với height cố định */}
         <Box 

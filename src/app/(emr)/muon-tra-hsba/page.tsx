@@ -16,9 +16,8 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {
   Box,
   Button,
-  FormControl,
   FormControlLabel,
-  FormLabel,
+  Grid,
   MenuItem,
   Radio,
   RadioGroup,
@@ -355,7 +354,8 @@ export default function MuonTraHsbaPage() {
                 aria-labelledby="popt-radio-group-label"
                 name="popt-radio-group"
                 value={popt}
-                onChange={(e) => setPopt(e.target.value)}>
+                onChange={(e) => setPopt(e.target.value)}
+                className="w-auto">
                 <FormControlLabel
                   value="1"
                   control={
@@ -385,32 +385,28 @@ export default function MuonTraHsbaPage() {
                   sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
-            </FormControl>
-          </Box>
-          <Box flex={1}>
+            </Box>
+          </Grid>
+
+          {/* DatePicker "Từ ngày" */}
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
               onChange={(value) => setTuNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Box flex={1}>
+          </Grid>
+
+          {/* DatePicker "Đến ngày" */}
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
               onChange={(value) => setDenNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
           </Box>
           <Button

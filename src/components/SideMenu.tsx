@@ -22,11 +22,10 @@ const Drawer = styled(MuiDrawer)({
 
 export default function SideMenu() {
   return (
-    <Drawer variant="permanent">
+    <Drawer variant="permanent" className="!hidden xl:!block">
       <Box
         sx={{
           display: "flex",
-          mt: "calc(var(--template-frame-height, 0px) + 4px)",
           p: 1.5,
         }}>
         <SelectContent />
