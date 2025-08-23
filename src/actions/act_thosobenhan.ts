@@ -77,10 +77,39 @@ export const capnhathosobenhan = async (
   hsba: IHoSoBenhAn
 ) => {
   try {
-    console.log("Fetching HoSoBenhAn...");
-    console.log("pOpt:", pOpt);
-    console.log("pUser:", pUser);
-    console.log("pUser:", hsba);
+    //console.log("Fetching HoSoBenhAn...");  
+console.log(`'${pUser}'
+, '${pOpt}'
+, '${hsba.ID}'
+, '${hsba.SoBenhAn}'
+, '${hsba.MaBANoiTru}'
+, '${hsba.MaBN}'
+, '${hsba.Hoten}'
+, '${hsba.Ngaysinh}'
+, '${hsba.Gioitinh}'
+, '${hsba.Dienthoai}'
+, '${hsba.Diachi?.substring(0, 50)}...'
+, '${hsba.SoCCCD}'
+, '${hsba.SoNhapVien}'
+, '${hsba.SoVaoVien}'
+, '${hsba.SoLuuTru}'
+, '${hsba.KhoaVaoVien}'
+, '${hsba.KhoaDieuTri}'
+, '${hsba.NgayVao}'
+, '${hsba.NgayRa}'
+, '${hsba.LoaiBenhAn}'
+, '${hsba.NoiDungJson?.substring(0, 50)}...'
+, '${hsba.NoiDungXml?.substring(0, 50)}...'
+, '${hsba.NoiDungPdf?.substring(0, 50)}...'
+, '${hsba.TruongKhoaKyTen}'
+, '${hsba.GdbvKyTen}'
+, '${hsba.BsLamBAKyTen}'
+, '${hsba.BsDieuTriKyTen}'
+, '${hsba.TrangThaiBA}'
+, '${hsba.ViTriLuuTru}'
+, '${hsba.LoaiLuuTru}'
+, '${hsba.NgayLuuTru}'
+, '${hsba.NguoiKetXuat}'`);
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
@@ -121,7 +150,7 @@ export const capnhathosobenhan = async (
         { paraName: "NguoiKetXuat", paraValue: hsba.NguoiKetXuat },
       ],
     });
-    console.log("Response from capnhathosobenhan:", response);
+    //console.log("Response from capnhathosobenhan:", response);
     if (response.status === "error") {
       return [];
     }

@@ -8,8 +8,7 @@ import {
   getnhatkyketxuatba,
 } from "@/actions/act_thosobenhan";
 import { IPDFItem } from "@/model/ipdf";
-import { IHoSoBenhAn } from "@/model/thosobenhan";
-import { IHoSoBenhAn } from "@/model/thosobenhan";
+import { IHoSoBenhAn } from "@/model/thosobenhan"; 
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
@@ -20,6 +19,7 @@ import { PdfComponents } from "@/components/pdfComponents"; // Import PdfCompone
 import { Download, NoteAdd, Refresh, Search  } from "@mui/icons-material"; 
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import HeadMetadata from "@/components/HeadMetadata";
 import {
   Alert,
   Box,
@@ -439,7 +439,7 @@ export default function KetXuatHsbaPage() {
             }
           }
         } catch (error) {
-          console.error(`Error getting PDF for HSBA ${hsba.ID}:`, error);
+          // console.error(`Error getting PDF for HSBA ${hsba.ID}:`, error);
           continue;
         }
       }
@@ -523,8 +523,11 @@ export default function KetXuatHsbaPage() {
           sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
         </Typography>
+        <Typography
+          variant="h6"
           gutterBottom
-          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}
+        >
           QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
         </Typography>
 
