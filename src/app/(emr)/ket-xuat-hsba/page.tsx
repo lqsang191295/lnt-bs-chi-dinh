@@ -6,6 +6,7 @@ import {
   getChiTietHSBA,
   getHosobenhan,
   getnhatkyketxuatba,
+  ketxuathosobenhan,
 } from "@/actions/act_thosobenhan";
 import { IPDFItem } from "@/model/ipdf";
 import { IHoSoBenhAn } from "@/model/thosobenhan"; 
@@ -417,7 +418,7 @@ export default function KetXuatHsbaPage() {
               setProgress((current / total) * 100);
             }
           );
-
+          // console.log("Merged PDF Base64:", mergedPdfBase64);
           if (mergedPdfBase64) {
             try {
               const updatedHsba = {
@@ -426,11 +427,12 @@ export default function KetXuatHsbaPage() {
                 TrangThaiKetXuat: "1",
                 NguoiKetXuat: loginedUser.ctaikhoan,
               };
-              const result = await capnhathosobenhan(
+              const result = await ketxuathosobenhan(
                 loginedUser.ctaikhoan,
                 "5",
                 updatedHsba
               );
+              // console.log("Kết xuất thành công:", result);
               if (result && result[0].ROW_COUNT === 1) {
                 hsbaSuccess++;
               }
