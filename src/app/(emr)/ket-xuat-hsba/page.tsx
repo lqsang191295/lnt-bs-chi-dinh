@@ -571,7 +571,7 @@ export default function KetXuatHsbaPage() {
                       size="small"
                     />
                   }
-                  label="Ngày vào viện"
+                  label="Ngày vào"
                   sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
                 <FormControlLabel
@@ -585,7 +585,7 @@ export default function KetXuatHsbaPage() {
                       size="small"
                     />
                   }
-                  label="Ngày ra viện"
+                  label="Ngày ra"
                   sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
