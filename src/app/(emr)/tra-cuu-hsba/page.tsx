@@ -1,3 +1,4 @@
+// src/app/(emr)/tra-cuu-hsba/page.tsx
 "use client";
 import { getChiTietHSBA, getHosobenhan } from "@/actions/act_thosobenhan";
 import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
@@ -8,27 +9,23 @@ import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import { useMenuStore } from "@/store/menu";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
-import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { History, NoteAdd, Search } from "@mui/icons-material";
 import AccessDeniedPage from "@/components/AccessDeniedPage";
-
 import HeadMetadata from "@/components/HeadMetadata";
 import {
   Box,
   Button,
   FormControlLabel,
-  Grid,
   IconButton,
   MenuItem,
   Radio,
   RadioGroup,
   Select,
   Typography,
-  IconButton,
   CircularProgress,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -443,10 +440,10 @@ export default function TraCuuHsbaPage() {
               format="dd/MM/yyyy"
               slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Grid>
+          </Box>
 
           {/* DatePicker "Đến ngày" */}
-          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
+          <Box flex={0.5}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
@@ -454,20 +451,17 @@ export default function TraCuuHsbaPage() {
               format="dd/MM/yyyy"
               slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Grid>
+          </Box>
 
           {/* Nút "Tìm kiếm" */}
-          <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-            <Button
-              fullWidth
-              startIcon={<Search />}
-              variant="contained"
-              onClick={handleSearch}
-              disabled={searchingData}>
-              {searchingData ? "Đang tìm..." : "Tìm kiếm"}
-            </Button>
-          </Grid>
-        </Grid>
+          <Button
+            startIcon={<Search />}
+            variant="contained"
+            onClick={handleSearch}
+            disabled={searchingData}>
+            {searchingData ? "Đang tìm..." : "Tìm kiếm"}
+          </Button>
+        </Box>
 
         {/* Main Content Area - DataGrid với height cố định */}
         <Box 
