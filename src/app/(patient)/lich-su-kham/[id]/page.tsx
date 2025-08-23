@@ -5,12 +5,10 @@ import {
   Button,
   Card,
   Divider,
-  FormControlLabel,
   Grid,
   InputAdornment,
   Paper,
   Radio,
-  RadioGroup,
   Tab,
   Table,
   TableBody,
@@ -117,182 +115,311 @@ export default function Page() {
       <Box sx={{ flex: 1, p: 1, overflow: "auto" }}>
         {/* Thông tin bệnh nhân */}
         <Card sx={{ mb: 2, p: 2 }}>
-          <Grid container spacing={1}>
-            <Grid className="flex" size={{ xs: 12, sm: 6, md: 3 }}>
-              <Typography>Mã bệnh nhân</Typography>
-              <TextField
-                label="Mã bệnh nhân"
-                value="1217278"
-                size="small"
-                fullWidth
-                disabled
-              />
+          <Grid container spacing={1} alignItems="center">
+            {/* Dòng 1 */}
+            <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Typography
+                  variant="body1"
+                  sx={{ whiteSpace: "nowrap", mr: 2 }}>
+                  Mã bệnh nhân
+                </Typography>
+                <TextField fullWidth size="small" variant="outlined" />
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+              <Box display="flex" alignItems="center">
+                <Typography
+                  variant="body1"
+                  sx={{ whiteSpace: "nowrap", mr: 2 }}>
+                  Họ Tên
+                </Typography>
+                <TextField fullWidth size="small" variant="outlined" />
+              </Box>
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Đối tượng</Typography>
             </Grid>
             <Grid item xs={2.5}>
               <TextField
-                label="Họ tên"
-                value="BÙI VĂN GIÀU"
-                size="small"
-                fullWidth
-                disabled
-              />
-            </Grid>
-            <Grid item xs={1.2}>
-              <RadioGroup
-                row
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}>
-                <FormControlLabel
-                  value="Nam"
-                  control={<Radio size="small" />}
-                  label="Nam"
-                />
-                <FormControlLabel
-                  value="Nữ"
-                  control={<Radio size="small" />}
-                  label="Nữ"
-                />
-              </RadioGroup>
-            </Grid>
-            <Grid item xs={1}>
-              <TextField
-                label="Tuổi"
-                value="54"
-                size="small"
-                fullWidth
-                disabled
-              />
-            </Grid>
-            <Grid item xs={2}>
-              <TextField
-                label="Tỷ lệ miễn giảm"
-                value="80.00 %"
-                size="small"
-                fullWidth
-                disabled
-              />
-            </Grid>
-            <Grid item xs={3.1}>
-              <TextField
-                label="Địa chỉ"
-                value="ấp 6, Xã Suối Ngô, Huyện Tân Châu, Tỉnh Tây Ninh"
-                size="small"
-                fullWidth
-                disabled
-              />
-            </Grid>
-            <Grid item xs={2.2}>
-              <TextField
-                label="Đối tượng"
                 value="Người tham gia bảo hiểm theo hộ gia đình"
                 size="small"
                 fullWidth
                 disabled
               />
             </Grid>
-            <Grid item xs={2.2}>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Họ Tên</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
               <TextField
-                label="Ngày khám"
-                value={selectedHistory.date}
+                value="BÙI VĂN GIÀU"
                 size="small"
                 fullWidth
                 disabled
+                InputProps={{ sx: { color: "red", fontWeight: 700 } }}
               />
             </Grid>
-            <Grid item xs={2.2}>
+            <Grid item xs={0.8}>
+              <Typography fontWeight={500}>Nam</Typography>
+            </Grid>
+            <Grid item xs={0.5}>
+              <Radio checked value="Nam" size="small" disabled />
+            </Grid>
+            <Grid item xs={0.8}>
+              <Typography fontWeight={500}>Nữ</Typography>
+            </Grid>
+            <Grid item xs={0.5}>
+              <Radio value="Nữ" size="small" disabled />
+            </Grid>
+            <Grid item xs={0.7}>
+              <Typography fontWeight={500}>Tuổi</Typography>
+            </Grid>
+            <Grid item xs={0.8}>
+              <TextField value="54" size="small" fullWidth disabled />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Tỷ lệ miễn giảm</Typography>
+            </Grid>
+            <Grid item xs={1}>
+              <TextField value="80.00 %" size="small" fullWidth disabled />
+            </Grid>
+            <Grid item xs={1.5}>
+              <Typography fontWeight={500}>Khám sức khỏe</Typography>
+            </Grid>
+            <Grid item xs={0.5}>
+              <Radio value="checked" size="small" disabled />
+            </Grid>
+            {/* Dòng 2 */}
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Địa chỉ</Typography>
+            </Grid>
+            <Grid item xs={5.5}>
               <TextField
-                label="Bác sĩ"
-                value="Ngô Thị Vân"
+                value="ấp 6, Xã Suối Ngô, Huyện Tân Châu, Tỉnh Tây Ninh"
                 size="small"
                 fullWidth
                 disabled
+                InputProps={{ sx: { color: "red", fontWeight: 700 } }}
               />
             </Grid>
             <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Mã bệnh án NT</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField value="36615" size="small" fullWidth disabled />
+            </Grid>
+            {/* Dòng 3 */}
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Bác sĩ</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField value="Ngô Thị Vân" size="small" fullWidth disabled />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Mạch</Typography>
+            </Grid>
+            <Grid item xs={1.2}>
               <TextField
-                label="Mạch"
                 size="small"
+                fullWidth
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">lần/phút</InputAdornment>
                   ),
                 }}
-                fullWidth
               />
             </Grid>
             <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Nhiệt độ</Typography>
+            </Grid>
+            <Grid item xs={1.2}>
               <TextField
-                label="Nhiệt độ"
                 size="small"
+                fullWidth
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">°C</InputAdornment>
                   ),
                 }}
-                fullWidth
               />
             </Grid>
             <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Nhịp thở</Typography>
+            </Grid>
+            <Grid item xs={1.2}>
               <TextField
-                label="Nhịp thở"
                 size="small"
+                fullWidth
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">lần/phút</InputAdornment>
                   ),
                 }}
-                fullWidth
               />
             </Grid>
             <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Huyết áp</Typography>
+            </Grid>
+            <Grid item xs={1.2}>
               <TextField
-                label="Huyết áp"
                 size="small"
+                fullWidth
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">mmHg</InputAdornment>
                   ),
                 }}
-                fullWidth
               />
             </Grid>
             <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Chiều cao</Typography>
+            </Grid>
+            <Grid item xs={1.2}>
               <TextField
-                label="Chiều cao"
                 size="small"
+                fullWidth
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">cm</InputAdornment>
                   ),
                 }}
-                fullWidth
               />
             </Grid>
             <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Cân nặng</Typography>
+            </Grid>
+            <Grid item xs={1.2}>
               <TextField
-                label="Cân nặng"
                 size="small"
+                fullWidth
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">kg</InputAdornment>
                   ),
                 }}
-                fullWidth
               />
             </Grid>
-            <Grid item xs={2.2}>
+            {/* Dòng 4: Triệu chứng, ICD, ... */}
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Triệu chứng LS (C)</Typography>
+            </Grid>
+            <Grid item xs={2.5}>
+              <TextField size="small" fullWidth />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Mã ICD (Y)</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField value="36615" size="small" fullWidth disabled />
+            </Grid>
+            <Grid item xs={2.5}>
               <TextField
-                label="Mã bệnh án NT"
-                value="36615"
+                value="110 - Bệnh lý tăng huyết áp"
                 size="small"
                 fullWidth
                 disabled
               />
             </Grid>
-            {/* Thêm các trường khác nếu cần */}
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Mã ICD phụ</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField value="-1" size="small" fullWidth disabled />
+            </Grid>
+            {/* Dòng 5: Bệnh án, Giải quyết, ... */}
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Bệnh án NT</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField size="small" fullWidth />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Giải quyết</Typography>
+            </Grid>
+            <Grid item xs={2.5}>
+              <TextField
+                value="1 - Cấp toa cho về"
+                size="small"
+                fullWidth
+                disabled
+              />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Ngày hẹn</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField size="small" fullWidth />
+            </Grid>
+            {/* Dòng 6: Tuân thủ điều trị, Hồ sơ bệnh án, ... */}
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Tuân thủ điều trị</Typography>
+            </Grid>
+            <Grid item xs={2.5}>
+              <TextField
+                value="Chưa chọn tuân thủ điều trị"
+                size="small"
+                fullWidth
+                disabled
+              />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500} color="red">
+                Hồ sơ bệnh án
+              </Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField size="small" fullWidth />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500} color="red">
+                Người thân lãnh thuốc *
+              </Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField size="small" fullWidth />
+            </Grid>
+            {/* Dòng 7: Giai đoạn lâm sàng, ... */}
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Giai đoạn lâm sàng</Typography>
+            </Grid>
+            <Grid item xs={2.5}>
+              <TextField
+                value="Không đánh giá"
+                size="small"
+                fullWidth
+                disabled
+              />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Sàng lọc lao</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField size="small" fullWidth />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Vàng da/mắt</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField size="small" fullWidth />
+            </Grid>
+            {/* Dòng 8: Dấu hiệu thần kinh ngoại biên, ... */}
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>
+                Dấu hiệu thần kinh ngoại biên
+              </Typography>
+            </Grid>
+            <Grid item xs={2.5}>
+              <TextField size="small" fullWidth />
+            </Grid>
+            <Grid item xs={1.2}>
+              <Typography fontWeight={500}>Mang thai/cho con bú</Typography>
+            </Grid>
+            <Grid item xs={1.5}>
+              <TextField size="small" fullWidth />
+            </Grid>
           </Grid>
         </Card>
-
         {/* Tabs */}
         <Card>
           <Tabs
