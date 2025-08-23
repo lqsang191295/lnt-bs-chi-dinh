@@ -235,13 +235,31 @@ export default function LuuTruHsbaPage() {
                 className="w-auto">
                 <FormControlLabel
                   value="1"
-                  control={<Radio size="small" />}
-                  label="Ngày vào viện"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                      size="small"
+                    />
+                  }
+                  label="Ngày vào"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
                 <FormControlLabel
                   value="2"
-                  control={<Radio size="small" />}
-                  label="Ngày ra viện"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                      size="small"
+                    />
+                  }
+                  label="Ngày ra"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
             </Box>

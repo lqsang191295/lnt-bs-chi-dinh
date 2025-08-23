@@ -2,10 +2,10 @@
 "use client";
 
 import {
-  capnhathosobenhan,
   getChiTietHSBA,
   getHosobenhan,
   getnhatkyketxuatba,
+  ketxuathosobenhan,
 } from "@/actions/act_thosobenhan";
 import HeadMetadata from "@/components/HeadMetadata";
 import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
@@ -433,7 +433,7 @@ export default function KetXuatHsbaPage() {
               setProgress((current / total) * 100);
             }
           );
-
+          // console.log("Merged PDF Base64:", mergedPdfBase64);
           if (mergedPdfBase64) {
             try {
               const updatedHsba = {
@@ -442,11 +442,12 @@ export default function KetXuatHsbaPage() {
                 TrangThaiKetXuat: "1",
                 NguoiKetXuat: loginedUser.ctaikhoan,
               };
-              const result = await capnhathosobenhan(
+              const result = await ketxuathosobenhan(
                 loginedUser.ctaikhoan,
                 "5",
                 updatedHsba
               );
+              // console.log("Kết xuất thành công:", result);
               if (result && result[0].ROW_COUNT === 1) {
                 hsbaSuccess++;
               }
@@ -572,13 +573,31 @@ export default function KetXuatHsbaPage() {
                 className="w-auto">
                 <FormControlLabel
                   value="1"
-                  control={<Radio size="small" />}
-                  label="Ngày vào viện"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                      size="small"
+                    />
+                  }
+                  label="Ngày vào"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
                 <FormControlLabel
                   value="2"
-                  control={<Radio size="small" />}
-                  label="Ngày ra viện"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                      size="small"
+                    />
+                  }
+                  label="Ngày ra"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
             </Box>

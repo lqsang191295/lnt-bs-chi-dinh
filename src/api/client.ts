@@ -77,6 +77,6 @@ export async function post(
     return { status: "error", message: res.statusText };
     //throw new Error(`POST ${endpoint} failed: ${res.statusText}`);
   }
-
+  // console.log("Response from POST:", res);
   return res.json();
 }

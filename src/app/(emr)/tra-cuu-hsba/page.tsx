@@ -317,17 +317,34 @@ export default function TraCuuHsbaPage() {
                 aria-labelledby="popt-radio-group-label"
                 name="popt-radio-group"
                 value={popt}
-                onChange={(e) => setPopt(e.target.value)}
-                className="w-auto">
+                onChange={(e) => setPopt(e.target.value)}>
                 <FormControlLabel
                   value="1"
-                  control={<Radio size="small" />}
-                  label="Ngày vào viện"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                      size="small"
+                    />
+                  }
+                  label="Ngày vào"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
                 <FormControlLabel
                   value="2"
-                  control={<Radio size="small" />}
-                  label="Ngày ra viện"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                      size="small"
+                    />
+                  }
+                  label="Ngày ra"
+                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
             </Box>
@@ -367,59 +384,6 @@ export default function TraCuuHsbaPage() {
             </Button>
           </Grid>
         </Grid>
-
-        {/* <Box mb={2} className="flex gap-2">
-          <Select
-            className="flex-1"
-            value={selectedKhoa}
-            size="small"
-            onChange={(e) => setSelectedKhoa(e.target.value)}
-            displayEmpty>
-            {khoaList.map((item) => (
-              <MenuItem key={item.value} value={item.value}>
-                {item.label}
-              </MenuItem>
-            ))}
-          </Select>
-          <RadioGroup
-            row
-            aria-labelledby="popt-radio-group-label"
-            name="popt-radio-group"
-            value={popt}
-            onChange={(e) => setPopt(e.target.value)}>
-            <FormControlLabel
-              value="1"
-              control={<Radio size="small" />}
-              label="Ngày vào viện"
-            />
-            <FormControlLabel
-              value="2"
-              control={<Radio size="small" />}
-              label="Ngày ra viện"
-            />
-          </RadioGroup>
-          <DatePicker
-            label="Từ ngày"
-            value={tuNgay}
-            onChange={(value) => setTuNgay(value as Date)}
-            format="dd/MM/yyyy"
-            slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
-          />
-          <DatePicker
-            label="Đến ngày"
-            value={denNgay}
-            onChange={(value) => setDenNgay(value as Date)}
-            format="dd/MM/yyyy"
-            slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
-          />
-          <Button
-            startIcon={<Search />}
-            variant="contained"
-            onClick={handleSearch}
-            disabled={searchingData}>
-            {searchingData ? "Đang tìm..." : "Tìm kiếm"}
-          </Button>
-        </Box> */}
 
         <Box className="w-full h-full overflow-hidden">
           <DataGrid

@@ -6,7 +6,7 @@ import SideMenu from "@/components/SideMenu";
 import SideMenuMobile from "@/components/SideMenuMobile";
 import { useMenuStore } from "@/store/menu";
 import { useUserStore } from "@/store/user";
-import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
+import { getClaimsFromToken } from "@/utils/auth";
 import { Box } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -22,30 +22,24 @@ export default function RootLayout({
   const { data: userData, setUserData } = useUserStore();
 
   const initMenu = useCallback(async () => {
-    console.log("userData ==== ", userData);
-
     if (!userData) return;
 
     try {
       const menu = await getMenuItems(userData);
-      console.log("Menu items fetched:", menu);
       setData(menu);
     } catch {
-      //console.error("Error fetching menu items:", error);
+      // Handle error silently
     }
   }, [setData, userData]);
 
   const initUser = useCallback(async () => {
     try {
       const claims = getClaimsFromToken();
-      //console.log("Claims fetched 1111111111111111111:", claims);
       if (claims) {
         setUserData(claims);
-      } else {
-        //console.warn("No valid claims found in token");
       }
     } catch {
-      //console.error("Error initializing user data:", error);
+      // Handle error silently
     }
   }, [setUserData]);
 
@@ -60,13 +54,42 @@ export default function RootLayout({
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <HeadMetadata title="Hồ sơ bệnh án" />
-      <Box className="flex w-screen h-screen">
+      <Box
+        className="flex w-screen h-screen"
+        sx={{
+          width: "100vw",
+          height: "100vh",
+          overflow: "hidden",
+        }}>
         <SideMenu />
         <SideMenuMobile />
-        {/* <AppNavbar /> */}
-        <Box className="w-full h-full flex flex-col flex-1 overflow-hidden">
-          <AppBarTop />
-          <Box className="bg-blue-100 h-full w-full overflow-hidden">
+        {/* Main content area */}
+        <Box
+          className="w-full h-full flex flex-col flex-1 overflow-hidden"
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            width: 0, // Important: allows flex child to shrink
+            height: "100vh",
+            overflow: "hidden",
+          }}>
+          {/* App bar - fixed height */}
+          <Box sx={{ flexShrink: 0 }}>
+            <AppBarTop />
+          </Box>
+
+          {/* Content area - takes remaining height */}
+          <Box
+            className="bg-blue-100"
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              minHeight: 0, // Important: allows flex child to shrink
+              height: "100%",
+            }}>
             {children}
           </Box>
         </Box>
