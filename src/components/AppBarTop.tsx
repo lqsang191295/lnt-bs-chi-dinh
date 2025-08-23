@@ -1,18 +1,18 @@
 "use client";
-import * as React from "react";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import PermIdentityIcon from "@mui/icons-material/PermIdentity";
-import MenuIcon from "@mui/icons-material/Menu";
-import Cookies from "js-cookie";
-import { useUserStore } from "@/store/user";
-import { useState } from "react";
 import { IUserItem } from "@/model/tuser";
+import { useMenuToggleStore } from "@/store/menu";
+import { useUserStore } from "@/store/user";
 import KeyIcon from "@mui/icons-material/Key";
 import LogoutIcon from "@mui/icons-material/Logout";
+import MenuIcon from "@mui/icons-material/Menu";
+import PermIdentityIcon from "@mui/icons-material/PermIdentity";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Toolbar from "@mui/material/Toolbar";
+import Cookies from "js-cookie";
+import { useState } from "react";
 import { AppBreadcrumbs } from "./AppBreadcrumbs";
 import ChangePassword from "./ChangePassword"; // Import component mới
 
@@ -21,6 +21,7 @@ export default function AppBarTop() {
   const { data: loginedUser } = useUserStore();
   const [showLogout, setShowLogout] = useState(false);
   const [openChangePw, setOpenChangePw] = useState(false);
+  const { toggle, setToggle } = useMenuToggleStore();
 
   const handleLogout = () => {
     Cookies.remove("authToken");
@@ -47,16 +48,18 @@ export default function AppBarTop() {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-          >
+            onClick={() => {
+              setToggle(!toggle);
+            }}
+            className="xl:!hidden">
             <MenuIcon />
           </IconButton>
-         
+
           <AppBreadcrumbs />
 
           <Box
             sx={{ display: "flex", alignItems: "center", ml: "auto" }}
-            onClick={() => setShowLogout(true)}
-          >
+            onClick={() => setShowLogout(true)}>
             <IconButton color="inherit">
               <PermIdentityIcon />
             </IconButton>
@@ -77,16 +80,14 @@ export default function AppBarTop() {
                   borderRadius: 1,
                   p: 1,
                 }}
-                onMouseLeave={() => setShowLogout(false)}
-              >
+                onMouseLeave={() => setShowLogout(false)}>
                 <Button
                   color="primary"
                   variant="text"
                   size="small"
                   fullWidth
                   sx={{ justifyContent: "flex-start", mb: 1 }}
-                  onClick={handleOpenChangePw}
-                >
+                  onClick={handleOpenChangePw}>
                   <KeyIcon fontSize="small" sx={{ mr: 1 }} />
                   Đổi mật khẩu
                 </Button>
@@ -96,8 +97,7 @@ export default function AppBarTop() {
                   size="small"
                   fullWidth
                   sx={{ justifyContent: "flex-start" }}
-                  onClick={handleLogout}
-                >
+                  onClick={handleLogout}>
                   <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
                   Đăng xuất
                 </Button>
@@ -108,10 +108,7 @@ export default function AppBarTop() {
       </AppBar>
 
       {/* Sử dụng component ChangePassword */}
-      <ChangePassword 
-        open={openChangePw} 
-        onClose={handleCloseChangePw} 
-      />
+      <ChangePassword open={openChangePw} onClose={handleCloseChangePw} />
     </Box>
   );
 }

@@ -3,6 +3,7 @@ import { getMenuItems } from "@/actions/act_tmenu";
 import AppBarTop from "@/components/AppBarTop";
 import HeadMetadata from "@/components/HeadMetadata";
 import SideMenu from "@/components/SideMenu";
+import SideMenuMobile from "@/components/SideMenuMobile";
 import { useMenuStore } from "@/store/menu";
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth"; // Assuming you have a utility function to decode JWT
@@ -61,12 +62,7 @@ export default function RootLayout({
       <HeadMetadata title="Hồ sơ bệnh án" />
       <Box className="flex w-screen h-screen">
         <SideMenu />
-        {/* <SideMenuMobile
-          open={true}
-          toggleDrawer={(newOpen) => () => {
-            console.log("Toggle drawer:", newOpen);
-          }}
-        /> */}
+        <SideMenuMobile />
         {/* <AppNavbar /> */}
         <Box className="w-full h-full flex flex-col flex-1 overflow-hidden">
           <AppBarTop />

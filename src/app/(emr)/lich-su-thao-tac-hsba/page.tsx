@@ -1,7 +1,7 @@
 // app/lich-su-thao-tac-hsba/page.tsx
 "use client";
 
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import React, { useState } from "react";
 
 import { getnhatkythaotacba } from "@/actions/act_thosobenhan";
@@ -132,7 +132,7 @@ export default function LichSuThaoTacHsbaPage() {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <HeadMetadata title="Lịch sử thao tác hồ sơ bệnh án" />
 
-      <Box p={2} className="w-full h-full flex flex-col overflow-hidden">
+      <Box p={1} className="w-full h-full flex flex-col overflow-hidden">
         <Typography
           variant="h6"
           gutterBottom
@@ -141,54 +141,58 @@ export default function LichSuThaoTacHsbaPage() {
         </Typography>
 
         {/* Bộ lọc */}
-        <Box display="flex" gap={2} mb={2}>
-          <Box flex={2}>
-            <DatePicker
-              label="Từ ngày"
-              format="dd/MM/yyyy"
-              value={searchTuNgay}
-              onChange={(value) => setSearchTuNgay(value as Date)}
-              className="w-full"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
-            />
-          </Box>
-          <Box flex={2}>
-            <DatePicker
-              label="Đến ngày"
-              format="dd/MM/yyyy"
-              value={searchDenNgay}
-              onChange={(value) => setSearchDenNgay(value as Date)}
-              className="w-full"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
-            />
-          </Box>
-          <Box flex={1}>
-            <Button
-              fullWidth
-              startIcon={<Search />}
-              variant="contained"
-              onClick={handleSearch}>
-              Tìm kiếm
-            </Button>
-          </Box>
-          <Box flex={1}>
-            <Button
-              fullWidth
-              startIcon={<Refresh />}
-              variant="contained"
-              onClick={handleRefresh}>
-              Làm mới
-            </Button>
-          </Box>
-        </Box>
+        <Grid container spacing={1} mb={1}>
+          <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+            <Box className="flex flex-row" gap={2}>
+              <DatePicker
+                label="Từ ngày"
+                format="dd/MM/yyyy"
+                value={searchTuNgay}
+                onChange={(value) => setSearchTuNgay(value as Date)}
+                className="w-full"
+                slotProps={{
+                  textField: {
+                    size: "small",
+                  },
+                }}
+              />
+              <DatePicker
+                label="Đến ngày"
+                format="dd/MM/yyyy"
+                value={searchDenNgay}
+                onChange={(value) => setSearchDenNgay(value as Date)}
+                className="w-full"
+                slotProps={{
+                  textField: {
+                    size: "small",
+                  },
+                }}
+              />
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Box flex={1}>
+              <Button
+                fullWidth
+                startIcon={<Search />}
+                variant="contained"
+                onClick={handleSearch}>
+                Tìm kiếm
+              </Button>
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Box flex={1}>
+              <Button
+                fullWidth
+                startIcon={<Refresh />}
+                variant="contained"
+                onClick={handleRefresh}>
+                Làm mới
+              </Button>
+            </Box>
+          </Grid>
+        </Grid>
 
         {/* Main Content Area (Padding around the table) */}
         <Box className="flex-1 w-full h-full overflow-hidden">

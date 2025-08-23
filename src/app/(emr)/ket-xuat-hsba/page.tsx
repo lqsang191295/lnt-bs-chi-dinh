@@ -7,26 +7,26 @@ import {
   getHosobenhan,
   getnhatkyketxuatba,
 } from "@/actions/act_thosobenhan";
+import HeadMetadata from "@/components/HeadMetadata";
+import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
 import { IPDFItem } from "@/model/ipdf";
-import { IHoSoBenhAn } from "@/model/thosobenhan"; 
+import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
 import { mergePDFsWithProgress } from "@/utils/pdfLibs";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
-import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
-import { Download, NoteAdd, Refresh, Search  } from "@mui/icons-material"; 
+import { Download, NoteAdd, Refresh, Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
-import HeadMetadata from "@/components/HeadMetadata";
 import {
   Alert,
   Box,
   Button,
-  FormControl,
   FormControlLabel,
-  FormLabel,
+  Grid,
+  IconButton,
   LinearProgress,
   MenuItem,
   Radio,
@@ -35,12 +35,11 @@ import {
   Tab,
   Tabs,
   Typography,
-  IconButton,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 // Cập nhật interface cho dữ liệu lịch sử kết xuất
 interface INhatKyKetXuat {
@@ -121,187 +120,204 @@ export default function KetXuatHsbaPage() {
   const [searchingLichSu, setSearchingLichSu] = useState<boolean>(false);
 
   // Sử dụng PdfComponents hook
-  const { downloadPdf, isLoading: pdfLoading } = PdfComponents(useMemo(() => ({
-    onSuccess: (message: string) => {
-      ToastSuccess(message);
-    },
-    onError: (error: string) => {
-      ToastError(error);
-    }
-  }), []));
+  const { downloadPdf, isLoading: pdfLoading } = PdfComponents(
+    useMemo(
+      () => ({
+        onSuccess: (message: string) => {
+          ToastSuccess(message);
+        },
+        onError: (error: string) => {
+          ToastError(error);
+        },
+      }),
+      []
+    )
+  );
 
   // Hàm xử lý download PDF cho tab Kết xuất
-  const handleDownload = useCallback((hsba: IHoSoBenhAn) => {
-    if (!hsba.NoiDungPdf) {
-      ToastWarning("Hồ sơ bệnh án chưa được kết xuất PDF!");
-      return;
-    }
+  const handleDownload = useCallback(
+    (hsba: IHoSoBenhAn) => {
+      if (!hsba.NoiDungPdf) {
+        ToastWarning("Hồ sơ bệnh án chưa được kết xuất PDF!");
+        return;
+      }
 
-    if (Number(hsba.TrangThaiKetXuat) !== 1) {
-      ToastWarning("Hồ sơ này chưa được kết xuất!");
-      return;
-    }
+      if (Number(hsba.TrangThaiKetXuat) !== 1) {
+        ToastWarning("Hồ sơ này chưa được kết xuất!");
+        return;
+      }
 
-    const fileName = `HSBA_${hsba.MaBN}_${hsba.SoVaoVien}`;
-    downloadPdf(hsba.NoiDungPdf, fileName);
-  }, [downloadPdf]);
+      const fileName = `HSBA_${hsba.MaBN}_${hsba.SoVaoVien}`;
+      downloadPdf(hsba.NoiDungPdf, fileName);
+    },
+    [downloadPdf]
+  );
 
   // Hàm xử lý download PDF cho lịch sử
-  const handleDownloadLichSu = useCallback((lichSu: INhatKyKetXuat) => {
-    if (!lichSu.cnoidungketxuat) {
-      ToastWarning("Không có nội dung PDF để tải xuống!");
-      return;
-    }
+  const handleDownloadLichSu = useCallback(
+    (lichSu: INhatKyKetXuat) => {
+      if (!lichSu.cnoidungketxuat) {
+        ToastWarning("Không có nội dung PDF để tải xuống!");
+        return;
+      }
 
-    const fileName = `HSBA_${lichSu.MaBN || lichSu.cmabenhan}_${lichSu.SoVaoVien || 'NA'}`;
-    downloadPdf(lichSu.cnoidungketxuat, fileName);
-  }, [downloadPdf]);
+      const fileName = `HSBA_${lichSu.MaBN || lichSu.cmabenhan}_${
+        lichSu.SoVaoVien || "NA"
+      }`;
+      downloadPdf(lichSu.cnoidungketxuat, fileName);
+    },
+    [downloadPdf]
+  );
 
   // Columns cho tab Kết xuất
-  const columnsKetXuat: GridColDef[] = useMemo(() => [
-    { field: "ID", headerName: "ID", width: 60 },
-    {
-      field: "TrangThaiKetXuat",
-      headerName: "Trạng thái",
-      width: 120,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            backgroundColor: "transparent",
-            color: params.value === 1 ? "#4caf50" : "#ff9800",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontWeight: params.value === 1 ? "bold" : "normal",
-            textAlign: "center",
-            minWidth: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "4px",
-          }}>
-          {params.value === 1 ? (
-            <>
-              <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent row selection
-                  handleDownload(params.row);
-                }}
-                disabled={pdfLoading || !params.row.NoiDungPdf}
-                sx={{ 
-                  color: "inherit",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  p: 0.5,
-                  "&:hover": {
-                    backgroundColor: "rgba(76, 175, 80, 0.1)"
-                  }
-                }}
-                title={
-                  !params.row.NoiDungPdf 
-                    ? "Không có dữ liệu PDF" 
-                    : pdfLoading 
-                      ? "Đang tải..." 
+  const columnsKetXuat: GridColDef[] = useMemo(
+    () => [
+      { field: "ID", headerName: "ID", width: 60 },
+      {
+        field: "TrangThaiKetXuat",
+        headerName: "Trạng thái",
+        width: 120,
+        renderCell: (params) => (
+          <Box
+            sx={{
+              backgroundColor: "transparent",
+              color: params.value === 1 ? "#4caf50" : "#ff9800",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: params.value === 1 ? "bold" : "normal",
+              textAlign: "center",
+              minWidth: "60px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "4px",
+            }}>
+            {params.value === 1 ? (
+              <>
+                <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent row selection
+                    handleDownload(params.row);
+                  }}
+                  disabled={pdfLoading || !params.row.NoiDungPdf}
+                  sx={{
+                    color: "inherit",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    p: 0.5,
+                    "&:hover": {
+                      backgroundColor: "rgba(76, 175, 80, 0.1)",
+                    },
+                  }}
+                  title={
+                    !params.row.NoiDungPdf
+                      ? "Không có dữ liệu PDF"
+                      : pdfLoading
+                      ? "Đang tải..."
                       : "Tải xuống PDF"
-                }
-              >
-                {pdfLoading ? "..." : "Tải xuống"}
-              </IconButton>
-            </>
-          ) : (
-            <>
-              <KeyboardArrowDownOutlinedIcon sx={{ fontSize: "14px" }} />
-              Chưa kết xuất
-            </>
-          )}
-        </Box>
-      ),
-    },
-    { field: "Hoten", headerName: "Họ và tên", width: 200 },
-    { field: "MaBN", headerName: "Mã BN", width: 130 },
-    { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-    { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-    { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-    { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-    { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
-    { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
-    { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
-    { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
-    { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
-    { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
-    { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
-    { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
-    { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
-  ], [handleDownload, pdfLoading]);
+                  }>
+                  {pdfLoading ? "..." : "Tải xuống"}
+                </IconButton>
+              </>
+            ) : (
+              <>
+                <KeyboardArrowDownOutlinedIcon sx={{ fontSize: "14px" }} />
+                Chưa kết xuất
+              </>
+            )}
+          </Box>
+        ),
+      },
+      { field: "Hoten", headerName: "Họ và tên", width: 200 },
+      { field: "MaBN", headerName: "Mã BN", width: 130 },
+      { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+      { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
+      { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
+      { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
+      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+      { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+      { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
+      { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
+      { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
+      { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
+      { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
+      { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
+      { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+    ],
+    [handleDownload, pdfLoading]
+  );
 
   // Columns cho tab Lịch sử
-  const columnsLichSu: GridColDef[] = useMemo(() => [
-    { field: "cid", headerName: "ID", width: 60 },
-    {
-      field: "cnoidungketxuat",
-      headerName: "Trạng thái",
-      width: 120,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            backgroundColor: "transparent",
-            color: "#4caf50",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontWeight: "bold",
-            textAlign: "center",
-            minWidth: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "4px",
-            cursor: "pointer",
-          }}>
-          <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent row selection
-              handleDownloadLichSu(params.row);
-            }}
-            disabled={pdfLoading || !params.row.cnoidungketxuat}
-            sx={{ 
-              color: "inherit",
+  const columnsLichSu: GridColDef[] = useMemo(
+    () => [
+      { field: "cid", headerName: "ID", width: 60 },
+      {
+        field: "cnoidungketxuat",
+        headerName: "Trạng thái",
+        width: 120,
+        renderCell: (params) => (
+          <Box
+            sx={{
+              backgroundColor: "transparent",
+              color: "#4caf50",
+              padding: "4px 8px",
+              borderRadius: "4px",
               fontSize: "12px",
               fontWeight: "bold",
-              p: 0.5,
-              "&:hover": {
-                backgroundColor: "rgba(76, 175, 80, 0.1)"
-              }
-            }}
-            title={
-              !params.row.cnoidungketxuat 
-                ? "Không có dữ liệu PDF" 
-                : pdfLoading 
-                  ? "Đang tải..." 
+              textAlign: "center",
+              minWidth: "60px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "4px",
+              cursor: "pointer",
+            }}>
+            <FileDownloadOutlinedIcon sx={{ fontSize: "14px" }} />
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent row selection
+                handleDownloadLichSu(params.row);
+              }}
+              disabled={pdfLoading || !params.row.cnoidungketxuat}
+              sx={{
+                color: "inherit",
+                fontSize: "12px",
+                fontWeight: "bold",
+                p: 0.5,
+                "&:hover": {
+                  backgroundColor: "rgba(76, 175, 80, 0.1)",
+                },
+              }}
+              title={
+                !params.row.cnoidungketxuat
+                  ? "Không có dữ liệu PDF"
+                  : pdfLoading
+                  ? "Đang tải..."
                   : "Tải xuống PDF"
-            }
-          >
-            {pdfLoading ? "..." : "Tải xuống"}
-          </IconButton>
-        </Box>
-      ),
-    },
-    { field: "cmabenhan", headerName: "Mã bệnh án", width: 130 },
-    { field: "Hoten", headerName: "Họ và tên BN", width: 200 },
-    { field: "MaBN", headerName: "Mã BN", width: 130 },
-    { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-    { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-    { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 150 },
-    { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 150 },
-    { field: "SoLuuTru", headerName: "Số lưu trữ", width: 130 },
-    { field: "ctaikhoan", headerName: "Người kết xuất", width: 130 },
-    { field: "choten", headerName: "Tên người kết xuất", width: 180 },
-    { field: "tngayketxuat", headerName: "Ngày kết xuất", width: 170 },
-  ], [handleDownloadLichSu, pdfLoading]);
+              }>
+              {pdfLoading ? "..." : "Tải xuống"}
+            </IconButton>
+          </Box>
+        ),
+      },
+      { field: "cmabenhan", headerName: "Mã bệnh án", width: 130 },
+      { field: "Hoten", headerName: "Họ và tên BN", width: 200 },
+      { field: "MaBN", headerName: "Mã BN", width: 130 },
+      { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
+      { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
+      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 150 },
+      { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 150 },
+      { field: "SoLuuTru", headerName: "Số lưu trữ", width: 130 },
+      { field: "ctaikhoan", headerName: "Người kết xuất", width: 130 },
+      { field: "choten", headerName: "Tên người kết xuất", width: 180 },
+      { field: "tngayketxuat", headerName: "Ngày kết xuất", width: 170 },
+    ],
+    [handleDownloadLichSu, pdfLoading]
+  );
 
   // Function để lấy dữ liệu lịch sử kết xuất
   const handleSearchLichSu = async () => {
@@ -324,7 +340,7 @@ export default function KetXuatHsbaPage() {
         formatDate(tuNgay),
         formatDate(denNgay)
       );
-      
+
       setLichSuRows(
         (data || []).map((item: INhatKyKetXuat, index: number) => ({
           id: item.cid || index, // Use cid or index as row ID
@@ -378,7 +394,7 @@ export default function KetXuatHsbaPage() {
       setError(null);
       setProgress(0);
       let hsbaSuccess = 0;
-      
+
       // Lấy PDF data cho từng HSBA được chọn
       for (const hsba of selectedRows) {
         try {
@@ -435,7 +451,11 @@ export default function KetXuatHsbaPage() {
                 hsbaSuccess++;
               }
             } catch (error) {
-              ToastError(`Có lỗi xảy ra khi cập nhật kết xuất HSBA! ${error instanceof Error ? error.message : 'Unknown error'}`);
+              ToastError(
+                `Có lỗi xảy ra khi cập nhật kết xuất HSBA! ${
+                  error instanceof Error ? error.message : "Unknown error"
+                }`
+              );
             }
           }
         } catch (error) {
@@ -443,16 +463,18 @@ export default function KetXuatHsbaPage() {
           continue;
         }
       }
-      
+
       if (hsbaSuccess === selectedRows.length) {
         ToastSuccess(`Kết xuất thành công ${selectedRows.length} HSBA!`);
       } else {
-        ToastWarning(`Kết xuất thành công ${hsbaSuccess} trong tổng số ${selectedRows.length} HSBA!`);
+        ToastWarning(
+          `Kết xuất thành công ${hsbaSuccess} trong tổng số ${selectedRows.length} HSBA!`
+        );
       }
       await handleSearch();
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       setError(errorMessage);
       ToastError(`Lỗi kết xuất: ${errorMessage}`);
     } finally {
@@ -470,7 +492,7 @@ export default function KetXuatHsbaPage() {
     } else if (Array.isArray(selectionModel)) {
       selectionArray = selectionModel;
     }
-    
+
     const selectedRowsData = rows.filter((row) =>
       selectionArray.includes(row.ID)
     );
@@ -490,7 +512,7 @@ export default function KetXuatHsbaPage() {
         const day = String(date.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
       };
-      
+
       const data = await getHosobenhan(
         loginedUser.ctaikhoan,
         popt,
@@ -498,7 +520,7 @@ export default function KetXuatHsbaPage() {
         formatDate(tuNgay),
         formatDate(denNgay)
       );
-      
+
       setRows(
         (data || []).map((item: IHoSoBenhAn) => ({
           id: item.ID,
@@ -516,117 +538,86 @@ export default function KetXuatHsbaPage() {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <HeadMetadata title="Kết xuất hồ sơ bệnh án" />
 
-      <Box p={2} className="w-full h-full flex flex-col">
+      <Box p={1} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"
           gutterBottom
           sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
         </Typography>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}
-        >
-          QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
-        </Typography>
 
         {/* Bộ lọc */}
-        <Box display="flex" gap={2}>
-          <Box flex={3}>
-            <Select
-              fullWidth
-              value={selectedKhoa}
-              size="small"
-              onChange={(e) => setSelectedKhoa(e.target.value)}>
-              {khoaList.map((item) => (
-                <MenuItem key={item.value} value={item.value}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
-          <Box flex={2}>
-            <FormControl>
-              <FormLabel
-                id="popt-radio-group-label"
-                sx={{ color: "#1976d2", fontWeight: "bold" }}
-              />
+        <Grid container spacing={1}>
+          {/* Ô Select Khoa */}
+          <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+            <Box className="flex flex-row" gap={2}>
+              <Select
+                value={selectedKhoa}
+                size="small"
+                onChange={(e) => setSelectedKhoa(e.target.value)}
+                displayEmpty
+                className="flex-1">
+                {khoaList.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </Select>
               <RadioGroup
                 row
                 aria-labelledby="popt-radio-group-label"
                 name="popt-radio-group"
                 value={popt}
-                onChange={(e) => setPopt(e.target.value)}>
+                onChange={(e) => setPopt(e.target.value)}
+                className="w-auto">
                 <FormControlLabel
                   value="1"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
+                  control={<Radio size="small" />}
                   label="Ngày vào viện"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
                 <FormControlLabel
                   value="2"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
+                  control={<Radio size="small" />}
                   label="Ngày ra viện"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
-            </FormControl>
-          </Box>
-          <Box flex={1}>
+            </Box>
+          </Grid>
+
+          {/* DatePicker "Từ ngày" */}
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
               onChange={(value) => setTuNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Box flex={1}>
+          </Grid>
+
+          {/* DatePicker "Đến ngày" */}
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
               onChange={(value) => setDenNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Box flex={1}>
+          </Grid>
+
+          {/* Nút "Tìm kiếm" */}
+          <Grid size={{ xs: 12, sm: 4, md: 2 }}>
             <Button
               fullWidth
               startIcon={<Search />}
               variant="contained"
-              size="small"
               onClick={handleSearch}
               disabled={searchingData}>
               {searchingData ? "Đang tìm..." : "Tìm kiếm"}
             </Button>
-          </Box>
-        </Box>
+          </Grid>
+        </Grid>
 
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -650,9 +641,9 @@ export default function KetXuatHsbaPage() {
               disabled={loading || pdfLoading}>
               {loading ? `Kết xuất... ${progress.toFixed(0)}%` : "Kết xuất"}
             </Button>
-            <Button 
-              variant="contained" 
-              startIcon={<Refresh />} 
+            <Button
+              variant="contained"
+              startIcon={<Refresh />}
               size="small"
               onClick={handleSearch}
               disabled={searchingData}>
@@ -676,7 +667,7 @@ export default function KetXuatHsbaPage() {
               {error}
             </Alert>
           )}
-          
+
           {/* DataGrid Danh sách kết xuất HSBA */}
           <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
             <DataGrid
@@ -709,7 +700,7 @@ export default function KetXuatHsbaPage() {
             />
           </Box>
         </CustomTabPanel>
-        
+
         {/* Tab Lịch sử */}
         <CustomTabPanel value={value} index={1}>
           <Box className="bg-white flex gap-2 p-2">

@@ -4,9 +4,8 @@ import { Search } from "@mui/icons-material";
 import {
   Box,
   Button,
-  FormControl,
   FormControlLabel,
-  FormLabel,
+  Grid,
   MenuItem,
   Radio,
   RadioGroup,
@@ -203,7 +202,7 @@ export default function LuuTruHsbaPage() {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <HeadMetadata title="Quản lý lưu trữ hồ sơ bệnh án" />
 
-      <Box p={2} className="w-full h-full flex flex-col">
+      <Box p={1} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"
           gutterBottom
@@ -211,96 +210,77 @@ export default function LuuTruHsbaPage() {
           QUẢN LÝ LƯU TRỮ HSBA
         </Typography>
         {/* Search Bar */}
-        <Box display="flex" gap={2} mb={2}>
-          <Box flex={3}>
-            <Select
-              fullWidth
-              value={selectedKhoa}
-              size="small"
-              onChange={(e) => setSelectedKhoa(e.target.value)}>
-              {khoaList.map((item) => (
-                <MenuItem key={item.value} value={item.value}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
-          <Box flex={2}>
-            <FormControl>
-              <FormLabel
-                id="popt-radio-group-label"
-                sx={{ color: "#1976d2", fontWeight: "bold" }}
-              />
+        <Grid container spacing={1} mb={1}>
+          {/* Ô Select Khoa */}
+          <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+            <Box className="flex flex-row" gap={2}>
+              <Select
+                value={selectedKhoa}
+                size="small"
+                onChange={(e) => setSelectedKhoa(e.target.value)}
+                displayEmpty
+                className="flex-1">
+                {khoaList.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </Select>
               <RadioGroup
                 row
                 aria-labelledby="popt-radio-group-label"
                 name="popt-radio-group"
                 value={popt}
-                onChange={(e) => setPopt(e.target.value)}>
+                onChange={(e) => setPopt(e.target.value)}
+                className="w-auto">
                 <FormControlLabel
                   value="1"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
+                  control={<Radio size="small" />}
                   label="Ngày vào viện"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
                 <FormControlLabel
                   value="2"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
+                  control={<Radio size="small" />}
                   label="Ngày ra viện"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
-            </FormControl>
-          </Box>
-          <Box flex={1}>
+            </Box>
+          </Grid>
+
+          {/* DatePicker "Từ ngày" */}
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
               onChange={(value) => setTuNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Box flex={1}>
+          </Grid>
+
+          {/* DatePicker "Đến ngày" */}
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
               onChange={(value) => setDenNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<Search />}
-            onClick={handleSearch}>
-            Tìm kiếm
-          </Button>
-        </Box>
+          </Grid>
+
+          {/* Nút "Tìm kiếm" */}
+          <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+            <Button
+              fullWidth
+              startIcon={<Search />}
+              variant="contained"
+              onClick={handleSearch}
+              disabled={searchingData}>
+              {searchingData ? "Đang tìm..." : "Tìm kiếm"}
+            </Button>
+          </Grid>
+        </Grid>
 
         {/* Tab Navigation */}
         <Box className="bg-white flex gap-2 p-2">
