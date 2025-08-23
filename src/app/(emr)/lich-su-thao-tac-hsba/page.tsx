@@ -1,16 +1,20 @@
 // app/lich-su-thao-tac-hsba/page.tsx
 "use client";
 
-import { Box, Button, Grid, Typography } from "@mui/material";
-import React, { useState } from "react";
+import { Box, Button, Typography, CircularProgress } from "@mui/material";
+import React, { useState, useEffect } from "react";
 
 import { getnhatkythaotacba } from "@/actions/act_thosobenhan";
 import HeadMetadata from "@/components/HeadMetadata";
+import AccessDeniedPage from "@/components/AccessDeniedPage";
 import { useUserStore } from "@/store/user";
+import { useMenuStore } from "@/store/menu";
 import { Refresh, Search } from "@mui/icons-material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { ToastError } from "@/utils/toast";
+import { useRouter } from "next/navigation";
 
 // Dữ liệu cứng cho bảng
 interface DataRow {
@@ -71,7 +75,9 @@ const columns: GridColDef[] = [
     filterable: true,
   },
 ];
+
 export default function LichSuThaoTacHsbaPage() {
+  const router = useRouter();
   const [searchFromDate, setSearchFromDate] = React.useState("");
   const [searchToDate, setSearchToDate] = React.useState("");
 
@@ -83,131 +89,246 @@ export default function LichSuThaoTacHsbaPage() {
   const [mockData, setRows] = React.useState<DataRow[]>([]); // Dữ liệu bảng
   // State và hàm cho Pagination
   const { data: loginedUser } = useUserStore();
+  const { data: menuData } = useMenuStore();
   const [popt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
+  const [searchingData, setSearchingData] = useState<boolean>(false);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
+
+  // Kiểm tra quyền truy cập
+  useEffect(() => {
+    const checkAccess = () => {
+      // Kiểm tra xem có quyền truy cập trang "lich-su-thao-tac-hsba" không
+      if (menuData.find((item) => item.clink === "lich-su-thao-tac-hsba")) {
+        setHasAccess(true);
+      } else {
+        setHasAccess(false);
+        // Không redirect, chỉ set hasAccess = false để hiển thị AccessDeniedPage
+      }
+      setIsCheckingAccess(false);
+    };
+
+    // Chỉ kiểm tra khi đã có dữ liệu từ store
+    if (loginedUser && menuData !== undefined) {
+      checkAccess();
+    }
+  }, [menuData, loginedUser, router]);
 
   const handleSearch = async () => {
-    console.log("Searching with:", {
-      searchFromDate,
-      searchToDate,
-      colSearchMaBenhAn,
-      colSearchThoiGian,
-      // ... (thêm các trường tìm kiếm cột khác nếu cần)
-    });
-    // Logic lọc dữ liệu mockData dựa trên các trường tìm kiếm
-    // Logic lọc dữ liệu mockData
-    if (!searchTuNgay || !searchDenNgay) return;
-    const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    };
-    const data = await getnhatkythaotacba(
-      loginedUser.ctaikhoan,
-      popt,
-      formatDate(searchTuNgay),
-      formatDate(searchDenNgay)
-    );
+    if (!hasAccess) return;
+    
+    try {
+      console.log("Searching with:", {
+        searchFromDate,
+        searchToDate,
+        colSearchMaBenhAn,
+        colSearchThoiGian,
+        // ... (thêm các trường tìm kiếm cột khác nếu cần)
+      });
+      // Logic lọc dữ liệu mockData dựa trên các trường tìm kiếm
+      // Logic lọc dữ liệu mockData
+      if (!searchTuNgay || !searchDenNgay) return;
 
-    console.log("Search results: -----------", data);
+      setSearchingData(true);
 
-    setRows(
-      (data || []).map((item: DataRow) => ({
-        id: item.cid,
-        ...item,
-      }))
-    );
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+      const data = await getnhatkythaotacba(
+        loginedUser.ctaikhoan,
+        popt,
+        formatDate(searchTuNgay),
+        formatDate(searchDenNgay)
+      );
+
+      console.log("Search results: -----------", data);
+
+      setRows(
+        (data || []).map((item: DataRow) => ({
+          id: item.cid,
+          ...item,
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching history data:", error);
+      ToastError("Lỗi khi tìm kiếm lịch sử thao tác!");
+    } finally {
+      setSearchingData(false);
+    }
   };
 
   const handleRefresh = () => {
+    if (!hasAccess) return;
+    
     console.log("Refresh clicked!");
     // Reset tất cả các trường tìm kiếm
     setSearchFromDate("");
     setSearchToDate("");
     setColSearchMaBenhAn("");
     setColSearchThoiGian("");
+    setRows([]);
   };
+
+  // Hiển thị loading khi đang kiểm tra quyền truy cập
+  if (isCheckingAccess) {
+    return (
+      <Box
+        sx={{
+          height: 'calc(100vh - 64px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: 2
+        }}
+      >
+        <CircularProgress />
+        <Typography color="textSecondary">Đang kiểm tra quyền truy cập...</Typography>
+      </Box>
+    );
+  }
+
+  // Hiển thị trang Access Denied nếu không có quyền
+  if (!hasAccess) {
+    return (
+      <AccessDeniedPage
+        title="BẠN KHÔNG CÓ QUYỀN XEM LỊCH SỬ THAO TÁC"
+        message="Bạn không có quyền truy cập chức năng lịch sử thao tác hồ sơ bệnh án. Vui lòng liên hệ quản trị viên để được cấp quyền."
+        showBackButton={true}
+        showHomeButton={true}
+      />
+    );
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <HeadMetadata title="Lịch sử thao tác hồ sơ bệnh án" />
 
-      <Box p={1} className="w-full h-full flex flex-col overflow-hidden">
+      {/* Container chính với height cố định */}
+      <Box 
+        sx={{ 
+          height: 'calc(100vh - 64px)', // Trừ height của header/navbar
+          width: '100%',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          gap: 1
+        }}
+      >
         <Typography
           variant="h6"
-          gutterBottom
-          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+          sx={{ 
+            color: "#1976d2", 
+            fontWeight: "bold", 
+            letterSpacing: 1,
+            flexShrink: 0
+          }}
+        >
           QUẢN LÝ LỊCH SỬ THAO TÁC BỆNH ÁN
         </Typography>
 
         {/* Bộ lọc */}
-        <Grid container spacing={1} mb={1}>
-          <Grid size={{ xs: 12, sm: 12, md: 6 }}>
-            <Box className="flex flex-row" gap={2}>
-              <DatePicker
-                label="Từ ngày"
-                format="dd/MM/yyyy"
-                value={searchTuNgay}
-                onChange={(value) => setSearchTuNgay(value as Date)}
-                className="w-full"
-                slotProps={{
-                  textField: {
-                    size: "small",
-                  },
-                }}
-              />
-              <DatePicker
-                label="Đến ngày"
-                format="dd/MM/yyyy"
-                value={searchDenNgay}
-                onChange={(value) => setSearchDenNgay(value as Date)}
-                className="w-full"
-                slotProps={{
-                  textField: {
-                    size: "small",
-                  },
-                }}
-              />
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Box flex={1}>
-              <Button
-                fullWidth
-                startIcon={<Search />}
-                variant="contained"
-                onClick={handleSearch}>
-                Tìm kiếm
-              </Button>
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Box flex={1}>
-              <Button
-                fullWidth
-                startIcon={<Refresh />}
-                variant="contained"
-                onClick={handleRefresh}>
-                Làm mới
-              </Button>
-            </Box>
-          </Grid>
-        </Grid>
+        <Box 
+          display="flex" 
+          gap={2} 
+          sx={{ 
+            flexShrink: 0,
+            flexWrap: 'wrap'
+          }}
+        >
+          <Box flex={2}>
+            <DatePicker
+              label="Từ ngày"
+              format="dd/MM/yyyy"
+              value={searchTuNgay}
+              onChange={(value) => setSearchTuNgay(value as Date)}
+              slotProps={{
+                textField: {
+                  size: "small",
+                },
+              }}
+            />
+          </Box>
+          <Box flex={2}>
+            <DatePicker
+              label="Đến ngày"
+              format="dd/MM/yyyy"
+              value={searchDenNgay}
+              onChange={(value) => setSearchDenNgay(value as Date)}
+              slotProps={{
+                textField: {
+                  size: "small",
+                },
+              }}
+            />
+          </Box>
+          <Box flex={1}>
+            <Button
+              fullWidth
+              startIcon={<Search />}
+              variant="contained"
+              size="small"
+              onClick={handleSearch}
+              disabled={searchingData}>
+              {searchingData ? "Đang tìm..." : "Tìm kiếm"}
+            </Button>
+          </Box>
+          <Box flex={1}>
+            <Button
+              fullWidth
+              startIcon={<Refresh />}
+              variant="contained"
+              size="small"
+              onClick={handleRefresh}>
+              Làm mới
+            </Button>
+          </Box>
+        </Box>
 
-        {/* Main Content Area (Padding around the table) */}
-        <Box className="flex-1 w-full h-full overflow-hidden">
+        {/* Main Content Area - DataGrid với height cố định */}
+        <Box 
+          sx={{
+            flex: 1,
+            width: '100%',
+            minHeight: 400, // Đảm bảo có chiều cao tối thiểu
+            border: '1px solid #e0e0e0',
+            borderRadius: 1,
+            overflow: 'hidden'
+          }}
+        >
           <DataGrid
             rows={mockData}
             columns={columns}
+            loading={searchingData}
             pagination
             checkboxSelection
             disableRowSelectionOnClick
             density="compact"
             sx={{
+              height: '100%',
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
                 fontWeight: "bold",
               },
+              "& .MuiDataGrid-cell": {
+                border: "1px solid #e0e0e0",
+              },
+              "& .MuiDataGrid-row:nth-of-type(odd)": {
+                backgroundColor: "#f9f9f9",
+              },
+              "& .MuiDataGrid-row:nth-of-type(even)": {
+                backgroundColor: "white",
+              },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "#e3f2fd !important",
+              },
+              '& .MuiDataGrid-main': {
+                overflow: 'hidden'
+              }
             }}
           />
         </Box>
