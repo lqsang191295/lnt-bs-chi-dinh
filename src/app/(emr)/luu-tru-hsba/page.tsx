@@ -4,8 +4,9 @@ import { Search } from "@mui/icons-material";
 import {
   Box,
   Button,
+  FormControl,
   FormControlLabel,
-  Grid,
+  FormLabel,
   MenuItem,
   Radio,
   RadioGroup,
@@ -310,7 +311,8 @@ export default function LuuTruHsbaPage() {
               fullWidth
               value={selectedKhoa}
               size="small"
-              onChange={(e) => setSelectedKhoa(e.target.value)}>
+              onChange={(e) => setSelectedKhoa(e.target.value)}
+              displayEmpty>
               {khoaList.map((item) => (
                 <MenuItem key={item.value} value={item.value}>
                   {item.label}
@@ -329,8 +331,7 @@ export default function LuuTruHsbaPage() {
                 aria-labelledby="popt-radio-group-label"
                 name="popt-radio-group"
                 value={popt}
-                onChange={(e) => setPopt(e.target.value)}
-                className="w-auto">
+                onChange={(e) => setPopt(e.target.value)}>
                 <FormControlLabel
                   value="1"
                   control={
@@ -360,11 +361,11 @@ export default function LuuTruHsbaPage() {
                   sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
-            </Box>
-          </Grid>
+            </FormControl>
+          </Box>
 
           {/* DatePicker "Từ ngày" */}
-          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
+          <Box flex={1}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
@@ -372,10 +373,10 @@ export default function LuuTruHsbaPage() {
               format="dd/MM/yyyy"
               slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Grid>
+          </Box>
 
           {/* DatePicker "Đến ngày" */}
-          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
+          <Box flex={1}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}

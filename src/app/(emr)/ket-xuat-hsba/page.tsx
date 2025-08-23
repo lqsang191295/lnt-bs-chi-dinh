@@ -6,8 +6,7 @@ import {
   getHosobenhan,
   getnhatkyketxuatba,
   ketxuathosobenhan,
-} from "@/actions/act_thosobenhan";
-import HeadMetadata from "@/components/HeadMetadata";
+} from "@/actions/act_thosobenhan"; 
 import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
 import { IPDFItem } from "@/model/ipdf";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
@@ -20,16 +19,17 @@ import { mergePDFsWithProgress } from "@/utils/pdfLibs";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { Download, NoteAdd, Refresh, Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
-import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined"; 
 import HeadMetadata from "@/components/HeadMetadata";
-import AccessDeniedPage from "@/components/AccessDeniedPage";
+import AccessDeniedPage from "@/components/AccessDeniedPage"; 
 import {
   Alert,
   Box,
   Button,
+  FormControl,
   FormControlLabel,
-  Grid,
-  IconButton,
+  FormLabel,
+  Grid, 
   LinearProgress,
   MenuItem,
   Radio,
@@ -648,7 +648,9 @@ export default function KetXuatHsbaPage() {
               fullWidth
               value={selectedKhoa}
               size="small"
-              onChange={(e) => setSelectedKhoa(e.target.value)}>
+              onChange={(e) => setSelectedKhoa(e.target.value)}
+              displayEmpty
+            >
               {khoaList.map((item) => (
                 <MenuItem key={item.value} value={item.value}>
                   {item.label}
@@ -668,7 +670,7 @@ export default function KetXuatHsbaPage() {
                 name="popt-radio-group"
                 value={popt}
                 onChange={(e) => setPopt(e.target.value)}
-                className="w-auto">
+              >
                 <FormControlLabel
                   value="1"
                   control={
@@ -697,44 +699,36 @@ export default function KetXuatHsbaPage() {
                   label="Ngày ra"
                   sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
-              </RadioGroup>
-            </Box>
-          </Grid>
-
-          {/* DatePicker "Từ ngày" */}
-          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
+              </RadioGroup> 
+            </FormControl>
+          </Box>
+          <Box flex={1}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
               onChange={(value) => setTuNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{ textField: { size: "small", fullWidth: true } }}
+              slotProps={{ textField: { size: "small" } }}
             />
-          </Grid>
-
-          {/* DatePicker "Đến ngày" */}
-          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
+          </Box>
+          <Box flex={1}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
               onChange={(value) => setDenNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{ textField: { size: "small", fullWidth: true } }}
+              slotProps={{ textField: { size: "small" } }}
             />
-          </Grid>
-
-          {/* Nút "Tìm kiếm" */}
-          <Grid size={{ xs: 12, sm: 4, md: 2 }}>
-            <Button
-              fullWidth
-              startIcon={<Search />}
-              variant="contained"
-              onClick={handleSearch}
-              disabled={searchingData}>
-              {searchingData ? "Đang tìm..." : "Tìm kiếm"}
-            </Button>
-          </Grid>
-        </Grid>
+          </Box>
+          <Button
+            startIcon={<Search />}
+            variant="contained"
+            onClick={handleSearch}
+            disabled={searchingData}
+          >
+            {searchingData ? "Đang tìm..." : "Tìm kiếm"}
+          </Button>
+        </Box>
 
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 0 }}>
