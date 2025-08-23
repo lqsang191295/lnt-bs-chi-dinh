@@ -10,6 +10,7 @@ import {
   Skeleton,
   Stack,
 } from "@mui/material";
+import Tooltip from "@mui/material/Tooltip";
 import { useState } from "react";
 // import { ExpandLess, ExpandMore, Folder, Bookmark } from "@mui/icons-material";
 import type { IMenuTree } from "@/model/tmenu";
@@ -49,7 +50,7 @@ const MenuSkeleton = () => {
   );
 };
 
-export default function MenuContent() {
+export default function MenuContent({ open }: { open: boolean }) {
   const { data: menuData } = useMenuStore();
 
   if (!menuData || menuData.length == 0) return <MenuSkeleton />;
@@ -66,15 +67,23 @@ export default function MenuContent() {
         </ListItemButton>
 
         {menuTree.map((item: IMenuTree) => (
-          <MenuItemNode key={item.cid} item={item} level={0} />
+          <MenuItemNode key={item.cid} item={item} level={0} open={open} />
         ))}
       </List>
     </Stack>
   );
 }
 
-function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
-  const [open, setOpen] = useState(true);
+function MenuItemNode({
+  item,
+  level,
+  open,
+}: {
+  item: IMenuTree;
+  level: number;
+  open: boolean;
+}) {
+  const [collapse, setCollapse] = useState(true);
   const pathname = usePathname();
 
   const hasChildren = item.children && item.children.length > 0;
@@ -88,47 +97,40 @@ function MenuItemNode({ item, level }: { item: IMenuTree; level: number }) {
     ) : null;
   };
   const handleClick = () => {
-    if (hasChildren) setOpen(!open);
+    if (hasChildren) setCollapse(!collapse);
     // nếu không có children thì bạn có thể điều hướng tại đây
   };
 
   return (
     <>
-      <ListItemButton
-        onClick={handleClick}
-        sx={{ pl: 2 + level * 2 }}
-        className={
-          item.clink ===
-          (pathname?.replace(/^\/+|\/+$/g, "").toLowerCase() ?? "")
-            ? "!bg-blue-200 !border-l-4 !border-blue-500"
-            : ""
-        }>
-        <ListItemIcon>
-          {
-            /* {(() => {
-            const IconComponent = iconMap[item.cicon] || Folder;
-            //console.log("iconname", item.cicon);
-            return <IconComponent />;
-          })()} */
-            renderIcon(item.cicon)
-          }
-        </ListItemIcon>
-        <ListItemText primary={item.ctenmenu} />
-        {hasChildren ? (
-          open ? (
-            <MuiIcons.ExpandLess />
-          ) : (
-            <MuiIcons.ExpandMore />
-          )
-        ) : null}
-      </ListItemButton>
+      <Tooltip title={item.ctenmenu} placement="right">
+        <ListItemButton
+          onClick={handleClick}
+          sx={{ pl: 2 + level * 2 }}
+          className={
+            item.clink ===
+            (pathname?.replace(/^\/+|\/+$/g, "").toLowerCase() ?? "")
+              ? "!bg-blue-200 !border-l-4 !border-blue-500"
+              : ""
+          }>
+          <ListItemIcon>{renderIcon(item.cicon)}</ListItemIcon>
+          <ListItemText primary={item.ctenmenu} />
+          {hasChildren ? (
+            collapse ? (
+              <MuiIcons.ExpandLess />
+            ) : (
+              <MuiIcons.ExpandMore />
+            )
+          ) : null}
+        </ListItemButton>
+      </Tooltip>
 
       {hasChildren && (
-        <Collapse in={open} timeout="auto" unmountOnExit>
+        <Collapse in={collapse} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {item.children!.map((child) => (
               <Link key={child.cid} href={child.clink || ""} passHref>
-                <MenuItemNode item={child} level={level + 1} />
+                <MenuItemNode item={child} level={level + 1} open={true} />
               </Link>
             ))}
           </List>
