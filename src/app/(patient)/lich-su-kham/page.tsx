@@ -11,31 +11,35 @@ import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-export default function LoginPage() {
+export default function LichSuKhamPage() {
   const router = useRouter();
 
   const [form, setForm] = useState<"phone" | "otp">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [cooldown, setCooldown] = useState(0);
-
   const [sendingOTP, setSendingOTP] = useState(false);
   const [otpError, setOtpError] = useState(false);
-
+  const [isChecking, setIsChecking] = useState(true);
   const otpValue = useRef(""); // giữ giá trị OTP
+  const searchParams = useSearchParams();
+  const mabn = searchParams?.get("mabn");
 
-  // check login nếu có token
   useEffect(() => {
     const token = localStorage.getItem("token-patient");
-    console.log("Token ==== ", token);
 
-    // if (token) {
-    //   router.push("/"); // đã login → redirect
-    // }
-  }, [router]);
+    if (!token) {
+      setIsChecking(false);
+      return;
+    }
+
+    if (token) {
+      return router.push(`/lich-su-kham/${mabn}`); // đã login → redirect
+    }
+  }, [mabn, router]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -51,6 +55,7 @@ export default function LoginPage() {
     setSendingOTP(true);
     try {
       const otp = genOTP();
+      console.log("otp==== ", phone, otp);
       otpValue.current = otp; // giữ lại để so sánh
       await sentOTP(phone, otp);
 
@@ -83,12 +88,14 @@ export default function LoginPage() {
       localStorage.setItem("token-patient", fakeToken);
 
       ToastSuccess("Đăng nhập thành công");
-      router.push("/");
+      router.push(`/lich-su-kham/${mabn}`);
     } catch (ex) {
       console.error("ex handleLogin", ex);
       ToastError("Đăng nhập không thành công");
     }
   };
+
+  if (isChecking) return null;
 
   return (
     <Box
@@ -123,7 +130,7 @@ export default function LoginPage() {
               borderRadius: "4px",
               flexShrink: 0,
             }}>
-            <Image src={"/imgs/logo.png"} width={36} height={36} alt="Logo" />
+            <Image src={"/logo.png"} width={36} height={36} alt="Logo" />
           </Box>
           <Box
             sx={{
@@ -149,15 +156,7 @@ export default function LoginPage() {
           <CardHeader
             title="Đăng nhập"
             subheader="Nhập số điện thoại → Nhận mã OTP → Nhập OTP để đăng nhập"
-            titleTypographyProps={{
-              variant: "h5",
-              align: "center",
-              fontWeight: "bold",
-            }}
-            subheaderTypographyProps={{
-              align: "center",
-              color: "text.secondary",
-            }}
+            className="text-center"
             sx={{ pb: 0 }}
           />
           <CardContent sx={{ pt: 2 }}>

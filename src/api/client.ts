@@ -63,20 +63,6 @@ export async function post(
 
   if (endpoint.includes("http")) URL = `${endpoint}`;
 
-  console.log(
-    "POST request to:",
-    URL,
-    " |authToken:",
-    token,
-    " |with body:",
-    body
-  );
-
-  console.log("API_BASE_URL ==============----------------", {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...headers,
-  });
   const res = await fetch(URL, {
     method: "POST",
     ...(credentials ? { credentials: "include" } : {}),
@@ -91,6 +77,6 @@ export async function post(
     return { status: "error", message: res.statusText };
     //throw new Error(`POST ${endpoint} failed: ${res.statusText}`);
   }
-
+  // console.log("Response from POST:", res);
   return res.json();
 }

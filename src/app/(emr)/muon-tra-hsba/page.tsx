@@ -1,12 +1,16 @@
+// src/app/(emr)/muon-tra-hsba/page.tsx
 "use client";
 
 import { getHosobenhan, getmuontraHSBA } from "@/actions/act_thosobenhan";
 import HeadMetadata from "@/components/HeadMetadata";
+import AccessDeniedPage from "@/components/AccessDeniedPage";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useUserStore } from "@/store/user";
+import { useMenuStore } from "@/store/menu";
+import { ToastError } from "@/utils/toast";
 import { History, NoteAdd, Search } from "@mui/icons-material";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -21,6 +25,7 @@ import {
   RadioGroup,
   Select,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import {
   DataGrid,
@@ -31,6 +36,7 @@ import {
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import DsMuonHsba from "./components/ds-muon-hsba";
 import LsMuonTraHsba from "./components/ls-muon-tra-hsba";
 
@@ -87,7 +93,9 @@ const columns: GridColDef[] = [
   { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
   { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
 ];
+
 export default function MuonTraHsbaPage() {
+  const router = useRouter();
   const [khoaList, setKhoaList] = useState<ISelectOption[]>([]);
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
@@ -95,6 +103,7 @@ export default function MuonTraHsbaPage() {
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   const { data: loginedUser } = useUserStore();
+  const { data: menuData } = useMenuStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
   // State và hàm cho Pagination
   const [isOpenDsMuonHsba, setIsOpenDsMuonHsba] = useState(false);
@@ -104,9 +113,32 @@ export default function MuonTraHsbaPage() {
   const [phieumuontraHSBA, setPhieumuontraHSBA] =
     useState<ITMuonTraHSBA | null>(null);
   const [selectedKhoa, setSelectedKhoa] = useState("all"); // Trạng thái chọn khoa
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
+
+  // Kiểm tra quyền truy cập
+  useEffect(() => {
+    const checkAccess = () => {
+      // Kiểm tra xem có quyền truy cập trang "muon-tra-hsba" không
+      if (menuData.find((item) => item.clink === "muon-tra-hsba")) {
+        setHasAccess(true);
+      } else {
+        setHasAccess(false);
+        // Không redirect, chỉ set hasAccess = false để hiển thị AccessDeniedPage
+      }
+      setIsCheckingAccess(false);
+    };
+
+    // Chỉ kiểm tra khi đã có dữ liệu từ store
+    if (loginedUser && menuData !== undefined) {
+      checkAccess();
+    }
+  }, [menuData, loginedUser, router]);
 
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
+    if (!hasAccess) return;
+    
     try {
       if (!tuNgay || !denNgay) return;
 
@@ -133,24 +165,29 @@ export default function MuonTraHsbaPage() {
         }))
       );
       //console.log("Search results:", data);
-    } catch {
-      // console.error("Error fetching HSBA data:", error);
+    } catch (error) {
+      console.error("Error fetching HSBA data:", error);
+      ToastError("Lỗi khi tìm kiếm hồ sơ bệnh án!");
     } finally {
       setSearchingData(false);
     }
   };
 
   const fetchKhoaList = async () => {
+    if (!hasAccess) return;
+    
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
-    } catch {
-      // console.error("Error fetching khoa list:", error);
+    } catch (error) {
+      console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
   };
 
   const handleRowSelected = async (selectedIds: unknown[]) => {
+    if (!hasAccess) return;
+    
     //console.log("Selected IDs:", selectedIds); // Debug log
     if (selectedIds.length > 0) {
       const selectedId = selectedIds[0];
@@ -175,8 +212,8 @@ export default function MuonTraHsbaPage() {
           } else {
             setPhieumuontraHSBA(null);
           }
-        } catch {
-          // console.error("Error fetching phieu muon tra:", error);
+        } catch (error) {
+          console.error("Error fetching phieu muon tra:", error);
           setPhieumuontraHSBA(null);
         }
       }
@@ -190,6 +227,8 @@ export default function MuonTraHsbaPage() {
   const handleRowSelectionChange = async (
     selectionModel: GridRowSelectionModel
   ) => {
+    if (!hasAccess) return;
+    
     let selectedIds: unknown[] = [];
     if (selectionModel && selectionModel.ids) {
       selectedIds = Array.from(selectionModel.ids);
@@ -211,29 +250,87 @@ export default function MuonTraHsbaPage() {
 
   // Hàm xử lý double click
   const handleRowDoubleClick = (params: GridRowParams) => {
+    if (!hasAccess) return;
+    
     handleRowSelected([params.row.id]);
     setIsOpenDsMuonHsba(true);
   };
 
   // Fetch khoa list from API
   useEffect(() => {
-    fetchKhoaList();
-  }, []);
+    if (hasAccess && !isCheckingAccess) {
+      fetchKhoaList();
+    }
+  }, [hasAccess, isCheckingAccess]);
+
+  // Hiển thị loading khi đang kiểm tra quyền truy cập
+  if (isCheckingAccess) {
+    return (
+      <Box
+        sx={{
+          height: 'calc(100vh - 64px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: 2
+        }}
+      >
+        <CircularProgress />
+        <Typography color="textSecondary">Đang kiểm tra quyền truy cập...</Typography>
+      </Box>
+    );
+  }
+
+  // Hiển thị trang Access Denied nếu không có quyền
+  if (!hasAccess) {
+    return (
+      <AccessDeniedPage
+        title="BẠN KHÔNG CÓ QUYỀN QUẢN LÝ MƯỢN TRẢ HSBA"
+        message="Bạn không có quyền truy cập chức năng quản lý mượn trả hồ sơ bệnh án. Vui lòng liên hệ quản trị viên để được cấp quyền."
+        showBackButton={true}
+        showHomeButton={true}
+      />
+    );
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <HeadMetadata title="Quản lý mượn trả hồ sơ bệnh án" />
 
-      <Box p={2} className="w-full h-full flex flex-col">
+      {/* Container chính với height cố định */}
+      <Box 
+        sx={{ 
+          height: 'calc(100vh - 64px)', // Trừ height của header/navbar
+          width: '100%',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          gap: 1
+        }}
+      >
         <Typography
           variant="h6"
-          gutterBottom
-          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+          sx={{ 
+            color: "#1976d2", 
+            fontWeight: "bold", 
+            letterSpacing: 1,
+            flexShrink: 0
+          }}
+        >
           QUẢN LÝ MƯỢN TRẢ HỒ SƠ BỆNH ÁN
         </Typography>
 
         {/* Filter/Search Bar */}
-        <Box display="flex" gap={2} mb={2}>
+        <Box 
+          display="flex" 
+          gap={2} 
+          sx={{ 
+            flexShrink: 0,
+            flexWrap: 'wrap'
+          }}
+        >
           <Box flex={3}>
             <Select
               fullWidth
@@ -271,7 +368,7 @@ export default function MuonTraHsbaPage() {
                       size="small"
                     />
                   }
-                  label="Ngày vào viện"
+                  label="Ngày vào"
                   sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
                 <FormControlLabel
@@ -285,48 +382,53 @@ export default function MuonTraHsbaPage() {
                       size="small"
                     />
                   }
-                  label="Ngày ra viện"
+                  label="Ngày ra"
                   sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
             </FormControl>
           </Box>
+
+          {/* DatePicker "Từ ngày" */}
           <Box flex={1}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
               onChange={(value) => setTuNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
           </Box>
+
+          {/* DatePicker "Đến ngày" */}
           <Box flex={1}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
               onChange={(value) => setDenNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
           </Box>
           <Button
             variant="contained"
             startIcon={<Search />}
-            onClick={handleSearch}>
-            Tìm kiếm
+            onClick={handleSearch}
+            disabled={searchingData}>
+            {searchingData ? "Đang tìm..." : "Tìm kiếm"}
           </Button>
         </Box>
 
         {/* Tab Navigation */}
-        <Box className="bg-white flex gap-2 p-2">
+        <Box 
+          sx={{
+            bgcolor: 'white',
+            display: 'flex',
+            gap: 2,
+            p: 2,
+            flexShrink: 0
+          }}
+        >
           <Button
             variant="contained"
             startIcon={<NoteAdd />}
@@ -344,8 +446,17 @@ export default function MuonTraHsbaPage() {
           </Button>
         </Box>
 
-        {/* Main Content Area (Padding around the table) */}
-        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+        {/* Main Content Area (DataGrid với height cố định) */}
+        <Box 
+          sx={{
+            flex: 1,
+            width: '100%',
+            minHeight: 400, // Đảm bảo có chiều cao tối thiểu
+            border: '1px solid #e0e0e0',
+            borderRadius: 1,
+            overflow: 'hidden'
+          }}
+        >
           <DataGrid
             rows={rows}
             columns={columns}
@@ -357,13 +468,27 @@ export default function MuonTraHsbaPage() {
             onRowDoubleClick={handleRowDoubleClick}
             loading={searchingData}
             sx={{
+              height: '100%',
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
                 fontWeight: "bold",
               },
+              "& .MuiDataGrid-row:nth-of-type(odd)": {
+                backgroundColor: "#f9f9f9",
+              },
+              "& .MuiDataGrid-row:nth-of-type(even)": {
+                backgroundColor: "white",
+              },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "#e3f2fd !important",
+              },
+              '& .MuiDataGrid-main': {
+                overflow: 'hidden'
+              }
             }}
           />
         </Box>
+
         <DsMuonHsba
           loai={getLoaiPhieu()}
           phieumuon={phieumuontraHSBA}

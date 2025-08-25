@@ -11,7 +11,7 @@ export interface IPhanQuyenKhoa {
 export interface IPhanQuyenHoSoBenhAn {
   ID: string;
   SoBenhAn: string;
-  hoten: string;
+  Hoten: string;
   Ngaysinh: string;
   Gioitinh: string;
   Diachi: string;
