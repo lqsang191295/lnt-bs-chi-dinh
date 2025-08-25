@@ -4,6 +4,10 @@ import { getClaimsFromToken } from "./utils/auth";
 
 export async function middleware(request: NextRequest) {
   try {
+    const { pathname } = request.nextUrl;
+    if (pathname.startsWith('/dang-ky-kham')) {
+      return NextResponse.next()
+    }
     const token = request.cookies.get("authToken")?.value;
 
     if (!token) {
