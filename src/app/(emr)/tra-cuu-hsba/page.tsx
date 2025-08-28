@@ -1,24 +1,25 @@
 // src/app/(emr)/tra-cuu-hsba/page.tsx
 "use client";
 import { getChiTietHSBA, getHosobenhan } from "@/actions/act_thosobenhan";
+import AccessDeniedPage from "@/components/AccessDeniedPage";
+import HeadMetadata from "@/components/HeadMetadata";
 import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
-import { useUserStore } from "@/store/user";
 import { useMenuStore } from "@/store/menu";
+import { useUserStore } from "@/store/user";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
-import { History, NoteAdd, Search } from "@mui/icons-material";
-import AccessDeniedPage from "@/components/AccessDeniedPage";
-import HeadMetadata from "@/components/HeadMetadata";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {
   Box,
   Button,
+  CircularProgress,
   FormControlLabel,
   IconButton,
   MenuItem,
@@ -26,13 +27,12 @@ import {
   RadioGroup,
   Select,
   Typography,
-  CircularProgress,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import DialogDetail from "./components/dialog-detail";
 
 export default function TraCuuHsbaPage() {
@@ -75,33 +75,41 @@ export default function TraCuuHsbaPage() {
   }, [menuData, loginedUser, router]);
 
   // Sử dụng PdfComponents hook
-  const { downloadPdf, isLoading } = PdfComponents(useMemo(() => ({
-    onSuccess: (message: string) => {
-      ToastSuccess(message);
-    },
-    onError: (error: string) => {
-      ToastError(error);
-    }
-  }), []));
+  const { downloadPdf, isLoading } = PdfComponents(
+    useMemo(
+      () => ({
+        onSuccess: (message: string) => {
+          ToastSuccess(message);
+        },
+        onError: (error: string) => {
+          ToastError(error);
+        },
+      }),
+      []
+    )
+  );
 
   // Hàm xử lý download PDF
-  const handleDownload = useCallback((row: IHoSoBenhAn) => {
-    if (!hasAccess) return;
-    
-    if (!row.NoiDungPdf) {
-      ToastWarning("Không có dữ liệu PDF để tải!");
-      return;
-    }
+  const handleDownload = useCallback(
+    (row: IHoSoBenhAn) => {
+      if (!hasAccess) return;
 
-    // Kiểm tra trạng thái kết xuất
-    if (Number(row.TrangThaiKetXuat) !== 1) {
-      ToastWarning("Hồ sơ này chưa được kết xuất!");
-      return;
-    }
+      if (!row.NoiDungPdf) {
+        ToastWarning("Không có dữ liệu PDF để tải!");
+        return;
+      }
 
-    const fileName = `HSBA_${row.MaBN}_${row.Hoten}`;
-    downloadPdf(row.NoiDungPdf, fileName);
-  }, [downloadPdf, hasAccess]);
+      // Kiểm tra trạng thái kết xuất
+      if (Number(row.TrangThaiKetXuat) !== 1) {
+        ToastWarning("Hồ sơ này chưa được kết xuất!");
+        return;
+      }
+
+      const fileName = `HSBA_${row.MaBN}_${row.Hoten}`;
+      downloadPdf(row.NoiDungPdf, fileName);
+    },
+    [downloadPdf, hasAccess]
+  );
 
   // Cập nhật columns để sử dụng handleDownload mới
   const columns: GridColDef[] = useMemo(
@@ -221,7 +229,7 @@ export default function TraCuuHsbaPage() {
   // Hàm xử lý double click trên lưới chính
   const handleRowDoubleClick = async (params: GridRowParams) => {
     if (!hasAccess) return;
-    
+
     const hsba = params.row;
     setSelectedHsbaForDetail(hsba);
 
@@ -257,7 +265,7 @@ export default function TraCuuHsbaPage() {
 
   const fetchKhoaList = async () => {
     if (!hasAccess) return;
-    
+
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
@@ -277,7 +285,7 @@ export default function TraCuuHsbaPage() {
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
     if (!hasAccess) return;
-    
+
     try {
       if (!tuNgay || !denNgay) return;
 
@@ -298,6 +306,8 @@ export default function TraCuuHsbaPage() {
         formatDate(denNgay)
       );
 
+      console.log("Fetched HSBA data:", data);
+
       setRows(
         (data || []).map((item: IHoSoBenhAn) => ({
           id: item.ID,
@@ -317,16 +327,17 @@ export default function TraCuuHsbaPage() {
     return (
       <Box
         sx={{
-          height: 'calc(100vh - 64px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: 2
-        }}
-      >
+          height: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 2,
+        }}>
         <CircularProgress />
-        <Typography color="textSecondary">Đang kiểm tra quyền truy cập...</Typography>
+        <Typography color="textSecondary">
+          Đang kiểm tra quyền truy cập...
+        </Typography>
       </Box>
     );
   }
@@ -349,38 +360,35 @@ export default function TraCuuHsbaPage() {
       <HeadMetadata title="Tra cứu hồ sơ bệnh án" />
 
       {/* Container chính với height cố định */}
-      <Box 
-        sx={{ 
-          height: 'calc(100vh - 64px)', // Trừ height của header/navbar
-          width: '100%',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+      <Box
+        sx={{
+          height: "calc(100vh - 64px)", // Trừ height của header/navbar
+          width: "100%",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           p: 2,
-          gap: 1
-        }}
-      >
+          gap: 1,
+        }}>
         <Typography
           variant="h6"
-          sx={{ 
-            color: "#1976d2", 
-            fontWeight: "bold", 
+          sx={{
+            color: "#1976d2",
+            fontWeight: "bold",
             letterSpacing: 1,
-            flexShrink: 0
-          }}
-        >
+            flexShrink: 0,
+          }}>
           TRA CỨU HỒ SƠ BỆNH ÁN
         </Typography>
-        
+
         {/* Bộ lọc */}
-        <Box 
-          display="flex" 
-          gap={2} 
-          sx={{ 
+        <Box
+          display="flex"
+          gap={2}
+          sx={{
             flexShrink: 0,
-            flexWrap: 'wrap'
-          }}
-        >
+            flexWrap: "wrap",
+          }}>
           <Box flex={1}>
             <Select
               fullWidth
@@ -464,16 +472,15 @@ export default function TraCuuHsbaPage() {
         </Box>
 
         {/* Main Content Area - DataGrid với height cố định */}
-        <Box 
+        <Box
           sx={{
             flex: 1,
-            width: '100%',
+            width: "100%",
             minHeight: 400, // Đảm bảo có chiều cao tối thiểu
-            border: '1px solid #e0e0e0',
+            border: "1px solid #e0e0e0",
             borderRadius: 1,
-            overflow: 'hidden'
-          }}
-        >
+            overflow: "hidden",
+          }}>
           <DataGrid
             rows={rows}
             columns={columns}
@@ -483,7 +490,7 @@ export default function TraCuuHsbaPage() {
             density="compact"
             onRowDoubleClick={handleRowDoubleClick}
             sx={{
-              height: '100%',
+              height: "100%",
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
                 fontWeight: "bold",
@@ -500,9 +507,9 @@ export default function TraCuuHsbaPage() {
               "& .MuiDataGrid-row:hover": {
                 backgroundColor: "#e3f2fd !important",
               },
-              '& .MuiDataGrid-main': {
-                overflow: 'hidden'
-              }
+              "& .MuiDataGrid-main": {
+                overflow: "hidden",
+              },
             }}
             loading={searchingData}
           />

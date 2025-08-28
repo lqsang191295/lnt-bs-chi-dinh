@@ -1,8 +1,8 @@
 "use client";
 
+import { PdfComponents } from "@/components/pdfComponents";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
-import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet"; 
-import { PdfComponents }  from "@/components/pdfComponents";
+import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import CloseIcon from "@mui/icons-material/Close";
 import DescriptionIcon from "@mui/icons-material/Description";
 import PrintIcon from "@mui/icons-material/Print";
@@ -11,12 +11,12 @@ import {
   Button,
   Dialog,
   DialogContent,
-  DialogTitle, 
+  DialogTitle,
   IconButton,
   Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
-import React, { memo, useEffect, useCallback } from "react";
+import React, { memo, useCallback, useEffect } from "react";
 
 // Columns cho lưới chi tiết phiếu
 const phieuColumns: GridColDef[] = [
@@ -40,15 +40,9 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
   phieuList,
 }) => {
   // Sử dụng custom hook
-  const { 
-    isLoading, 
-    pdfUrl, 
-    printPdf, 
-    createPdfUrl, 
-    cleanup 
-  } = PdfComponents({
+  const { isLoading, pdfUrl, printPdf, createPdfUrl, cleanup } = PdfComponents({
     onSuccess: (message) => alert(message),
-    onError: (error) => alert(error)
+    onError: (error) => alert(error),
   });
 
   // Hàm in PDF từ selectedHsbaForDetail.NoiDungPdf
@@ -84,23 +78,23 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
     try {
       // Tạo blob từ nội dung XML
       const xmlBlob = new Blob([selectedHsbaForDetail.NoiDungXml], {
-        type: 'application/xml;charset=utf-8'
+        type: "application/xml;charset=utf-8",
       });
 
       // Tạo URL và tải file
       const blobUrl = URL.createObjectURL(xmlBlob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = blobUrl;
       link.download = `HSBA_${selectedHsbaForDetail.MaBN}_${selectedHsbaForDetail.Hoten}.xml`;
-      
+
       // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up
       setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-      
+
       alert("Đã tải file XML thành công!");
     } catch (error) {
       console.error("Error exporting XML:", error);
@@ -109,12 +103,15 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
   }, [selectedHsbaForDetail]);
 
   // Hàm xử lý khi click vào một phiếu trong lưới chi tiết
-  const handlePhieuRowClick = useCallback((params: GridRowParams) => {
-    const base64Data = params.row.FilePdfKySo;
-    if (base64Data) {
-      createPdfUrl(base64Data);
-    }
-  }, [createPdfUrl]);
+  const handlePhieuRowClick = useCallback(
+    (params: GridRowParams) => {
+      const base64Data = params.row.FilePdfKySo;
+      if (base64Data) {
+        createPdfUrl(base64Data);
+      }
+    },
+    [createPdfUrl]
+  );
 
   // Hàm đóng dialog chi tiết
   const handleCloseDetailDialog = useCallback(() => {
@@ -141,6 +138,8 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
     };
   }, []); // Empty dependency array
 
+  console.log("Selected HSBA for Detail:", pdfUrl);
+
   return (
     <Dialog
       open={open}
@@ -160,13 +159,15 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
         {selectedHsbaForDetail?.MaBN}
         {/* Hiển thị trạng thái kết xuất */}
         {selectedHsbaForDetail?.TrangThaiKetXuat?.toString() === "1" && (
-          <Typography variant="caption" sx={{ 
-            backgroundColor: "rgba(76, 175, 80, 0.8)", 
-            px: 1, 
-            py: 0.5, 
-            borderRadius: 1,
-            ml: 2 
-          }}>
+          <Typography
+            variant="caption"
+            sx={{
+              backgroundColor: "rgba(76, 175, 80, 0.8)",
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              ml: 2,
+            }}>
             ✓ Đã kết xuất
           </Typography>
         )}
@@ -174,7 +175,7 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      
+
       <DialogContent
         dividers
         sx={{
@@ -192,82 +193,82 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
             display: "flex",
             gap: 1,
           }}>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             startIcon={<PrintIcon />}
             onClick={handlePrintHSBA}
             disabled={
               isLoading ||
-              !selectedHsbaForDetail?.NoiDungPdf || 
+              !selectedHsbaForDetail?.NoiDungPdf ||
               selectedHsbaForDetail?.TrangThaiKetXuat?.toString() !== "1"
             }
             title={
-              selectedHsbaForDetail?.TrangThaiKetXuat?.toString() !== "1" 
-                ? "Hồ sơ chưa được kết xuất" 
+              selectedHsbaForDetail?.TrangThaiKetXuat?.toString() !== "1"
+                ? "Hồ sơ chưa được kết xuất"
                 : "In hồ sơ bệnh án"
-            }
-          >
+            }>
             {isLoading ? "Đang xử lý..." : "In HSBA"}
           </Button>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             startIcon={<DescriptionIcon />}
             onClick={handleExportXML}
             disabled={
-              !selectedHsbaForDetail?.NoiDungXml || 
+              !selectedHsbaForDetail?.NoiDungXml ||
               selectedHsbaForDetail?.TrangThaiKetXuat?.toString() !== "1"
             }
             title={
-              selectedHsbaForDetail?.TrangThaiKetXuat?.toString() !== "1" 
-                ? "Hồ sơ chưa được kết xuất" 
+              selectedHsbaForDetail?.TrangThaiKetXuat?.toString() !== "1"
+                ? "Hồ sơ chưa được kết xuất"
                 : "Xuất file XML"
-            }
-          >
+            }>
             Xuất XML
           </Button>
-          
+
           {/* Thông báo trạng thái */}
           {selectedHsbaForDetail?.TrangThaiKetXuat?.toString() !== "1" && (
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                display: "flex", 
-                alignItems: "center", 
+            <Typography
+              variant="caption"
+              sx={{
+                display: "flex",
+                alignItems: "center",
                 color: "warning.main",
                 fontStyle: "italic",
-                ml: 2 
-              }}
-            >
+                ml: 2,
+              }}>
               ⚠️ Hồ sơ chưa được kết xuất
             </Typography>
           )}
         </Box>
 
         {/* Vùng 2: Lưới chi tiết và PDF viewer - FIX LAYOUT */}
-        <Box sx={{ 
-          flex: 1, 
-          overflow: "hidden", 
-          display: "flex",
-          height: "100%"
-        }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflow: "hidden",
+            display: "flex",
+            height: "100%",
+          }}>
           {/* Vùng trái: Lưới chi tiết phiếu */}
           <Box
-            sx={{ 
+            sx={{
               width: 400, // Fixed width cho DataGrid
-              height: "100%", 
-              display: "flex", 
+              height: "100%",
+              display: "flex",
               flexDirection: "column",
               flexShrink: 0, // Không cho phép shrink
-            }}
-          >
-            <Typography variant="subtitle2" sx={{ p: 1, backgroundColor: "#f5f5f5" }}>
+            }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ p: 1, backgroundColor: "#f5f5f5" }}>
               Danh sách phiếu
             </Typography>
-            <Box sx={{ 
-              flex: 1, 
-              height: "100%", 
-              width: "100%"
-            }}>
+            <Box
+              sx={{
+                flex: 1,
+                height: "100%",
+                width: "100%",
+              }}>
               <DataGrid
                 rows={phieuList}
                 columns={phieuColumns}
@@ -278,9 +279,9 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
                   height: "100%",
                   width: "100%",
                   border: "none",
-                  '& .MuiDataGrid-columnHeaders': {
+                  "& .MuiDataGrid-columnHeaders": {
                     backgroundColor: "#f8f9fa",
-                  }
+                  },
                 }}
               />
             </Box>
@@ -295,9 +296,10 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
               flex: 1,
               flexDirection: "column",
               minWidth: 0,
-            }}
-          >
-            <Typography variant="subtitle2" sx={{ p: 1, backgroundColor: "#f5f5f5" }}>
+            }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ p: 1, backgroundColor: "#f5f5f5" }}>
               Xem trước PDF
             </Typography>
             {pdfUrl ? (
@@ -315,7 +317,12 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
                   data={pdfUrl}
                   type="application/pdf"
                   style={{ border: "none", width: "100%", height: "100%" }}>
-                  <p>Không thể hiển thị PDF. <a href={pdfUrl} target="_blank" rel="noopener noreferrer">Mở trong tab mới</a></p>
+                  <p>
+                    Không thể hiển thị PDF.{" "}
+                    <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                      Mở trong tab mới
+                    </a>
+                  </p>
                 </object>
               </Box>
             ) : (
@@ -326,8 +333,7 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
                   alignItems: "center",
                   flex: 1,
                   backgroundColor: "#f5f5f5",
-                }}
-              >
+                }}>
                 <Typography variant="h6" color="text.secondary">
                   Chọn một phiếu để xem chi tiết PDF
                 </Typography>

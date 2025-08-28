@@ -25,6 +25,8 @@ export interface IPatientChiDinh {
   Ngay: string;
   TGKetoa: string;
   TGCapthuoc: string;
+  FilePdfKySo: string;
+  TenLoaiPhieuY: string;
 }
 
 export interface IPatientToaThuoc {
@@ -36,4 +38,5 @@ export interface IPatientToaThuoc {
   TGKetoa: string;
   TGCapthuoc: string;
   FilePdfKySo: string;
+  TenLoaiPhieuY: string;
 }

@@ -94,7 +94,12 @@ export default function PatientDetailPage() {
     <Box
       className="h-screen overflow-auto"
       sx={{
-        maxWidth: "70vw",
+        maxWidth: {
+          xs: "100vw", // màn nhỏ (mobile)
+          sm: "100vw", // small
+          md: "80vw", // medium
+          lg: "70vw", // large
+        },
         mx: "auto",
         bgcolor: "#f5f7fa",
         boxShadow: 2,
@@ -115,34 +120,32 @@ export default function PatientDetailPage() {
             AS
           </Avatar>
           <Box>
-            <Typography variant="h5" fontWeight={700}>
+            <Typography variant="h5" fontWeight={700} fontSize={20}>
               {patientInfo?.Hoten}
             </Typography>
-            <Stack direction="row" spacing={2} mt={1}>
-              <Typography variant="body2" className="flex items-center gap-1">
-                <CalendarMonth className="w-6 h-6" />
+            <Stack spacing={1} mt={1} fontSize={12}>
+              <Box className="flex items-center gap-1">
+                <CalendarMonth fontSize="small" />
                 {getTextBirthday(
                   patientInfo?.Ngaysinh,
                   patientInfo?.Thangsinh,
                   patientInfo?.Namsinh
-                )}
-                <Typography className="px-0.5">-</Typography>
-                <Typography component="span">
-                  {`${
-                    new Date().getFullYear() - Number(patientInfo?.Namsinh || 0)
-                  }`}
-                </Typography>
+                )}{" "}
+                -{" "}
+                {`${
+                  new Date().getFullYear() - Number(patientInfo?.Namsinh || 0)
+                }`}
                 tuổi
-              </Typography>
+              </Box>
               {patientInfo?.Diachi && (
                 <Typography variant="body2" className="flex items-center gap-1">
-                  <LocationPin className="w-6 h-6" />
+                  <LocationPin fontSize="small" />
                   {patientInfo?.Diachi}
                 </Typography>
               )}
               {patientInfo?.Dienthoai && (
                 <Typography variant="body2" className="flex items-center gap-1">
-                  <PhoneIphone className="w-6 h-6" />
+                  <PhoneIphone fontSize="small" />
                   {patientInfo?.Dienthoai}
                 </Typography>
               )}
@@ -164,7 +167,11 @@ export default function PatientDetailPage() {
               expanded={expanded === idx}
               onChange={handleChange(idx)}>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Stack direction="row" spacing={2} alignItems="center">
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  justifyContent="space-between"
+                  sx={{ width: "100%" }}>
                   <Box className="flex gap-1">
                     <Typography fontWeight={600}>Ngày:</Typography>
                     <Typography>{StringToDate(item.TGVao)}</Typography>
@@ -175,6 +182,13 @@ export default function PatientDetailPage() {
                     />
                     <Typography color="text.secondary">
                       {StringToTime(item.TGVao)}
+                    </Typography>
+                  </Box>
+
+                  <Box className="flex gap-1">
+                    <Typography>Chẩn đoán:</Typography>
+                    <Typography color="text.secondary">
+                      {item.VVIET_ChanDoanChinh}
                     </Typography>
                   </Box>
                 </Stack>

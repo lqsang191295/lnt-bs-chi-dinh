@@ -1,181 +1,267 @@
 "use client";
 
+import PdfHandler from "@/utils/PdfHandler";
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
-  Close as CloseIcon,
-  Download as DownloadIcon,
+  Close,
+  Visibility,
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import Image from "next/image";
-import { useState } from "react";
+import { memo, useEffect, useState } from "react";
 
 export interface iPdfGallery {
   filename: string;
-  url: string;
+  base64: string;
 }
 
 type Props = {
   files: iPdfGallery[];
 };
 
-export default function ImageGallery({ files }: Props) {
+/* ---------- Thumbnail component ---------- */
+const PDFThumbnail = memo(function PDFThumbnail({
+  file,
+  onOpen,
+  interactive = false,
+}: {
+  file: iPdfGallery;
+  onOpen?: () => void;
+  interactive?: boolean;
+}) {
+  const [pdfUrl, setPdfUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (!file?.base64 || !PdfHandler.validatePdfData(file.base64)) return;
+
+    const newUrl = PdfHandler.createPdfBlobUrl(file.base64);
+    setPdfUrl(newUrl);
+
+    return () => {
+      PdfHandler.cleanupBlobUrl(newUrl);
+    };
+  }, [file]);
+
+  return (
+    <Box
+      onClick={!interactive ? onOpen : undefined}
+      className={`relative h-full ${interactive ? "" : "group cursor-pointer"}`}
+      sx={{
+        borderRadius: 2,
+        overflow: "hidden",
+        ...(interactive
+          ? {}
+          : {
+              boxShadow: 1,
+              "&:hover": {
+                boxShadow: 4,
+                transform: "scale(1.02)",
+                transition: "transform 0.2s",
+              },
+            }),
+        minHeight: 200,
+      }}>
+      <Box
+        sx={{
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          bgcolor: "#f5f5f5",
+          overflow: "hidden",
+        }}>
+        {pdfUrl && (
+          <div
+            className="relative w-full h-full"
+            style={{
+              overflow: "hidden", // ẩn scroll bar
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+            <object
+              data={pdfUrl}
+              type="application/pdf"
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                overflow: "hidden",
+              }}>
+              <p>
+                Thiết bị không hỗ trợ xem PDF.
+                <a href={pdfUrl}>Tải về tại đây</a>
+              </p>
+            </object>
+
+            {!interactive && (
+              <div className="absolute inset-0 bg-transparent" />
+            )}
+          </div>
+        )}
+      </Box>
+
+      {/* Hover overlay chỉ ở preview mode */}
+      {!interactive && (
+        <Box
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          sx={{ bgcolor: "rgba(0,0,0,0.5)" }}>
+          <Visibility sx={{ fontSize: 40, color: "white" }} />
+        </Box>
+      )}
+
+      <Typography
+        className="absolute bottom-0 left-0 right-0 bg-black/50 text-white"
+        sx={{ textAlign: "center", p: 1 }}>
+        {file.filename}
+      </Typography>
+    </Box>
+  );
+});
+
+/* ---------- Main gallery ---------- */
+function PdfGallery({ files }: Props) {
   const [index, setIndex] = useState<number | null>(null);
 
   const currentFile = index !== null ? files[index] : null;
-  const isPdf = currentFile ? /\.pdf$/i.test(currentFile.url) : false;
+  const numPages = files.length;
 
   const close = () => setIndex(null);
-  const prev = () =>
-    setIndex((prev) => (prev! - 1 + files.length) % files.length);
-  const next = () => setIndex((prev) => (prev! + 1) % files.length);
-  const download = () => {
-    if (!currentFile) return;
-    const link = document.createElement("a");
-    link.href = currentFile.url;
-    link.download = currentFile.filename;
-    link.click();
-  };
+  const prev = () => setIndex((prev) => (prev! - 1 + numPages) % numPages);
+  const next = () => setIndex((prev) => (prev! + 1) % numPages);
+
+  if (!files || files.length === 0) {
+    return <Typography>Không có file PDF</Typography>;
+  }
+  console.log("files 123123", files);
 
   return (
     <>
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mt-4">
-        {files.map((f, i) => (
-          <Box key={i}>{f.filename}</Box>
-        ))}
-      </div>
-
-      <Dialog
-        open={index !== null}
-        onClose={close}
-        maxWidth={false}
-        PaperProps={{
-          sx: {
-            width: "100%",
-            height: "100%",
-            maxWidth: "unset",
-            maxHeight: "unset",
-            m: 0,
-            bgcolor: "rgba(0, 0, 0, 0.5)",
-            boxShadow: "none",
-          },
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "repeat(1, 1fr)", md: "repeat(3, 1fr)" },
+          gap: 2,
         }}>
-        <DialogContent
-          sx={{
-            p: 2,
-            display: "grid",
-            gridTemplateRows: "auto 1fr",
-            "&::-webkit-scrollbar": { display: "none" }, // Ẩn scrollbar
-            msOverflowStyle: "none",
-          }}>
-          {/* Header với tên file và các nút */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              mb: 2,
-              position: "relative",
-            }}>
-            <Typography
-              variant="h6"
-              sx={{
-                color: "white",
-                fontWeight: "medium",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                maxWidth: "80%",
-              }}>
-              {currentFile?.filename}
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                gap: 1,
-                position: "absolute",
-                right: 0,
-              }}>
-              <IconButton
-                onClick={download}
-                sx={{ bgcolor: "rgba(255, 255, 255, 0.2)", color: "white" }}>
-                <DownloadIcon />
-              </IconButton>
-              <IconButton
-                onClick={close}
-                sx={{ bgcolor: "rgba(255, 255, 255, 0.2)", color: "white" }}>
-                <CloseIcon />
-              </IconButton>
-            </Box>
-          </Box>
+        {files.map((f, i) => (
+          <PDFThumbnail key={i} file={f} onOpen={() => setIndex(i)} />
+          // <ComponentPdfPreview
+          //   key={i}
+          //   base64={f.base64}
+          //   interactive={false}
+          //   onOpen={() => setIndex(i)}
+          // />
+        ))}
 
-          {/* Nội dung chính: Hình ảnh/PDF và các nút điều hướng */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "100%",
-              gap: 2,
-            }}>
-            <IconButton
-              onClick={prev}
-              sx={{
-                bgcolor: "rgba(255, 255, 255, 0.2)",
-                color: "white",
-                "&:hover": { bgcolor: "rgba(255, 255, 255, 0.3)" },
-              }}>
-              <ChevronLeftIcon sx={{ fontSize: "2rem" }} />
-            </IconButton>
+        {/* {files && files.length > 0 && (
+          <ComponentPdfPreview
+            base64={files[0].base64}
+            interactive={false}
+            onOpen={() => setIndex(0)}
+          />
+        )} */}
+      </Box>
 
-            <Box
-              sx={{
+      {currentFile && (
+        <Dialog
+          open
+          onClose={close}
+          fullWidth
+          maxWidth="xl"
+          slotProps={{
+            paper: {
+              sx: {
+                boxShadow: "none",
+                background: "none",
+                margin: 0,
                 width: "100%",
                 height: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                overflow: "hidden",
-              }}>
-              {isPdf ? (
-                <Box
-                  component="iframe"
-                  src={currentFile?.url}
-                  sx={{ width: "100%", height: "100%", border: "none" }}
-                />
-              ) : (
-                <Image
-                  src={currentFile?.url ?? ""}
-                  alt={currentFile?.filename ?? ""}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    objectFit: "contain",
-                  }}
-                  width={800} // Cần thiết cho Next/Image
-                  height={600}
-                  unoptimized
-                />
-              )}
-            </Box>
-
-            <IconButton
-              onClick={next}
+                maxHeight: "100vh",
+              },
+              elevation: 0,
+            },
+          }}>
+          <DialogContent
+            sx={{
+              background: "none",
+              py: 0,
+              px: 0,
+              display: "grid",
+              gridTemplateRows: "auto 1fr",
+              "&::-webkit-scrollbar": { display: "none" },
+              msOverflowStyle: "none",
+              height: "100vh",
+            }}>
+            <Box
+              className="relative"
               sx={{
-                bgcolor: "rgba(255, 255, 255, 0.2)",
-                color: "white",
-                "&:hover": { bgcolor: "rgba(255, 255, 255, 0.3)" },
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+                height: "100vh",
+                gap: 2,
               }}>
-              <ChevronRightIcon sx={{ fontSize: "2rem" }} />
-            </IconButton>
-          </Box>
-        </DialogContent>
-      </Dialog>
+              <Box sx={{ flex: 1, width: "100%", height: "100%" }}>
+                <PDFThumbnail file={currentFile} interactive />
+              </Box>
+
+              <IconButton
+                onClick={close}
+                sx={{
+                  position: "absolute",
+                  width: 39,
+                  height: 39,
+                  top: 60,
+                  right: 20,
+                  bgcolor: "rgba(23, 23, 23, 0.5)",
+                  color: "white",
+                  "&:hover": { bgcolor: "rgba(23, 23, 23, 0.75)" },
+                }}>
+                <Close sx={{ fontSize: "2rem" }} />
+              </IconButton>
+
+              <IconButton
+                className="absolute top-0 bottom-0 left-0"
+                onClick={prev}
+                sx={{
+                  position: "absolute",
+                  width: 39,
+                  height: 39,
+                  top: "50%",
+                  left: 15,
+                  bgcolor: "rgba(23, 23, 23, 0.5)",
+                  color: "white",
+                  "&:hover": { bgcolor: "rgba(23, 23, 23, 0.75)" },
+                }}>
+                <ChevronLeftIcon sx={{ fontSize: "2rem" }} />
+              </IconButton>
+
+              <IconButton
+                className="absolute top-0 bottom-0 right-0"
+                onClick={next}
+                sx={{
+                  position: "absolute",
+                  width: 39,
+                  height: 39,
+                  top: "50%",
+                  right: 15,
+                  bgcolor: "rgba(23, 23, 23, 0.5)",
+                  color: "white",
+                  "&:hover": { bgcolor: "rgba(23, 23, 23, 0.75)" },
+                }}>
+                <ChevronRightIcon sx={{ fontSize: "2rem" }} />
+              </IconButton>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
+export default memo(PdfGallery);

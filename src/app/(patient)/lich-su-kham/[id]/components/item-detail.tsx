@@ -2,111 +2,166 @@ import {
   getPatientChiDinhByMaBN_SoVaoVien,
   getPatientToaThuocByMaBN_SoVaoVien,
 } from "@/actions/act_patient";
-import { IPatientLichSuKham } from "@/model/tpatient";
+import PdfGallery from "@/components/PdfGallery";
+import Spinner from "@/components/spinner";
+import {
+  IPatientChiDinh,
+  IPatientLichSuKham,
+  IPatientToaThuoc,
+} from "@/model/tpatient";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
-  Grid,
   Typography,
 } from "@mui/material";
 import React, { useEffect } from "react";
-import useSWR from "swr";
 
 interface ItemDetailProps {
   lsKham: IPatientLichSuKham;
 }
 
-const PDFViewerBox = ({ title }: { title: string }) => (
-  <Box
-    className="h-64 relative"
-    sx={{
-      border: "1px solid #e0e0e0",
-      borderRadius: 2,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      bgcolor: "#fff",
-      flexDirection: "column",
-    }}>
-    <Typography variant="subtitle1" className="absolute bottom-1">
-      {title}
-    </Typography>
-    <Typography variant="caption" color="text.secondary">
-      (PDF Viewer sẽ hiển thị ở đây)
-    </Typography>
-  </Box>
-);
-
-const fetcherToaThuoc = async (id: string, sovaovien: string) => {
-  if (!id || !sovaovien) return null;
-  return await getPatientToaThuocByMaBN_SoVaoVien(id, sovaovien);
-};
-
-const fetcherChiDinh = async (id: string, sovaovien: string) => {
-  if (!id || !sovaovien) return null;
-  return await getPatientChiDinhByMaBN_SoVaoVien(id, sovaovien);
-};
-
 function ItemDetail({ lsKham }: ItemDetailProps) {
-  const { data: ToaThuoc, isLoading: isLoadingToaThuoc } = useSWR(
-    lsKham ? ["patient-toathuoc", lsKham.MaBN] : null,
-    () => fetcherToaThuoc(lsKham.MaBN!, lsKham.SoVaoVien!)
+  const [dataChiDinh, setDataChiDinh] = React.useState<IPatientChiDinh[]>([]);
+  const [loadingChiDinh, setLoadingChiDinh] = React.useState<boolean>(false);
+  const [dataToaThuoc, setDataToaThuoc] = React.useState<IPatientToaThuoc[]>(
+    []
   );
-  const { data: ChiDinh, isLoading: isLoadingChiDinh } = useSWR(
-    lsKham ? ["patient-chidinh", lsKham.MaBN] : null,
-    () => fetcherChiDinh(lsKham.MaBN!, lsKham.SoVaoVien!)
-  );
+  const [loadingToaThuoc, setLoadingToaThuoc] = React.useState<boolean>(false);
 
   useEffect(() => {
-    console.log("lsKham:", lsKham);
+    if (!lsKham) return;
+
+    let isMounted = true;
+    setLoadingChiDinh(true);
+
+    (async () => {
+      try {
+        const data = await getPatientChiDinhByMaBN_SoVaoVien(
+          lsKham.MaBN!,
+          lsKham.SoVaoVien!
+        );
+
+        if (isMounted) {
+          console.log("data chi dinh:", data);
+          setDataChiDinh(data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching Chi Dinh data:", error);
+        if (isMounted) setDataChiDinh([]);
+      } finally {
+        if (isMounted) setLoadingChiDinh(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [lsKham]);
+
+  useEffect(() => {
+    if (!lsKham) return;
+
+    let isMounted = true;
+    setLoadingToaThuoc(true);
+
+    (async () => {
+      try {
+        const data = await getPatientToaThuocByMaBN_SoVaoVien(
+          lsKham.MaBN!,
+          lsKham.SoVaoVien!
+        );
+        if (isMounted) setDataToaThuoc(data || []);
+      } catch (error) {
+        console.error("Error fetching Chi Dinh data:", error);
+        if (isMounted) setDataToaThuoc([]);
+      } finally {
+        if (isMounted) setLoadingToaThuoc(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [lsKham]);
 
   return (
-    <AccordionDetails className="bg-blue-300">
-      <Box className="flex gap-1 !text-[10px]">
-        <Typography>Chẩn đoán chính:</Typography>
-        <Typography color="text.secondary">
-          {lsKham.VVIET_ChanDoanChinh}
-        </Typography>
-      </Box>
-      <Accordion sx={{ mb: 1, boxShadow: 0, bgcolor: "#f9f9f9" }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={600}>Chỉ định</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2}>
-            {/* Box 1 */}
-            <Grid size={{ xs: 12, sm: 12, md: 4 }}>
-              <PDFViewerBox title="Toa thuốc 1" />
-            </Grid>
-            {/* Box 2 */}
-            <Grid size={{ xs: 12, sm: 12, md: 4 }}>
-              <PDFViewerBox title="Toa thuốc 2" />
-            </Grid>
-            {/* Box 3 */}
-            <Grid size={{ xs: 12, sm: 12, md: 4 }}>
-              <PDFViewerBox title="Toa thuốc 3" />
-            </Grid>
-            {/* Box 4 */}
-            <Grid size={{ xs: 12, sm: 12, md: 4 }}>
-              <PDFViewerBox title="Toa thuốc 4" />
-            </Grid>
-          </Grid>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion sx={{ mb: 1, boxShadow: 0, bgcolor: "#f9f9f9" }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={600}>Toa thuốc</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography>Toa thuốc</Typography>
-        </AccordionDetails>
-      </Accordion>
-      <Accordion sx={{ mb: 1, boxShadow: 0, bgcolor: "#f9f9f9" }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+    <AccordionDetails className="bg-blue-100">
+      {dataChiDinh && (
+        <Accordion sx={{ p: 0, mb: 1, boxShadow: 0, background: "none" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{
+              p: 0,
+              margin: 0,
+            }}>
+            <Typography fontWeight={600}>Chỉ định</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {!loadingChiDinh && dataChiDinh && dataChiDinh.length > 0 && (
+              <PdfGallery
+                files={dataChiDinh
+                  .filter((i: IPatientChiDinh) => !!i.FilePdfKySo)
+                  .map((i: IPatientChiDinh) => ({
+                    filename: i.TenLoaiPhieuY,
+                    base64: i.FilePdfKySo,
+                  }))}
+              />
+            )}
+            {!loadingChiDinh && dataChiDinh && dataChiDinh.length === 0 && (
+              <Typography>Không có chỉ định</Typography>
+            )}
+            {loadingChiDinh && (
+              <Box className="flex flex-row gap-2">
+                <Spinner />
+                <Typography>Đang tải dữ liệu...</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      )}
+      {dataToaThuoc && (
+        <Accordion sx={{ p: 0, mb: 1, boxShadow: 0, background: "none" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{
+              p: 0,
+              margin: 0,
+            }}>
+            <Typography fontWeight={600}>Toa thuốc</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {!loadingToaThuoc && dataToaThuoc && dataToaThuoc.length > 0 && (
+              <PdfGallery
+                files={dataToaThuoc
+                  .filter((i: IPatientToaThuoc) => !!i.FilePdfKySo)
+                  .map((i: IPatientToaThuoc) => ({
+                    filename: i.TenLoaiPhieuY,
+                    base64: i.FilePdfKySo,
+                  }))}
+              />
+            )}
+            {!loadingToaThuoc && dataToaThuoc && dataToaThuoc.length === 0 && (
+              <Typography>Không có toa thuốc</Typography>
+            )}
+            {loadingToaThuoc && (
+              <Box className="flex flex-row gap-2">
+                <Spinner />
+                <Typography>Đang tải dữ liệu...</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      )}
+      <Accordion sx={{ mb: 1, boxShadow: 0, background: "none" }}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            p: 0,
+            margin: 0,
+          }}>
           <Typography fontWeight={600}>Bảng kê</Typography>
         </AccordionSummary>
         <AccordionDetails>
