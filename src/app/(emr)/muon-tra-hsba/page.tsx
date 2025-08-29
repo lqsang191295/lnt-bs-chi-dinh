@@ -2,14 +2,14 @@
 "use client";
 
 import { getHosobenhan, getmuontraHSBA } from "@/actions/act_thosobenhan";
-import HeadMetadata from "@/components/HeadMetadata";
 import AccessDeniedPage from "@/components/AccessDeniedPage";
+import HeadMetadata from "@/components/HeadMetadata";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ITMuonTraHSBA } from "@/model/tmuontrahsba";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
-import { useUserStore } from "@/store/user";
 import { useMenuStore } from "@/store/menu";
+import { useUserStore } from "@/store/user";
 import { ToastError } from "@/utils/toast";
 import { History, NoteAdd, Search } from "@mui/icons-material";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
@@ -17,6 +17,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {
   Box,
   Button,
+  CircularProgress,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -25,7 +26,6 @@ import {
   RadioGroup,
   Select,
   Typography,
-  CircularProgress,
 } from "@mui/material";
 import {
   DataGrid,
@@ -35,8 +35,8 @@ import {
 } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import DsMuonHsba from "./components/ds-muon-hsba";
 import LsMuonTraHsba from "./components/ls-muon-tra-hsba";
 
@@ -138,7 +138,7 @@ export default function MuonTraHsbaPage() {
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
     if (!hasAccess) return;
-    
+
     try {
       if (!tuNgay || !denNgay) return;
 
@@ -173,9 +173,9 @@ export default function MuonTraHsbaPage() {
     }
   };
 
-  const fetchKhoaList = async () => {
+  const fetchKhoaList = useCallback(async () => {
     if (!hasAccess) return;
-    
+
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
@@ -183,11 +183,11 @@ export default function MuonTraHsbaPage() {
       console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
-  };
+  }, [hasAccess]);
 
   const handleRowSelected = async (selectedIds: unknown[]) => {
     if (!hasAccess) return;
-    
+
     //console.log("Selected IDs:", selectedIds); // Debug log
     if (selectedIds.length > 0) {
       const selectedId = selectedIds[0];
@@ -228,7 +228,7 @@ export default function MuonTraHsbaPage() {
     selectionModel: GridRowSelectionModel
   ) => {
     if (!hasAccess) return;
-    
+
     let selectedIds: unknown[] = [];
     if (selectionModel && selectionModel.ids) {
       selectedIds = Array.from(selectionModel.ids);
@@ -251,7 +251,7 @@ export default function MuonTraHsbaPage() {
   // Hàm xử lý double click
   const handleRowDoubleClick = (params: GridRowParams) => {
     if (!hasAccess) return;
-    
+
     handleRowSelected([params.row.id]);
     setIsOpenDsMuonHsba(true);
   };
@@ -261,23 +261,24 @@ export default function MuonTraHsbaPage() {
     if (hasAccess && !isCheckingAccess) {
       fetchKhoaList();
     }
-  }, [hasAccess, isCheckingAccess]);
+  }, [hasAccess, isCheckingAccess, fetchKhoaList]);
 
   // Hiển thị loading khi đang kiểm tra quyền truy cập
   if (isCheckingAccess) {
     return (
       <Box
         sx={{
-          height: 'calc(100vh - 64px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: 2
-        }}
-      >
+          height: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 2,
+        }}>
         <CircularProgress />
-        <Typography color="textSecondary">Đang kiểm tra quyền truy cập...</Typography>
+        <Typography color="textSecondary">
+          Đang kiểm tra quyền truy cập...
+        </Typography>
       </Box>
     );
   }
@@ -299,38 +300,35 @@ export default function MuonTraHsbaPage() {
       <HeadMetadata title="Quản lý mượn trả hồ sơ bệnh án" />
 
       {/* Container chính với height cố định */}
-      <Box 
-        sx={{ 
-          height: 'calc(100vh - 64px)', // Trừ height của header/navbar
-          width: '100%',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+      <Box
+        sx={{
+          height: "calc(100vh - 64px)", // Trừ height của header/navbar
+          width: "100%",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           p: 2,
-          gap: 1
-        }}
-      >
+          gap: 1,
+        }}>
         <Typography
           variant="h6"
-          sx={{ 
-            color: "#1976d2", 
-            fontWeight: "bold", 
+          sx={{
+            color: "#1976d2",
+            fontWeight: "bold",
             letterSpacing: 1,
-            flexShrink: 0
-          }}
-        >
+            flexShrink: 0,
+          }}>
           QUẢN LÝ MƯỢN TRẢ HỒ SƠ BỆNH ÁN
         </Typography>
 
         {/* Filter/Search Bar */}
-        <Box 
-          display="flex" 
-          gap={2} 
-          sx={{ 
+        <Box
+          display="flex"
+          gap={2}
+          sx={{
             flexShrink: 0,
-            flexWrap: 'wrap'
-          }}
-        >
+            flexWrap: "wrap",
+          }}>
           <Box flex={3}>
             <Select
               fullWidth
@@ -420,15 +418,14 @@ export default function MuonTraHsbaPage() {
         </Box>
 
         {/* Tab Navigation */}
-        <Box 
+        <Box
           sx={{
-            bgcolor: 'white',
-            display: 'flex',
+            bgcolor: "white",
+            display: "flex",
             gap: 2,
             p: 2,
-            flexShrink: 0
-          }}
-        >
+            flexShrink: 0,
+          }}>
           <Button
             variant="contained"
             startIcon={<NoteAdd />}
@@ -447,16 +444,15 @@ export default function MuonTraHsbaPage() {
         </Box>
 
         {/* Main Content Area (DataGrid với height cố định) */}
-        <Box 
+        <Box
           sx={{
             flex: 1,
-            width: '100%',
+            width: "100%",
             minHeight: 400, // Đảm bảo có chiều cao tối thiểu
-            border: '1px solid #e0e0e0',
+            border: "1px solid #e0e0e0",
             borderRadius: 1,
-            overflow: 'hidden'
-          }}
-        >
+            overflow: "hidden",
+          }}>
           <DataGrid
             rows={rows}
             columns={columns}
@@ -468,7 +464,7 @@ export default function MuonTraHsbaPage() {
             onRowDoubleClick={handleRowDoubleClick}
             loading={searchingData}
             sx={{
-              height: '100%',
+              height: "100%",
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
                 fontWeight: "bold",
@@ -482,9 +478,9 @@ export default function MuonTraHsbaPage() {
               "& .MuiDataGrid-row:hover": {
                 backgroundColor: "#e3f2fd !important",
               },
-              '& .MuiDataGrid-main': {
-                overflow: 'hidden'
-              }
+              "& .MuiDataGrid-main": {
+                overflow: "hidden",
+              },
             }}
           />
         </Box>
