@@ -1,7 +1,6 @@
 import { post } from "@/api/client";
 import { IUserItem } from "@/model/tuser";
-import { sha256 } from "@/utils/auth";
-
+import { sha256 } from "@/utils/auth"; 
 /** * Hàm thực hiện các thao tác với người dùng
  * @param pUser Tên người dùng thực hiện thao tác
  * @param pOpt Loại thao tác (1 thêm, 2 sửa, 3 xóa, 4 đổi mật khẩu )
@@ -418,4 +417,32 @@ export const luuanhnguoidung = async (
   } catch {
     return [];
   }
-};
+}; 
+
+export async function sendOTP(phoneNumber: string) {
+  try {
+    const response = await fetch("/api/send-otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ phoneNumber }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to send OTP");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    throw error;
+  }
+}
+
+export async function verifyOTP(otp: string, storedOtp: string) {
+  // Verify OTP locally or call API
+  return {
+    status: otp === storedOtp ? "success" : "error",
+  };
+}
