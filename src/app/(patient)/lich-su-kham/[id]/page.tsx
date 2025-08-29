@@ -21,12 +21,17 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import ItemDetail from "./components/item-detail";
+import {
+  PatientInfoSkeleton,
+  PatientLsKhamSkeleton,
+} from "./components/patient-skeleton";
 
 export default function PatientDetailPage() {
   const params = useParams();
   const rawId = params?.id;
   const id = Array.isArray(rawId) ? rawId[0] : rawId;
   const router = useRouter();
+
   const [isChecking, setIsChecking] = useState(true);
   const [patientInfo, setPatientInfo] = useState<IPatientInfo | null>(null);
   const [patientLsKham, setPatientLsKham] = useState<
@@ -34,54 +39,47 @@ export default function PatientDetailPage() {
   >(null);
   const [expanded, setExpanded] = useState<number | false>(false);
 
+  const [loadingInfo, setLoadingInfo] = useState(true);
+  const [loadingLsKham, setLoadingLsKham] = useState(true);
+
   const handleChange =
-    (idx: number) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    (idx: number) => (_: React.SyntheticEvent, isExpanded: boolean) => {
       setExpanded(isExpanded ? idx : false);
     };
 
   const getPatientInfo = useCallback(async () => {
     if (!id) return;
-
     try {
+      setLoadingInfo(true);
       const data = await getPatientInfoByMaBN(id);
-
-      if (!data) return;
-
-      setPatientInfo(data);
-    } catch {
-      // Handle error silently
+      if (data) setPatientInfo(data);
+    } finally {
+      setLoadingInfo(false);
     }
   }, [id]);
 
   const getPatientLsKham = useCallback(async () => {
     if (!id) return;
-
     try {
+      setLoadingLsKham(true);
       const data = await getPatientLichSuKhamByMaBN(id);
-      console.log("Patient Info:", data);
-      if (!data) return;
-
-      setPatientLsKham(data);
-    } catch {
-      // Handle error silently
+      if (data) setPatientLsKham(data);
+    } finally {
+      setLoadingLsKham(false);
     }
   }, [id]);
 
   useEffect(() => {
     const token = localStorage.getItem("token-patient");
-
     if (token) {
       setIsChecking(false);
       return;
     }
-
     if (!token) {
       localStorage.removeItem("token-patient");
       return router.push(`/lich-su-kham?mabn=${id}`);
     }
-
     const dataToken = JSON.parse(atob(token));
-
     if (dataToken.mabn !== id) {
       localStorage.removeItem("token-patient");
       return router.push(`/lich-su-kham?mabn=${id}`);
@@ -102,12 +100,7 @@ export default function PatientDetailPage() {
     <Box
       className="h-screen overflow-auto"
       sx={{
-        maxWidth: {
-          xs: "100vw", // màn nhỏ (mobile)
-          sm: "100vw", // small
-          md: "80vw", // medium
-          lg: "70vw", // large
-        },
+        maxWidth: { xs: "100vw", sm: "100vw", md: "80vw", lg: "70vw" },
         mx: "auto",
         bgcolor: "#f5f7fa",
         boxShadow: 2,
@@ -116,50 +109,53 @@ export default function PatientDetailPage() {
       {/* Thông tin cơ bản bệnh nhân */}
       <Card
         className="!bg-blue-500"
-        sx={{
-          p: 1,
-          mb: 3,
-          borderRadius: 3,
-          color: "#fff",
-        }}>
-        <Stack direction="row" spacing={3} alignItems="center">
-          <Avatar
-            sx={{ width: 72, height: 72, fontSize: 32, bgcolor: "#1565c0" }}>
-            AS
-          </Avatar>
-          <Box>
-            <Typography variant="h5" fontWeight={700} fontSize={20}>
-              {patientInfo?.Hoten}
-            </Typography>
-            <Stack spacing={1} mt={1} fontSize={12}>
-              <Box className="flex items-center gap-1">
-                <CalendarMonth fontSize="small" />
-                {getTextBirthday(
-                  patientInfo?.Ngaysinh,
-                  patientInfo?.Thangsinh,
-                  patientInfo?.Namsinh
-                )}{" "}
-                -{" "}
-                {`${
-                  new Date().getFullYear() - Number(patientInfo?.Namsinh || 0)
-                }`}
-                tuổi
-              </Box>
-              {patientInfo?.Diachi && (
-                <Typography variant="body2" className="flex items-center gap-1">
-                  <LocationPin fontSize="small" />
-                  {patientInfo?.Diachi}
-                </Typography>
-              )}
-              {patientInfo?.Dienthoai && (
-                <Typography variant="body2" className="flex items-center gap-1">
-                  <PhoneIphone fontSize="small" />
-                  {patientInfo?.Dienthoai}
-                </Typography>
-              )}
-            </Stack>
-          </Box>
-        </Stack>
+        sx={{ p: 1, mb: 3, borderRadius: 3, color: "#fff" }}>
+        {loadingInfo ? (
+          <PatientInfoSkeleton />
+        ) : (
+          <Stack direction="row" spacing={3} alignItems="center">
+            <Avatar
+              sx={{ width: 72, height: 72, fontSize: 32, bgcolor: "#1565c0" }}>
+              AS
+            </Avatar>
+            <Box>
+              <Typography variant="h5" fontWeight={700} fontSize={20}>
+                {patientInfo?.Hoten}
+              </Typography>
+              <Stack spacing={1} mt={1} fontSize={12}>
+                <Box className="flex items-center gap-1">
+                  <CalendarMonth fontSize="small" />
+                  {getTextBirthday(
+                    patientInfo?.Ngaysinh,
+                    patientInfo?.Thangsinh,
+                    patientInfo?.Namsinh
+                  )}{" "}
+                  -{" "}
+                  {`${
+                    new Date().getFullYear() - Number(patientInfo?.Namsinh || 0)
+                  }`}
+                  tuổi
+                </Box>
+                {patientInfo?.Diachi && (
+                  <Typography
+                    variant="body2"
+                    className="flex items-center gap-1">
+                    <LocationPin fontSize="small" />
+                    {patientInfo?.Diachi}
+                  </Typography>
+                )}
+                {patientInfo?.Dienthoai && (
+                  <Typography
+                    variant="body2"
+                    className="flex items-center gap-1">
+                    <PhoneIphone fontSize="small" />
+                    {patientInfo?.Dienthoai}
+                  </Typography>
+                )}
+              </Stack>
+            </Box>
+          </Stack>
+        )}
       </Card>
 
       {/* Lịch sử khám chữa bệnh */}
@@ -167,8 +163,11 @@ export default function PatientDetailPage() {
         <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
           Lịch sử khám chữa bệnh
         </Typography>
-        {patientLsKham &&
-          patientLsKham.map((item, idx) => (
+
+        {loadingLsKham ? (
+          <PatientLsKhamSkeleton />
+        ) : (
+          patientLsKham?.map((item, idx) => (
             <Accordion
               key={idx}
               sx={{ mb: 1 }}
@@ -192,7 +191,6 @@ export default function PatientDetailPage() {
                       {StringToTime(item.TGVao)}
                     </Typography>
                   </Box>
-
                   <Box className="flex gap-1">
                     <Typography>Chẩn đoán:</Typography>
                     <Typography color="text.secondary">
@@ -203,7 +201,8 @@ export default function PatientDetailPage() {
               </AccordionSummary>
               {expanded === idx && <ItemDetail lsKham={item} />}
             </Accordion>
-          ))}
+          ))
+        )}
       </Box>
     </Box>
   );
