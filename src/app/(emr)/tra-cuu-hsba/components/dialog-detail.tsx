@@ -129,14 +129,14 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
     if (base64Data) {
       createPdfUrl(base64Data);
     }
-  }, [phieuList]); // Chỉ dependency phieuList, không có createPdfUrl
+  }, [phieuList, createPdfUrl]); // Chỉ dependency phieuList, không có createPdfUrl
 
   // Cleanup khi component unmount
   useEffect(() => {
     return () => {
       cleanup();
     };
-  }, []); // Empty dependency array
+  }, [cleanup]); // Empty dependency array
 
   console.log("Selected HSBA for Detail:", pdfUrl);
 

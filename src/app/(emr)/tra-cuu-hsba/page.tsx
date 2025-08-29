@@ -263,7 +263,7 @@ export default function TraCuuHsbaPage() {
     setPhieuList([]);
   };
 
-  const fetchKhoaList = async () => {
+  const fetchKhoaList = useCallback(async () => {
     if (!hasAccess) return;
 
     try {
@@ -273,14 +273,14 @@ export default function TraCuuHsbaPage() {
       console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
-  };
+  }, [hasAccess]);
 
   // Fetch khoa list from API
   useEffect(() => {
     if (hasAccess && !isCheckingAccess) {
       fetchKhoaList();
     }
-  }, [hasAccess, isCheckingAccess]);
+  }, [hasAccess, isCheckingAccess, fetchKhoaList]);
 
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {

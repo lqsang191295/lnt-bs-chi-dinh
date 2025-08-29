@@ -101,7 +101,7 @@ export const PdfComponents = (options?: iPdfComponentsOptions) => {
         return "";
       }
     },
-    [onError]
+    [onError, pdfUrl]
   );
 
   // View PDF in new tab
