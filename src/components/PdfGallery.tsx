@@ -1,18 +1,18 @@
 "use client";
 
-import PdfHandler from "@/utils/PdfHandler";
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Close,
-  Visibility,
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { memo, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { memo, useState } from "react";
+import PdfViewer from "./PdfView";
 
 export interface iPdfGallery {
   filename: string;
@@ -23,104 +23,8 @@ type Props = {
   files: iPdfGallery[];
 };
 
-/* ---------- Thumbnail component ---------- */
-const PDFThumbnail = memo(function PDFThumbnail({
-  file,
-  onOpen,
-  interactive = false,
-}: {
-  file: iPdfGallery;
-  onOpen?: () => void;
-  interactive?: boolean;
-}) {
-  const [pdfUrl, setPdfUrl] = useState<string>("");
-
-  useEffect(() => {
-    if (!file?.base64 || !PdfHandler.validatePdfData(file.base64)) return;
-
-    const newUrl = PdfHandler.createPdfBlobUrl(file.base64);
-    setPdfUrl(newUrl);
-
-    return () => {
-      PdfHandler.cleanupBlobUrl(newUrl);
-    };
-  }, [file]);
-
-  return (
-    <Box
-      onClick={!interactive ? onOpen : undefined}
-      className={`relative h-full ${interactive ? "" : "group cursor-pointer"}`}
-      sx={{
-        borderRadius: 2,
-        overflow: "hidden",
-        ...(interactive
-          ? {}
-          : {
-              boxShadow: 1,
-              "&:hover": {
-                boxShadow: 4,
-                transform: "scale(1.02)",
-                transition: "transform 0.2s",
-              },
-            }),
-        minHeight: 200,
-      }}>
-      <Box
-        sx={{
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          bgcolor: "#f5f5f5",
-          overflow: "hidden",
-        }}>
-        {pdfUrl && (
-          <div
-            className="relative w-full h-full"
-            style={{
-              overflow: "hidden", // ẩn scroll bar
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-            <object
-              data={pdfUrl}
-              type="application/pdf"
-              style={{
-                width: "100%",
-                height: "100%",
-                border: "none",
-                overflow: "hidden",
-              }}>
-              <p>
-                Thiết bị không hỗ trợ xem PDF.
-                <a href={pdfUrl}>Tải về tại đây</a>
-              </p>
-            </object>
-
-            {!interactive && (
-              <div className="absolute inset-0 bg-transparent" />
-            )}
-          </div>
-        )}
-      </Box>
-
-      {/* Hover overlay chỉ ở preview mode */}
-      {!interactive && (
-        <Box
-          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          sx={{ bgcolor: "rgba(0,0,0,0.5)" }}>
-          <Visibility sx={{ fontSize: 40, color: "white" }} />
-        </Box>
-      )}
-
-      <Typography
-        className="absolute bottom-0 left-0 right-0 bg-black/50 text-white"
-        sx={{ textAlign: "center", p: 1 }}>
-        {file.filename}
-      </Typography>
-    </Box>
-  );
+const ComponentPdfPreview = dynamic(() => import("./PdfPreview"), {
+  ssr: false, // Dòng này là mấu chốt: Tắt Server-Side Rendering cho component này
 });
 
 /* ---------- Main gallery ---------- */
@@ -148,22 +52,14 @@ function PdfGallery({ files }: Props) {
           gap: 2,
         }}>
         {files.map((f, i) => (
-          <PDFThumbnail key={i} file={f} onOpen={() => setIndex(i)} />
-          // <ComponentPdfPreview
-          //   key={i}
-          //   base64={f.base64}
-          //   interactive={false}
-          //   onOpen={() => setIndex(i)}
-          // />
-        ))}
-
-        {/* {files && files.length > 0 && (
           <ComponentPdfPreview
-            base64={files[0].base64}
+            key={i}
+            base64={f.base64}
             interactive={false}
-            onOpen={() => setIndex(0)}
+            onOpen={() => setIndex(i)}
+            filename={f.filename}
           />
-        )} */}
+        ))}
       </Box>
 
       {currentFile && (
@@ -208,7 +104,7 @@ function PdfGallery({ files }: Props) {
                 gap: 2,
               }}>
               <Box sx={{ flex: 1, width: "100%", height: "100%" }}>
-                <PDFThumbnail file={currentFile} interactive />
+                <PdfViewer file={currentFile} interactive />
               </Box>
 
               <IconButton

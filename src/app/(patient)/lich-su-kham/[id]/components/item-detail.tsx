@@ -132,7 +132,11 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
             }}>
             <Typography fontWeight={600}>Toa thuốc</Typography>
           </AccordionSummary>
-          <AccordionDetails>
+          <AccordionDetails
+            sx={{
+              p: 0,
+              margin: 0,
+            }}>
             {!loadingToaThuoc && dataToaThuoc && dataToaThuoc.length > 0 && (
               <PdfGallery
                 files={dataToaThuoc
