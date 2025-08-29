@@ -11,7 +11,6 @@ import {
   Button,
   FormControl,
   FormControlLabel,
-  FormLabel,
   MenuItem,
   Radio,
   RadioGroup,
@@ -46,7 +45,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
   const fetchHSBA = async () => {
     if (!selectedUser) return;
     if (!fromDate || !toDate) return;
-    
+
     const formatDate = (date: Date) => {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -92,31 +91,28 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
   return (
     <Box
       sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
         border: "1px solid #ccc",
         borderRadius: 2,
         bgcolor: "#fff",
-        overflow: 'hidden'
-      }}
-    >
+        overflow: "hidden",
+      }}>
       {/* Filter Controls - Tất cả trên 1 hàng */}
       <Box
         sx={{
           p: 2,
           flexShrink: 0,
-          borderBottom: '1px solid #eee'
-        }}
-      >
-        <Box 
-          sx={{ 
-            display: 'flex',
-            alignItems: 'center',
+          borderBottom: "1px solid #eee",
+        }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
             gap: 2,
-            flexWrap: 'nowrap' // Không wrap xuống dòng
-          }}
-        >
+            flexWrap: "nowrap", // Không wrap xuống dòng
+          }}>
           {/* Select Khoa - Width cố định, dài hơn */}
           <Select
             size="small"
@@ -131,12 +127,11 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
               flexShrink: 0, // Không co lại
               "& .MuiSelect-select": {
                 fontSize: "0.875rem",
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               },
-            }}
-          >
+            }}>
             {khoaList.map((item) => (
               <MenuItem key={item.value} value={item.value}>
                 {item.label}
@@ -153,12 +148,11 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
               onChange={(e) => setPopt(e.target.value)}
               sx={{
                 gap: 1,
-                '& .MuiFormControlLabel-root': {
+                "& .MuiFormControlLabel-root": {
                   margin: 0,
-                  marginRight: 1
-                }
-              }}
-            >
+                  marginRight: 1,
+                },
+              }}>
               <FormControlLabel
                 value="1"
                 control={
@@ -166,7 +160,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     sx={{
                       color: "#1976d2",
                       "&.Mui-checked": { color: "#1976d2" },
-                      padding: 0.5
+                      padding: 0.5,
                     }}
                     size="small"
                   />
@@ -184,7 +178,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     sx={{
                       color: "#1976d2",
                       "&.Mui-checked": { color: "#1976d2" },
-                      padding: 0.5
+                      padding: 0.5,
                     }}
                     size="small"
                   />
@@ -220,14 +214,14 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     fontSize: "0.8rem",
                   },
                   "& .MuiInputBase-input": {
-                    padding: '8px 14px',
-                    width: 'auto'
-                  }
+                    padding: "8px 14px",
+                    width: "auto",
+                  },
                 },
               },
               openPickerButton: {
-                size: "small"
-              }
+                size: "small",
+              },
             }}
           />
 
@@ -253,14 +247,14 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     fontSize: "0.8rem",
                   },
                   "& .MuiInputBase-input": {
-                    padding: '8px 14px',
-                    width: 'auto'
-                  }
+                    padding: "8px 14px",
+                    width: "auto",
+                  },
                 },
               },
               openPickerButton: {
-                size: "small"
-              }
+                size: "small",
+              },
             }}
           />
 
@@ -275,17 +269,16 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
               fontSize: "0.8rem",
               px: 2,
               flexShrink: 0,
-              minWidth: 'auto'
-            }}
-          >
+              minWidth: "auto",
+            }}>
             Tìm kiếm
           </Button>
         </Box>
       </Box>
 
       {/* Table */}
-      <Box sx={{ flex: 1, overflow: 'hidden' }}>
-        <TableContainer sx={{ height: '100%' }}>
+      <Box sx={{ flex: 1, overflow: "hidden" }}>
+        <TableContainer sx={{ height: "100%" }}>
           <Table size="small" sx={{ border: "1px solid #eee" }}>
             <TableHead>
               <TableRow>
@@ -297,9 +290,8 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                  }}>
                   {/* Checkbox header */}
                 </TableCell>
                 <TableCell
@@ -309,10 +301,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    minWidth: 80
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                    minWidth: 80,
+                  }}>
                   Mã BA
                 </TableCell>
                 <TableCell
@@ -322,10 +313,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    minWidth: 100
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                    minWidth: 100,
+                  }}>
                   Số vào viện
                 </TableCell>
                 <TableCell
@@ -335,10 +325,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    minWidth: 150
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                    minWidth: 150,
+                  }}>
                   Họ tên
                 </TableCell>
                 <TableCell
@@ -348,10 +337,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    minWidth: 100
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                    minWidth: 100,
+                  }}>
                   Ngày sinh
                 </TableCell>
                 <TableCell
@@ -361,10 +349,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    minWidth: 80
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                    minWidth: 80,
+                  }}>
                   Giới tính
                 </TableCell>
                 <TableCell
@@ -374,10 +361,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    minWidth: 200
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                    minWidth: 200,
+                  }}>
                   Địa chỉ
                 </TableCell>
                 <TableCell
@@ -387,10 +373,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    minWidth: 120
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                    minWidth: 120,
+                  }}>
                   Ngày vào
                 </TableCell>
                 <TableCell
@@ -400,10 +385,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    minWidth: 150
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                    minWidth: 150,
+                  }}>
                   Ngày ra
                 </TableCell>
                 <TableCell
@@ -413,10 +397,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                    whiteSpace: 'nowrap',
-                    minWidth: 150
-                  }}
-                >
+                    whiteSpace: "nowrap",
+                    minWidth: 150,
+                  }}>
                   Khoa điều trị
                 </TableCell>
               </TableRow>
@@ -425,37 +408,55 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
               {Array.isArray(dsHSBA) && dsHSBA.length > 0 ? (
                 dsHSBA.map((item) => (
                   <TableRow key={item.ID} sx={{ cursor: "pointer" }}>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
                       <input
                         type="checkbox"
                         checked={item.ctrangthai === 1}
                         onChange={() => handleCheckHSBA(item.ID)}
                       />
                     </TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.ID}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.SoVaoVien}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.Hoten}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.Ngaysinh}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.Gioitinh}</TableCell>
-                    <TableCell 
-                      sx={{ 
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        maxWidth: 200
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {item.ID}
+                    </TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {item.SoVaoVien}
+                    </TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {item.Hoten}
+                    </TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {item.Ngaysinh}
+                    </TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {item.Gioitinh}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        maxWidth: 200,
                       }}
-                      title={item.Diachi}
-                    >
+                      title={item.Diachi}>
                       {item.Diachi}
                     </TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.NgayVao}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.NgayRa}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.KhoaDieuTri}</TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {item.NgayVao}
+                    </TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {item.NgayRa}
+                    </TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {item.KhoaDieuTri}
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={10} align="center" sx={{ whiteSpace: 'nowrap' }}>
+                  <TableCell
+                    colSpan={10}
+                    align="center"
+                    sx={{ whiteSpace: "nowrap" }}>
                     Không có dữ liệu
                   </TableCell>
                 </TableRow>
@@ -466,7 +467,13 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
       </Box>
 
       {/* Footer */}
-      <Box sx={{ p: 2, textAlign: "right", flexShrink: 0, borderTop: '1px solid #eee' }}>
+      <Box
+        sx={{
+          p: 2,
+          textAlign: "right",
+          flexShrink: 0,
+          borderTop: "1px solid #eee",
+        }}>
         <Button variant="contained" onClick={handleLuuPhanQuyenBA}>
           LƯU
         </Button>

@@ -526,8 +526,6 @@ const CameraComponent = ({
 
   // Initialize camera based on source
   useEffect(() => {
-    let cleanup: () => void;
-
     const initCamera = async () => {
       if (cameraSource === "local") {
         await getLocalCamera();

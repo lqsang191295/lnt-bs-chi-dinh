@@ -83,7 +83,7 @@ export default function LichSuKhamPage() {
     try {
       // demo: tạo token giả (bạn có thể thay bằng JWT thật)
       const fakeToken = btoa(
-        JSON.stringify({ phone, logged: true, loginAt: Date.now() })
+        JSON.stringify({ phone, logged: true, loginAt: Date.now(), mabn })
       );
       localStorage.setItem("token-patient", fakeToken);
 

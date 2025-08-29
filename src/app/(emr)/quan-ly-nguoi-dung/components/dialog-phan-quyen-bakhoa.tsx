@@ -1,6 +1,9 @@
 "use client";
 
-import { getphanquyenbakhoa, luuphanquyenbakhoa } from "@/actions/act_tnguoidung";
+import {
+  getphanquyenbakhoa,
+  luuphanquyenbakhoa,
+} from "@/actions/act_tnguoidung";
 import { IPhanQuyenKhoa } from "@/model/tphanquyen";
 import { IUserItem } from "@/model/tuser";
 import { useUserStore } from "@/store/user";
@@ -14,7 +17,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
 } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 
@@ -61,23 +63,22 @@ const DialogPhanQuyenBaKhoa: React.FC<DialogPhanQuyenBaKhoaProps> = ({
   return (
     <Box
       sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
         border: "1px solid #ccc",
         borderRadius: 2,
         bgcolor: "#fff",
-        overflow: 'hidden'
-      }}
-    >
+        overflow: "hidden",
+      }}>
       {/* <Box sx={{ p: 2, flexShrink: 0 }}>
         <Typography fontWeight="bold" sx={{ color: "#1976d2" }}>
           Danh sách khoa
         </Typography>
       </Box> */}
 
-      <Box sx={{ flex: 1, overflow: 'hidden' }}>
-        <TableContainer sx={{ height: '100%' }}>
+      <Box sx={{ flex: 1, overflow: "hidden" }}>
+        <TableContainer sx={{ height: "100%" }}>
           <Table size="small" sx={{ border: "1px solid #eee" }}>
             <TableHead>
               <TableRow>
@@ -98,8 +99,7 @@ const DialogPhanQuyenBaKhoa: React.FC<DialogPhanQuyenBaKhoaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                  }}
-                >
+                  }}>
                   Ký hiệu
                 </TableCell>
                 <TableCell
@@ -109,8 +109,7 @@ const DialogPhanQuyenBaKhoa: React.FC<DialogPhanQuyenBaKhoaProps> = ({
                     background: "#fff",
                     fontWeight: "bold",
                     zIndex: 1,
-                  }}
-                >
+                  }}>
                   Tên khoa
                 </TableCell>
               </TableRow>
@@ -145,7 +144,13 @@ const DialogPhanQuyenBaKhoa: React.FC<DialogPhanQuyenBaKhoaProps> = ({
         </TableContainer>
       </Box>
 
-      <Box sx={{ p: 2, textAlign: "right", flexShrink: 0, borderTop: '1px solid #eee' }}>
+      <Box
+        sx={{
+          p: 2,
+          textAlign: "right",
+          flexShrink: 0,
+          borderTop: "1px solid #eee",
+        }}>
         <Button variant="contained" onClick={handleLuuPhanQuyenKhoa}>
           LƯU
         </Button>
