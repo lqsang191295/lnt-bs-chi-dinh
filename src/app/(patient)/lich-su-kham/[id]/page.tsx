@@ -76,6 +76,14 @@ export default function PatientDetailPage() {
     }
 
     if (!token) {
+      localStorage.removeItem("token-patient");
+      return router.push(`/lich-su-kham?mabn=${id}`);
+    }
+
+    const dataToken = JSON.parse(atob(token));
+
+    if (dataToken.mabn !== id) {
+      localStorage.removeItem("token-patient");
       return router.push(`/lich-su-kham?mabn=${id}`);
     }
   }, [id, router]);
