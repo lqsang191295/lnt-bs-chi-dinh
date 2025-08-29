@@ -258,7 +258,35 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                 <TableCell sx={{ fontWeight: "bold", width: 150 }}>
                   Ngày trả
                 </TableCell>
-                {/* <TableCell sx={{ fontWeight: "bold", width: 100 }}>Trạng thái</TableCell> */}
+                
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Mã BN
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Họ tên
+                </TableCell>
+                
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Ngày sinh
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Giới tính
+                </TableCell>
+                
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Số Vào viện
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Ngày vào
+                </TableCell>
+                
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Ngày ra
+                </TableCell>
+                
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Khoa điều trị
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -300,6 +328,9 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                   />
                 </TableCell>
                 <TableCell></TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
               </TableRow>
 
               {/* Data Rows */}
@@ -332,6 +363,14 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                       {formatDisplayDate(row.cngaytradukien)}
                     </TableCell>
                     <TableCell>{formatDisplayDate(row.cngaytra)}</TableCell>
+                    <TableCell>{row.MaBN || ""}</TableCell>
+                    <TableCell>{row.Hoten || ""}</TableCell>
+                    <TableCell>{row.Ngaysinh || ""}</TableCell>
+                    <TableCell>{row.Gioitinh || ""}</TableCell>
+                    <TableCell>{row.SoVaoVien || ""}</TableCell>
+                    <TableCell>{formatDisplayDate(row.NgayVao)}</TableCell>
+                    <TableCell>{formatDisplayDate(row.NgayRa)}</TableCell>
+                    <TableCell>{row.TenKhoaDieuTri || ""}</TableCell>
                   </TableRow>
                 ))
               ) : (

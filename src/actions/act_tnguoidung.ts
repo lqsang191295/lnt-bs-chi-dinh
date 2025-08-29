@@ -435,7 +435,7 @@ export async function sendOTP(phoneNumber: string) {
 
     return await response.json();
   } catch (error) {
-    console.error("Error sending OTP:", error);
+    // console.error("Error sending OTP:", error);
     throw error;
   }
 }

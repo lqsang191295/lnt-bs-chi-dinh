@@ -111,22 +111,22 @@ export default function SignIn() {
   }, [countdown]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    console.log("handleSubmit");
+    // console.log("handleSubmit");
     event.preventDefault();
     setError("");
     setLoading(true);
     
     try {
       const hashedPassword = await sha256(password);
-      console.log("handleSubmit ---- ", username, password);
+      // console.log("handleSubmit ---- ", username, password);
 
       const res = await login(username, hashedPassword);
-      console.log("handleSubmit res ---- ", res);
+      // console.log("handleSubmit res ---- ", res);
 
       if (res && res.status === "success") {
         // Parse thông tin user từ token
         const tokenClaims = parseTokenClaims(res.token);
-        console.log("Token claims:", tokenClaims);
+        // console.log("Token claims:", tokenClaims);
         
         // Kiểm tra xem có yêu cầu OTP không (cxacthuc2lop === "1")
         if (tokenClaims?.cxacthuc2lop === "1") {
@@ -188,7 +188,7 @@ export default function SignIn() {
         ToastError("Mã OTP không đúng");
       }
     } catch (error) {
-      console.error("OTP verification error:", error);
+      // console.error("OTP verification error:", error);
       setOtpError("Có lỗi xảy ra khi xác thực OTP. Vui lòng thử lại.");
       ToastError("Lỗi xác thực OTP");
     }
@@ -212,7 +212,7 @@ export default function SignIn() {
         ToastError("Không thể gửi lại mã OTP");
       }
     } catch (error) {
-      console.error("Resend OTP error:", error);
+      // console.error("Resend OTP error:", error);
       ToastError("Lỗi khi gửi lại mã OTP");
     }
     setOtpLoading(false);
@@ -238,11 +238,11 @@ export default function SignIn() {
 
   const initUserData = async () => {
     const claims = getClaimsFromToken();
-    console.log("Claims fetched:", claims);
+    // console.log("Claims fetched:", claims);
     if (claims) {
       setUserData(claims);
     } else {
-      console.warn("No valid claims found in token");
+      // console.warn("No valid claims found in token");
     }
   };
 
@@ -253,20 +253,20 @@ export default function SignIn() {
       const decodedPayload = atob(payload);
       return JSON.parse(decodedPayload);
     } catch (error) {
-      console.error("Error parsing token:", error);
+      // console.error("Error parsing token:", error);
       return null;
     }
   };
 
   // Tạo token cuối cùng sau khi xác thực OTP
-  const generateFinalToken = async (userInfo: any) => {
+  const generateFinalToken = async (userInfo: unknown) => {
     // Gọi API để tạo token mới với thời gian hết hạn dài hơn
     // Hoặc sử dụng token hiện tại nếu API không hỗ trợ
     try {
       const res = await login(username, await sha256(password));
       return res.token;
     } catch (error) {
-      console.error("Error generating final token:", error);
+      // console.error("Error generating final token:", error);
       throw error;
     }
   };

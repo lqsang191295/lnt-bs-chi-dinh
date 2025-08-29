@@ -79,14 +79,14 @@ async function sendSmsOtp(otp: string, phoneNumber: string) {
 
     if (response.ok) {
       const result = await response.json();
-      console.log('SMS API response:', result);
+      // console.log('SMS API response:', result);
       return result;
     } else {
-      console.error('SMS API failed with status:', response.status);
+      // console.error('SMS API failed with status:', response.status);
       return null;
     }
   } catch (error) {
-    console.error('SMS API error:', error);
+    // console.error('SMS API error:', error);
     return null;
   }
 }
