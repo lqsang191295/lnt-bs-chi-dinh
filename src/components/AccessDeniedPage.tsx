@@ -215,7 +215,7 @@ const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
                   fontWeight: 'medium',
                 }}
               >
-                admin@hospital.com
+                info@bvlengoctung.com
               </Typography>
             </Typography>
           </Box>
