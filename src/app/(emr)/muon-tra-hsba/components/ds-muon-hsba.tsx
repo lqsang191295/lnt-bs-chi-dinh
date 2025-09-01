@@ -101,6 +101,22 @@ const DsMuonHsba: React.FC<DsMuonHsbaProps> = ({
         cngaytra: loai === "TRA" ? formatDateForAPI(formData.cngaytra) : null,
         cghichutra: loai === "TRA" ? formData.cghichutra : "",
         ctrangthaitra: loai === "TRA" ? "1" : "0",
+        MaBN: null,
+        Hoten: null,
+        Ngaysinh: null,
+        Gioitinh: null,
+        Dienthoai: null,
+        Diachi: null,
+        SoCCCD: null,
+        SoNhapVien: null,
+        SoVaoVien: null,
+        SoLuuTru: null,
+        KhoaVaoVien: null,
+        KhoaDieuTri: null,
+        TenKhoaDieuTri: null,
+        NgayVao: null,
+        NgayRa: null,
+        LoaiBenhAn: null
       };
 
       //console.log("Saving HSBA data:", hsbaData);
