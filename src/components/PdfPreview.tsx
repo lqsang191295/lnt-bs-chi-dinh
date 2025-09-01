@@ -68,6 +68,7 @@ function PdfPreview({
       }}>
       {pdfUrl && (
         <Document
+          className="flex flex-col items-center w-full bg-white"
           file={pdfUrl}
           onLoadSuccess={({ numPages }) => setNumPages(numPages)}
           loading={<p>Đang tải PDF...</p>}

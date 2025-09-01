@@ -1,12 +1,16 @@
 import {
+  getPatientBangKeByMaBN_SoVaoVien,
   getPatientChiDinhByMaBN_SoVaoVien,
+  getPatientPkBenhByMaBN_SoVaoVien,
   getPatientToaThuocByMaBN_SoVaoVien,
 } from "@/actions/act_patient";
 import PdfGallery from "@/components/PdfGallery";
 import Spinner from "@/components/spinner";
 import {
+  IPatientBangKe,
   IPatientChiDinh,
   IPatientLichSuKham,
+  IPatientPkBenh,
   IPatientToaThuoc,
 } from "@/model/tpatient";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -30,6 +34,10 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
     []
   );
   const [loadingToaThuoc, setLoadingToaThuoc] = React.useState<boolean>(false);
+  const [dataBangKe, setDataBangKe] = React.useState<IPatientBangKe[]>([]);
+  const [loadingBangKe, setLoadingBangKe] = React.useState<boolean>(false);
+  const [dataPkBenh, setDataPkBenh] = React.useState<IPatientPkBenh[]>([]);
+  const [loadingPkBenh, setLoadingPkBenh] = React.useState<boolean>(false);
 
   useEffect(() => {
     if (!lsKham) return;
@@ -87,8 +95,87 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
     };
   }, [lsKham]);
 
+  useEffect(() => {
+    if (!lsKham) return;
+
+    setLoadingBangKe(true);
+
+    (async () => {
+      try {
+        const data = await getPatientBangKeByMaBN_SoVaoVien(
+          lsKham.MaBN!,
+          lsKham.SoVaoVien!
+        );
+        setDataBangKe(data || []);
+      } catch (error) {
+        console.error("Error fetching Chi Dinh data:", error);
+        setDataBangKe([]);
+      } finally {
+        setLoadingBangKe(false);
+      }
+    })();
+  }, [lsKham]);
+
+  useEffect(() => {
+    if (!lsKham) return;
+
+    setLoadingPkBenh(true);
+
+    (async () => {
+      try {
+        const data = await getPatientPkBenhByMaBN_SoVaoVien(
+          lsKham.MaBN!,
+          lsKham.SoVaoVien!
+        );
+        setDataPkBenh(data || []);
+      } catch (error) {
+        console.error("Error fetching Chi Dinh data:", error);
+        setDataPkBenh([]);
+      } finally {
+        setLoadingPkBenh(false);
+      }
+    })();
+  }, [lsKham]);
+
   return (
     <AccordionDetails className="bg-blue-100">
+      {dataPkBenh && (
+        <Accordion sx={{ mb: 1, boxShadow: 0, background: "none" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{
+              p: 0,
+              margin: 0,
+            }}>
+            <Typography fontWeight={600}>Phiếu khám bệnh</Typography>
+          </AccordionSummary>
+          <AccordionDetails
+            sx={{
+              p: 0,
+              margin: 0,
+            }}>
+            {!loadingPkBenh && dataPkBenh && dataPkBenh.length > 0 && (
+              <PdfGallery
+                files={dataPkBenh
+                  .filter((i: IPatientPkBenh) => !!i.FilePdfKySo)
+                  .map((i: IPatientPkBenh) => ({
+                    filename: i.TenLoaiPhieuY,
+                    base64: i.FilePdfKySo,
+                  }))}
+              />
+            )}
+            {!loadingPkBenh && dataPkBenh && dataPkBenh.length === 0 && (
+              <Typography>Không có Phiếu khám bệnh</Typography>
+            )}
+            {loadingPkBenh && (
+              <Box className="flex flex-row gap-2">
+                <Spinner />
+                <Typography>Đang tải dữ liệu...</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      )}
       {dataChiDinh && (
         <Accordion sx={{ p: 0, mb: 1, boxShadow: 0, background: "none" }}>
           <AccordionSummary
@@ -159,19 +246,43 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
           </AccordionDetails>
         </Accordion>
       )}
-      <Accordion sx={{ mb: 1, boxShadow: 0, background: "none" }}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{
-            p: 0,
-            margin: 0,
-          }}>
-          <Typography fontWeight={600}>Bảng kê</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography>Bảng kê</Typography>
-        </AccordionDetails>
-      </Accordion>
+      {dataBangKe && (
+        <Accordion sx={{ mb: 1, boxShadow: 0, background: "none" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{
+              p: 0,
+              margin: 0,
+            }}>
+            <Typography fontWeight={600}>Bảng kê</Typography>
+          </AccordionSummary>
+          <AccordionDetails
+            sx={{
+              p: 0,
+              margin: 0,
+            }}>
+            {!loadingBangKe && dataBangKe && dataBangKe.length > 0 && (
+              <PdfGallery
+                files={dataBangKe
+                  .filter((i: IPatientBangKe) => !!i.FilePdfKySo)
+                  .map((i: IPatientBangKe) => ({
+                    filename: i.TenLoaiPhieuY,
+                    base64: i.FilePdfKySo,
+                  }))}
+              />
+            )}
+            {!loadingBangKe && dataBangKe && dataBangKe.length === 0 && (
+              <Typography>Không có Bảng kê</Typography>
+            )}
+            {loadingBangKe && (
+              <Box className="flex flex-row gap-2">
+                <Spinner />
+                <Typography>Đang tải dữ liệu...</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      )}
     </AccordionDetails>
   );
 }
