@@ -1,32 +1,32 @@
 "use client";
-import { login,  verifyOTP, sendOTP} from "@/actions/act_tnguoidung";
+import { login, sendOTP } from "@/actions/act_tnguoidung";
 import { FacebookIcon, GoogleIcon } from "@/components/CustomIcons";
 import Spinner from "@/components/spinner";
-import { useUserStore } from "@/store/user";
 import { TokenClaims } from "@/model/ttokenclaims";
+import { useUserStore } from "@/store/user";
 import { getClaimsFromToken, sha256 } from "@/utils/auth";
-import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast"; 
+import { ToastError, ToastSuccess } from "@/utils/toast";
+import CloseIcon from "@mui/icons-material/Close";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import SecurityIcon from "@mui/icons-material/Security";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MuiCard from "@mui/material/Card";
 import Checkbox from "@mui/material/Checkbox";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import Divider from "@mui/material/Divider";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
+import IconButton from "@mui/material/IconButton";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import { styled } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
-import IconButton from "@mui/material/IconButton";
-import CloseIcon from "@mui/icons-material/Close";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import SecurityIcon from "@mui/icons-material/Security";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -79,7 +79,7 @@ export default function SignIn() {
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  
+
   // OTP states
   const [showOtpDialog, setShowOtpDialog] = React.useState(false);
   const [otpCode, setOtpCode] = React.useState("");
@@ -89,7 +89,7 @@ export default function SignIn() {
   const [userInfo, setUserInfo] = React.useState<TokenClaims>(null); // Thông tin user từ token
   const [currentOtp, setCurrentOtp] = React.useState(""); // OTP hiện tại được tạo
   const [canResendOtp, setCanResendOtp] = React.useState(false);
-  
+
   const router = useRouter();
   const { setUserData } = useUserStore();
 
@@ -115,7 +115,7 @@ export default function SignIn() {
     event.preventDefault();
     setError("");
     setLoading(true);
-    
+
     try {
       const hashedPassword = await sha256(password);
       // console.log("handleSubmit ---- ", username, password);
@@ -127,21 +127,24 @@ export default function SignIn() {
         // Parse thông tin user từ token
         const tokenClaims = parseTokenClaims(res.token);
         // console.log("Token claims:", tokenClaims);
-        
+
         // Kiểm tra xem có yêu cầu OTP không (cxacthuc2lop === "1")
         if (tokenClaims?.cxacthuc2lop === "1") {
           setUserInfo(tokenClaims);
-          
+
           // Gửi OTP
           try {
-
             const otpResult = await sendOTP(tokenClaims.cdienthoai);
             if (otpResult && otpResult.status === "success") {
               setCurrentOtp(otpResult.otp); // Lưu OTP để verify
               setShowOtpDialog(true);
               setCountdown(60); // 60 giây countdown
               setCanResendOtp(false);
-              ToastSuccess(`Mã OTP đã được gửi đến số điện thoại ${maskPhoneNumber(tokenClaims.cdienthoai)}`);
+              ToastSuccess(
+                `Mã OTP đã được gửi đến số điện thoại ${maskPhoneNumber(
+                  tokenClaims.cdienthoai
+                )}`
+              );
             } else {
               ToastError("Không thể gửi mã OTP. Vui lòng thử lại.");
             }
@@ -249,7 +252,7 @@ export default function SignIn() {
   // Parse thông tin từ JWT token
   const parseTokenClaims = (token: string) => {
     try {
-      const payload = token.split('.')[1];
+      const payload = token.split(".")[1];
       const decodedPayload = atob(payload);
       return JSON.parse(decodedPayload);
     } catch (error) {
@@ -281,7 +284,7 @@ export default function SignIn() {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -383,17 +386,21 @@ export default function SignIn() {
       </SignInContainer>
 
       {/* OTP Dialog */}
-      <Dialog 
-        open={showOtpDialog} 
+      <Dialog
+        open={showOtpDialog}
         onClose={handleCloseOtpDialog}
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: 2, p: 1 }
-        }}
-      >
-        <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
-          <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+          sx: { borderRadius: 2, p: 1 },
+        }}>
+        <DialogTitle sx={{ textAlign: "center", pb: 1 }}>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            gap={1}
+            mb={1}>
             <SecurityIcon color="primary" fontSize="large" />
             <Typography variant="h5" fontWeight="bold" color="primary">
               Xác thực OTP
@@ -402,46 +409,45 @@ export default function SignIn() {
           <IconButton
             onClick={handleCloseOtpDialog}
             sx={{
-              position: 'absolute',
+              position: "absolute",
               right: 8,
               top: 8,
               color: (theme) => theme.palette.grey[500],
-            }}
-          >
+            }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        
-        <DialogContent sx={{ textAlign: 'center', px: 3 }}>
+
+        <DialogContent sx={{ textAlign: "center", px: 3 }}>
           <Typography variant="body1" color="textSecondary" mb={2}>
             Mã OTP đã được gửi đến số điện thoại:
           </Typography>
           <Typography variant="h6" color="primary" fontWeight="bold" mb={3}>
-            {userInfo?.cdienthoai ? maskPhoneNumber(userInfo.cdienthoai) : ''}
+            {userInfo?.cdienthoai ? maskPhoneNumber(userInfo.cdienthoai) : ""}
           </Typography>
           <Typography variant="body2" color="textSecondary" mb={3}>
             Vui lòng nhập mã OTP 6 chữ số để hoàn tất đăng nhập
           </Typography>
-          
+
           <TextField
             fullWidth
             label="Mã OTP"
             placeholder="Nhập 6 chữ số"
             value={otpCode}
             onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, '');
+              const value = e.target.value.replace(/\D/g, "");
               if (value.length <= 6) {
                 setOtpCode(value);
-                setOtpError('');
+                setOtpError("");
               }
             }}
             inputProps={{
               maxLength: 6,
-              style: { 
-                textAlign: 'center', 
-                fontSize: '1.5rem',
-                letterSpacing: '0.5rem'
-              }
+              style: {
+                textAlign: "center",
+                fontSize: "1.5rem",
+                letterSpacing: "0.5rem",
+              },
             }}
             error={!!otpError}
             helperText={otpError}
@@ -458,27 +464,24 @@ export default function SignIn() {
               onClick={handleResendOtp}
               disabled={otpLoading || !canResendOtp}
               variant="text"
-              sx={{ textTransform: 'none' }}
-            >
+              sx={{ textTransform: "none" }}>
               Gửi lại mã OTP
             </Button>
           )}
         </DialogContent>
-        
+
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button 
-            onClick={handleCloseOtpDialog} 
+          <Button
+            onClick={handleCloseOtpDialog}
             disabled={otpLoading}
-            sx={{ minWidth: 100 }}
-          >
+            sx={{ minWidth: 100 }}>
             Hủy
           </Button>
           <Button
             onClick={handleOtpSubmit}
             variant="contained"
             disabled={otpLoading || otpCode.length !== 6}
-            sx={{ minWidth: 100, gap: 1 }}
-          >
+            sx={{ minWidth: 100, gap: 1 }}>
             {otpLoading && <Spinner />}
             Xác nhận
           </Button>

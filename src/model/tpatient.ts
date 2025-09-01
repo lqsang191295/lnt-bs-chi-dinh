@@ -40,3 +40,27 @@ export interface IPatientToaThuoc {
   FilePdfKySo: string;
   TenLoaiPhieuY: string;
 }
+
+export interface IPatientBangKe {
+  ID: string;
+  ID_Toa: string;
+  Ma: string;
+  Ten: string;
+  Ngay: string;
+  TGKetoa: string;
+  TGCapthuoc: string;
+  FilePdfKySo: string;
+  TenLoaiPhieuY: string;
+}
+
+export interface IPatientPkBenh {
+  ID: string;
+  ID_Toa: string;
+  Ma: string;
+  Ten: string;
+  Ngay: string;
+  TGKetoa: string;
+  TGCapthuoc: string;
+  FilePdfKySo: string;
+  TenLoaiPhieuY: string;
+}

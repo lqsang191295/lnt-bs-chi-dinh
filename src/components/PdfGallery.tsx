@@ -48,7 +48,11 @@ function PdfGallery({ files }: Props) {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "repeat(1, 1fr)", md: "repeat(3, 1fr)" },
+          gridTemplateColumns: {
+            xs: "repeat(1, 1fr)",
+            md: "repeat(3, 1fr)",
+            lg: "repeat(4, 1fr)",
+          },
           gap: 2,
         }}>
         {files.map((f, i) => (

@@ -107,3 +107,53 @@ export const getPatientChiDinhByMaBN_SoVaoVien = async (
     return null;
   }
 };
+
+export const getPatientBangKeByMaBN_SoVaoVien = async (
+  mabn: string,
+  sovaovien: string
+) => {
+  try {
+    const response = await post(`/his/call`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_parientinfo_by_mabn",
+      paraData: [
+        { paraName: "popt", paraValue: 4 },
+        { paraName: "mabn", paraValue: mabn },
+        { paraName: "sovaovien", paraValue: sovaovien },
+      ],
+    });
+
+    if (response.status === "error") {
+      return null;
+    }
+    return response.message;
+  } catch {
+    return null;
+  }
+};
+
+export const getPatientPkBenhByMaBN_SoVaoVien = async (
+  mabn: string,
+  sovaovien: string
+) => {
+  try {
+    const response = await post(`/his/call`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_parientinfo_by_mabn",
+      paraData: [
+        { paraName: "popt", paraValue: 5 },
+        { paraName: "mabn", paraValue: mabn },
+        { paraName: "sovaovien", paraValue: sovaovien },
+      ],
+    });
+
+    if (response.status === "error") {
+      return null;
+    }
+    return response.message;
+  } catch {
+    return null;
+  }
+};

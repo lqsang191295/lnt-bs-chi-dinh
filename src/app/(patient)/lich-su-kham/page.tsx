@@ -1,6 +1,6 @@
 "use client";
 
-import { genOTP, sentOTP } from "@/utils/otp";
+import { sendOTP } from "@/actions/act_tnguoidung";
 import { ToastError, ToastSuccess } from "@/utils/toast";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -54,13 +54,10 @@ export default function LichSuKhamPage() {
 
     setSendingOTP(true);
     try {
-      const otp = genOTP();
-      console.log("otp==== ", phone, otp);
-      otpValue.current = otp; // giữ lại để so sánh
-      await sentOTP(phone, otp);
-
+      const otpResult = await sendOTP(phone);
+      otpValue.current = otpResult.otp;
       setForm("otp");
-      setCooldown(30);
+      setCooldown(60);
       ToastSuccess("Gửi OTP thành công");
     } catch (err) {
       console.error("Gửi OTP thất bại", err);
