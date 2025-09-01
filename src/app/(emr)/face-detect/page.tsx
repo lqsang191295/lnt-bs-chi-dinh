@@ -97,82 +97,82 @@ const CameraComponent = ({
     }
   };
 
-  // Get IP camera stream
-  const getIPCamera = async (config: IPCameraConfig) => {
-    try {
-      setIpCameraError(null);
-      console.log("Connecting to IP camera:", config.url);
+  // // Get IP camera stream
+  // const getIPCamera = async (config: IPCameraConfig) => {
+  //   try {
+  //     setIpCameraError(null);
+  //     console.log("Connecting to IP camera:", config.url);
 
-      // Tạo URL stream với authentication
-      const streamUrl = `${config.url}/doc/page/main.html`;
+  //     // Tạo URL stream với authentication
+  //     const streamUrl = `${config.url}/doc/page/main.html`;
 
-      // Sử dụng fetch để test connection trước
-      const response = await fetch(streamUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Basic ${btoa(
-            `${config.username}:${config.password}`
-          )}`,
-          "Content-Type": "text/html",
-        },
-        mode: "cors",
-      });
+  //     // Sử dụng fetch để test connection trước
+  //     const response = await fetch(streamUrl, {
+  //       method: "GET",
+  //       headers: {
+  //         Authorization: `Basic ${btoa(
+  //           `${config.username}:${config.password}`
+  //         )}`,
+  //         "Content-Type": "text/html",
+  //       },
+  //       mode: "cors",
+  //     });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
 
-      // Nếu connection OK, tạo video stream
-      if (videoRef.current) {
-        // Stop local camera nếu đang chạy
-        const currentStream = videoRef.current.srcObject as MediaStream;
-        if (currentStream) {
-          currentStream.getTracks().forEach((track) => track.stop());
-        }
+  //     // Nếu connection OK, tạo video stream
+  //     if (videoRef.current) {
+  //       // Stop local camera nếu đang chạy
+  //       const currentStream = videoRef.current.srcObject as MediaStream;
+  //       if (currentStream) {
+  //         currentStream.getTracks().forEach((track) => track.stop());
+  //       }
 
-        // Tạo video element mới với IP camera stream
-        // Lưu ý: Nhiều camera IP cần RTSP hoặc WebRTC, không phải HTTP trực tiếp
-        // Đây là cách tiếp cận cho camera hỗ trợ HTTP stream
-        const videoElement = videoRef.current;
-        videoElement.src = `${config.url}/video_stream`; // URL stream thực tế
-        videoElement.crossOrigin = "anonymous";
+  //       // Tạo video element mới với IP camera stream
+  //       // Lưu ý: Nhiều camera IP cần RTSP hoặc WebRTC, không phải HTTP trực tiếp
+  //       // Đây là cách tiếp cận cho camera hỗ trợ HTTP stream
+  //       const videoElement = videoRef.current;
+  //       videoElement.src = `${config.url}/video_stream`; // URL stream thực tế
+  //       videoElement.crossOrigin = "anonymous";
 
-        // Alternative: Sử dụng iframe hoặc img cho MJPEG stream
-        const img = new window.Image();
-        img.crossOrigin = "anonymous";
-        img.src = `${config.url}/video.cgi?user=${config.username}&pwd=${config.password}`;
+  //       // Alternative: Sử dụng iframe hoặc img cho MJPEG stream
+  //       const img = new window.Image();
+  //       img.crossOrigin = "anonymous";
+  //       img.src = `${config.url}/video.cgi?user=${config.username}&pwd=${config.password}`;
 
-        img.onload = () => {
-          console.log("IP camera stream connected");
-          // Update video source với image stream
-          if (videoRef.current) {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx?.drawImage(img, 0, 0);
+  //       img.onload = () => {
+  //         console.log("IP camera stream connected");
+  //         // Update video source với image stream
+  //         if (videoRef.current) {
+  //           const canvas = document.createElement("canvas");
+  //           const ctx = canvas.getContext("2d");
+  //           canvas.width = img.width;
+  //           canvas.height = img.height;
+  //           ctx?.drawImage(img, 0, 0);
 
-            // Convert to video stream (simplified approach)
-            videoRef.current.srcObject = canvas.captureStream(30); // 30 FPS
-          }
-        };
+  //           // Convert to video stream (simplified approach)
+  //           videoRef.current.srcObject = canvas.captureStream(30); // 30 FPS
+  //         }
+  //       };
 
-        img.onerror = (error) => {
-          console.error("IP camera connection error:", error);
-          setIpCameraError(
-            "Không thể kết nối đến camera IP. Kiểm tra URL, username, password."
-          );
-        };
-      }
-    } catch (error) {
-      console.error("IP camera error:", error);
-      setIpCameraError(
-        `Lỗi kết nối camera IP: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    }
-  };
+  //       img.onerror = (error) => {
+  //         console.error("IP camera connection error:", error);
+  //         setIpCameraError(
+  //           "Không thể kết nối đến camera IP. Kiểm tra URL, username, password."
+  //         );
+  //       };
+  //     }
+  //   } catch (error) {
+  //     console.error("IP camera error:", error);
+  //     setIpCameraError(
+  //       `Lỗi kết nối camera IP: ${
+  //         error instanceof Error ? error.message : "Unknown error"
+  //       }`
+  //     );
+  //   }
+  // };
 
   // Enhanced IP camera connection với WebRTC hoặc MJPEG
 
@@ -293,6 +293,7 @@ const CameraComponent = ({
         };
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 

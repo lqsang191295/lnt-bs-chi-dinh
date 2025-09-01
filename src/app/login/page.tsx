@@ -86,7 +86,7 @@ export default function SignIn() {
   const [otpLoading, setOtpLoading] = React.useState(false);
   const [otpError, setOtpError] = React.useState("");
   const [countdown, setCountdown] = React.useState(0);
-  const [userInfo, setUserInfo] = React.useState<TokenClaims>(null); // Thông tin user từ token
+  const [userInfo, setUserInfo] = React.useState<TokenClaims | null>(null); // Thông tin user từ token
   const [currentOtp, setCurrentOtp] = React.useState(""); // OTP hiện tại được tạo
   const [canResendOtp, setCanResendOtp] = React.useState(false);
 
@@ -184,13 +184,13 @@ export default function SignIn() {
       if (otpCode === currentOtp) {
         setShowOtpDialog(false);
         // Tạo token mới với thời gian hết hạn dài hơn
-        const finalToken = await generateFinalToken(userInfo);
+        const finalToken = await generateFinalToken();
         await completeLogin(finalToken);
       } else {
         setOtpError("Mã OTP không đúng. Vui lòng thử lại.");
         ToastError("Mã OTP không đúng");
       }
-    } catch (error) {
+    } catch {
       // console.error("OTP verification error:", error);
       setOtpError("Có lỗi xảy ra khi xác thực OTP. Vui lòng thử lại.");
       ToastError("Lỗi xác thực OTP");
@@ -214,7 +214,7 @@ export default function SignIn() {
       } else {
         ToastError("Không thể gửi lại mã OTP");
       }
-    } catch (error) {
+    } catch {
       // console.error("Resend OTP error:", error);
       ToastError("Lỗi khi gửi lại mã OTP");
     }
@@ -255,14 +255,14 @@ export default function SignIn() {
       const payload = token.split(".")[1];
       const decodedPayload = atob(payload);
       return JSON.parse(decodedPayload);
-    } catch (error) {
+    } catch {
       // console.error("Error parsing token:", error);
       return null;
     }
   };
 
   // Tạo token cuối cùng sau khi xác thực OTP
-  const generateFinalToken = async (userInfo: unknown) => {
+  const generateFinalToken = async () => {
     // Gọi API để tạo token mới với thời gian hết hạn dài hơn
     // Hoặc sử dụng token hiện tại nếu API không hỗ trợ
     try {
