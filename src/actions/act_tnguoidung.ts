@@ -409,6 +409,7 @@ export const luuanhnguoidung = async (
         { paraName: "cimg", paraValue: cimg },
       ],
     });
+    console.log("luuanhnguoidung response:", response);
     //console.log("luuanhnguoidung responselenght:[", response.message.length,"]");
     if (response.status === "error") {
       return [];

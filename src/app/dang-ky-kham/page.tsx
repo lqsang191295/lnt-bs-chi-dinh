@@ -1,0 +1,1127 @@
+"use client"
+import { searchPatientInfoByType, dangKyKhamBenh } from "@/actions/act_dangkykhambenh";
+import { PatientInfo } from "@/model/dangkykhambenh";
+import { createQRScanner } from "@/actions/act_qrscan";
+import { useState, useEffect, useRef } from "react"
+import JsBarcode from "jsbarcode";
+
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  TextFieldProps,
+  Button,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl,
+  FormLabel,
+  Grid,
+  Container,
+  Paper,
+  Fade,
+  InputAdornment,
+  Dialog, DialogTitle, DialogContent,
+  DialogActions,
+  IconButton,
+  List, ListItemButton, ListItemText, Divider,
+} from "@mui/material"
+import {
+  Person,
+  Phone,
+  LocationOn,
+  CalendarToday,
+  LocalHospital,
+  HealthAndSafety,
+  MedicalServices, Female, Male, Badge as IdCard, EditNote, Error, Warning,CheckCircle,
+  AssignmentLate,
+  Print, ContactEmergency,
+  Mic, Search
+} from "@mui/icons-material"
+type RegistrationStep = "home" | "bhyt" | "dv" | "form" | "success"
+type ExamType = "bhyt" | "dv" | "ksk"
+
+interface ErrorDialog {
+  open: boolean
+  title: string
+  message: string
+  type: "error" | "warning" | "info"
+}
+// Debounced TextField to reduce frequent parent updates/rendering
+function DebouncedTextField(props: TextFieldProps & { debounceMs?: number }) {
+  const { value, onChange, debounceMs = 250, ...rest } = props
+  const [local, setLocal] = useState<string>(() => (value as string) || "")
+  const timerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    // keep local in sync when parent value changes externally
+    setLocal((value as string) || "")
+  }, [value])
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current)
+    }
+  }, [])
+
+  const handleLocalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const v = e.target.value
+    setLocal(v)
+    if (timerRef.current) window.clearTimeout(timerRef.current)
+    timerRef.current = window.setTimeout(() => {
+      onChange?.(e as any)
+      timerRef.current = null
+    }, debounceMs)
+  }
+
+  return <TextField {...(rest as any)} value={local} onChange={handleLocalChange} />
+}
+export default function MedicalKioskPage() {
+  const [focusedField, setFocusedField] = useState<keyof PatientInfo | null>(null);
+  const focusedFieldRef = useRef<keyof PatientInfo | null>(null);
+  const scannerRef = useRef<ReturnType<typeof createQRScanner> | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [selectedExamType, setSelectedExamType] = useState<ExamType | null>(null)
+  const [currentStep, setCurrentStep] = useState<RegistrationStep>("form")
+  const [isConnectPort, setIsConnectPort] = useState(false)
+  const [patientSelectOpen, setPatientSelectOpen] = useState(false)
+  const [patientCandidates, setPatientCandidates] = useState<any[]>([])
+  const showErrorDialog = (title: string, message: string, type: "error" | "warning" | "info" = "error") => {
+    setErrorDialog({
+      open: true,
+      title,
+      message,
+      type,
+    })
+  }
+  const startVoiceInput = (field: keyof typeof patientInfo) => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Trình duyệt không hỗ trợ voice input");
+      return;
+    }
+    if (!field) {
+      alert("Vui lòng chọn một ô nhập trước khi ghi âm");
+      return;
+    }
+
+    if (!recognitionRef.current) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.lang = "vi-VN"; // hoặc "en-US"
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.onstart = () => {
+        setIsListening(true); // Bắt đầu ghi âm
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false); // Dừng ghi âm
+      };
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (focusedFieldRef.current) {
+          setPatientInfo((prev) => ({
+            ...prev,
+            [focusedFieldRef.current!]: transcript,
+          }));
+        }
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+    }
+
+    recognitionRef.current.start();
+  };  
+  const searchPatient = async (name: string, type: number) => {
+    const respone = await searchPatientInfoByType(name, type);
+    if (respone && respone.length > 1){
+      setPatientCandidates(respone)
+      setPatientSelectOpen(true)
+    }
+    else if (respone && respone.length === 1) {
+      setPatientInfo({
+        id: respone[0].Ma,
+        fullname: respone[0].Hoten,
+        address: respone[0].Diachi,
+        birthDateString: respone[0].Birthday,
+        gender: respone[0].Gioitinh,
+        idNumber: respone[0].SoCMND,
+        insuranceNumber: respone[0].SoBHYT,
+        phone: respone[0].Dienthoai,
+      })
+    }
+    else {
+      showErrorDialog("Không tìm thấy bệnh nhân", "Vui lòng kiểm tra lại thông tin hoặc đăng ký bệnh nhân mới.", "warning" )
+    }
+  }
+  const handleSelectPatient = (p: any) => {
+    setPatientInfo({
+      id: p.Ma,
+      fullname: p.Hoten,
+      address: p.Diachi,
+      birthDateString: p.Birthday,
+      gender: p.Gioitinh,
+      idNumber: p.SoCMND,
+      insuranceNumber: p.SoBHYT,
+      phone: p.Dienthoai,
+    })
+    setPatientSelectOpen(false)
+  }
+    const handlePrint = () => {
+      const svg = document.createElement("svg");
+      JsBarcode(svg, patientInfo.id || "0", {
+        format: "CODE128",
+        width: 2,
+        height: 50,
+        displayValue: false,
+        margin: 0,
+      });
+    const barcodeHTML = svg.outerHTML;
+    const printWindow = window.open("", "_blank")
+    if (printWindow) {
+      printWindow.document.write(`
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <title></title>
+        <style>
+          body {
+            font-family: "Courier New", monospace;
+            width: 280px; /* chiều rộng giống giấy in bill */
+            margin: 0 auto;
+            padding: 10px;
+          }
+          .title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+          }
+          .header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 12px;
+            text-align: center;
+          }
+
+          .line {
+            border-top: 1px dashed #000;
+            margin: 8px 0;
+          }
+
+          .queue-label {
+            font-size: 14px;
+            margin: 10px 0;
+            text-align: center;
+          }
+
+          .queue-number {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 10px 0;
+            text-align: center; 
+          }
+
+          .footer {
+            margin-top: 10px;
+            font-size: 12px;
+          }
+
+          .social {
+            margin: 8px 0;
+            font-size: 12px;
+          }
+
+          .date-time {
+            margin-top: 10px;
+            font-size: 14px;
+          }
+          .barcode {
+            margin-top: 10px;
+            text-align: center;
+          }
+        </style>
+        </head>
+        <body onload="window.print()">
+        <div class="title">BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG</div>
+          <div class="header">THÔNG TIN ĐĂNG KÝ</div>
+          <div class="line"></div>
+          <div class="queue-label">SỐ THỨ TỰ</div>
+          <div class="queue-number">${patientInfo.queueNumber}</div>
+          <div class="footer">
+            Họ tên: ${patientInfo.fullname}</br>
+            Ngày sinh: ${patientInfo.birthDateString}</br>
+            Giới tính: ${patientInfo.gender}</br>
+            Địa chỉ: ${patientInfo.address}</br>
+            Số CMND/CCCD: ${patientInfo.idNumber}</br>
+            Số thẻ BHYT: ${patientInfo.insuranceNumber || "N/A"}</br>
+            Số điện thoại: ${patientInfo.phone || "N/A"}</br>
+            Loại đăng ký khám: ${selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "Dịch vụ" : "Khám sức khỏe"} </br>   
+          </div>
+          ${patientInfo.id ? `<div class="barcode">${barcodeHTML}</div>` : ''}
+          <div class="date-time">
+            Đăng ký lúc: ${patientInfo.registrationTime}
+          </div>
+          <div class="line"></div>
+        </body>
+        </html>
+      `)
+      printWindow.document.close()
+    }}
+      const closeErrorDialog = () => {
+      setErrorDialog({
+        open: false,
+        title: "",
+        message: "",
+        type: "error",
+      })
+    }
+   const [errorDialog, setErrorDialog] = useState<ErrorDialog>({
+    open: false,
+    title: "",
+    message: "",
+    type: "error",
+  })
+  const [patientInfo, setPatientInfo] = useState<PatientInfo>({
+    id: "",
+    fullname: "",
+    phone: "",
+    address: "",
+    birthDateString: "",
+    idNumber: "",
+    insuranceNumber: "",
+    gender: "",
+    chiefComplaint: "",
+    queueNumber: "",
+    registrationTime: ""
+  })
+  useEffect(() => {
+  focusedFieldRef.current = focusedField;
+}, [focusedField]);
+  function formatDateForInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  async function initCamera(): Promise<void> {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Không thể truy cập camera:", err);
+    }
+  }
+  useEffect(() => {
+    console.log("Initializing camera and QR scanner...");
+    initCamera();
+    const scanner = createQRScanner({
+      onStatus:(status) => console.log(status),
+      onConnect: (connected) => {if(connected) {setIsConnectPort(true)} else {setIsConnectPort(false)}},
+      onData: (data) => {
+        if(data !== null) {
+          console.log("QR Data:", data);
+          setPatientInfo({
+            id: "",
+            fullname: data.fullname || "",
+            gender: data.gender || "",
+            phone: data.phone || "",
+            address: data.address || "",
+            birthDateString: data.birthDate ? formatDateForInput(data.birthDate) : "",
+            idNumber: data.idNumber || "",
+            insuranceNumber: data.insuranceNumber || "",
+            chiefComplaint: data.chiefComplaint || ""        
+          })
+          setCurrentStep("form")
+        }
+      }
+    });
+    scannerRef.current = scanner;
+    scannerRef.current?.autoConnect();
+    if (!scannerRef.current.onConnect){
+      setIsConnectPort(true)
+    }
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.disconnect();
+      }
+    };
+  }, []);
+  const examTypes = [
+    {
+      id: "bhyt" as ExamType,
+      title: "Khám BHYT",
+      subtitle: "Sử dụng bảo hiểm y tế",
+      icon: <LocalHospital sx={{ fontSize: 40 }} />,
+      color: "#2196F3",
+    },
+    {
+      id: "dv" as ExamType,
+      title: "Khám dịch vụ",
+      subtitle: "Khám theo yêu cầu",
+      icon: <MedicalServices sx={{ fontSize: 40 }} />,
+      color: "#4CAF50",
+    },
+    {
+      id: "ksk" as ExamType,
+      title: "Khám sức khỏe",
+      subtitle: "Khám tổng quát định kỳ",
+      icon: <HealthAndSafety sx={{ fontSize: 40 }} />,
+      color: "#FF9800",
+    },
+  ]
+  const resetKiosk = () => {
+    setCurrentStep("form")
+    setSelectedExamType(null)
+    setPatientInfo({
+      id: "",
+      fullname: "",
+      phone: "",
+      address: "",
+      birthDate: undefined,
+      idNumber: "",
+      insuranceNumber: "",
+      queueNumber: "",
+      registrationTime: "",
+      gender: "",
+      chiefComplaint: "",
+    })
+  }
+  const handleExamTypeSelect = (type: ExamType) => {
+    setSelectedExamType(type)
+  }
+    const handleFormSubmit = async () => {
+    (() => {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (video && canvas) {
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          setPhoto(canvas.toDataURL("image/jpeg"));
+        }
+      })();
+    if (selectedExamType === null) {
+      showErrorDialog("Chưa chọn loại khám", "Vui lòng chọn loại hình khám bệnh để tiếp tục.", "warning")
+      return
+    }
+    if (selectedExamType === "bhyt" && !patientInfo.insuranceNumber) {
+      showErrorDialog(
+        "Thiếu số thẻ BHYT",
+        "Vui lòng nhập số thẻ bảo hiểm y tế để tiếp tục đăng ký khám bệnh.",
+        "warning",
+      )
+      return
+    }
+    const respone = await dangKyKhamBenh({
+        id: patientInfo.id || "",
+        fullname: patientInfo.fullname,
+        idNumber: patientInfo.idNumber,
+        insuranceNumber: patientInfo.insuranceNumber,
+        birthDate: patientInfo.birthDateString ? new Date(patientInfo.birthDateString) : undefined, 
+        gender: patientInfo.gender as "Nam" | "Nữ",
+        phone: patientInfo.phone,
+        address: patientInfo.address,
+        quay: selectedExamType,
+        chiefComplaint: patientInfo.chiefComplaint || "",
+        anh: photo || undefined,
+      });
+      const registrationTime = new Date().toLocaleString("vi-VN")
+      if(respone.status === "success" && respone.data && respone.data.length > 0) {
+        const queueNumber = respone.data[0].SoThuTu
+        setPatientInfo((prev) => ({
+          ...prev,
+          queueNumber,
+          registrationTime,
+        }))
+        setCurrentStep("success")
+      }
+      else{
+        showErrorDialog(
+          "Đăng ký thất bại",
+          respone.message || "Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại hoặc liên hệ quầy lễ tân để được hỗ trợ.",
+          "error",
+        )
+        resetKiosk();
+      }
+  }
+
+  const getTransformOffset = () => {
+    if (!selectedExamType) return 0
+    const selectedIndex = examTypes.findIndex((type) => type.id === selectedExamType)
+    // Calculate offset to move selected box to center
+    // Left box (index 0): move right, Right box (index 2): move left, Center box (index 1): no movement
+    if (selectedIndex === 0) return 120 // Move right by one column width
+    if (selectedIndex === 2) return -120 // Move left by one column width
+    return 0 // Center box stays in place
+  }
+
+  return (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #E3F2FD 0%, #E8F5E8 100%)",
+      }}
+    >
+      <Container maxWidth="lg">
+          {/* Exam Type Selection */}
+          {currentStep === "form" && (
+          <Box>
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
+            <Grid container spacing={6} justifyContent="center">
+              {examTypes.map((type, index) => {
+                const isSelected = selectedExamType === type.id
+                const isHidden = selectedExamType !== null && !isSelected
+                return (
+                  <Grid                 
+                    size={4}
+                    key={type.id}
+                    sx={{
+                      transform: isSelected ? `translateX(${getTransformOffset()}%)` : "translateX(0)",
+                      transition: "all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+                      opacity: isHidden ? 0 : 1,
+                      visibility: isHidden ? "hidden" : "visible",
+                      zIndex: isSelected ? 10 : 1,
+                      minWidth: 300,
+                    }}
+                  >
+                    <Fade in={!isHidden} timeout={isSelected ? 0 : 500 + index * 150}>
+                      <Card
+                        sx={{
+                          cursor: "pointer",
+                          transition: "all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                          transformOrigin: "center",
+                          willChange: "transform, box-shadow, border-color, background",
+                          boxShadow: isSelected ? `0 20px 60px ${type.color}30` : "0 4px 20px rgba(0,0,0,0.08)",
+                          border: isSelected ? `3px solid ${type.color}` : "3px solid transparent",
+                          background: isSelected
+                            ? `linear-gradient(135deg, ${type.color}15 0%, ${type.color}25 100%)`
+                            : "white",
+                          backdropFilter: isSelected ? "blur(15px)" : "none",
+                          "&:hover": !isSelected
+                            ? {
+                                boxShadow: `0 12px 40px ${type.color}25`,
+                                borderColor: `${type.color}40`,
+                              }
+                            : {
+                                boxShadow: `0 25px 80px ${type.color}40`,
+                              },
+                          "&:active": {
+                            transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+                          },
+                        }}
+                        onClick={() => (isSelected ? setSelectedExamType(null) : handleExamTypeSelect(type.id))}
+                      >
+                        <CardContent sx={{ textAlign: "center", py: 4 }}>
+                          <Box
+                            sx={{
+                              color: type.color,
+                            }}
+                          >
+                            {type.icon}
+                          </Box>
+                          <Typography
+                            variant={isSelected ? "h5" : "h6"}
+                            sx={{
+                              fontWeight: "bold",
+                              color: isSelected ? type.color : "#333",
+                            }}
+                          >
+                            {type.title}
+                          </Typography>
+                          <Typography
+                            variant={isSelected ? "body1" : "body2"}
+                            sx={{
+                              color: "#666",
+                            }}
+                          >
+                            {type.subtitle}
+                          </Typography>
+                          {isSelected && (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: type.color,
+                                fontStyle: "italic",
+                                opacity: 0.8,
+                              }}
+                            >
+                              Nhấn để thay đổi lựa chọn
+                            </Typography>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Fade>
+                  </Grid>
+                )
+              })}
+            </Grid>
+          </Box>
+        </Box>
+        )}
+
+        {currentStep === "form" && (
+            <Card sx={{ maxWidth: 1000, mx: "auto" }}>
+              <CardContent sx={{ p: 4 }}>
+                <Typography
+                  variant="h3"
+                  component="h2"
+                  sx={{ fontWeight: "bold", textAlign: "center", color: "primary.main" }}
+                >
+                  Thông tin đăng ký
+
+                </Typography>     
+                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+                  <IconButton
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      if (focusedField) startVoiceInput(focusedField);
+                      else showErrorDialog("Chọn trường nhập", "Vui lòng chọn một ô nhập trước khi ghi âm.", "warning");
+                    }}
+                    sx={{
+                      background: isListening ? "red" : "linear-gradient(45deg, #2563eb 30%, #059669 90%)",
+                      color: "white",
+                      borderRadius: "50%",
+                      width: 45,
+                      height: 45,
+                      justifySelf: "center",
+                      mb: 2,
+                      mt: 1,
+                      alignItems:"center"
+                    }}
+                  >
+                    <Mic />
+                  </IconButton>
+                  </Box>         
+                  
+                <Grid container spacing={3}>
+                  <Grid size={6}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Họ và tên"
+                      value={patientInfo.fullname}
+                      onFocus={() => setFocusedField("fullname")}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, fullname: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Person color="primary" />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton onClick={() => {searchPatient(patientInfo.fullname, 0)} }>
+                                  <Search sx={{ color: "#2563eb" }} />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+                   <Grid size={6} mt={-1}>
+                    <FormControl
+                    fullWidth
+                      component="fieldset"
+                      sx={{
+                        border: "1px solid #ccc",
+                        borderRadius: 2,
+                      }}
+                    >
+                      <FormLabel
+                        component="legend"
+                        sx={{ fontSize: "0.9rem", fontWeight: 600 }}
+                      >
+                        Giới tính
+                      </FormLabel>
+                      <RadioGroup
+                        row
+                        value={patientInfo.gender || "Nam"}
+                        onChange={(e) => setPatientInfo({ ...patientInfo, gender: e.target.value })}
+                      >
+                        <FormControlLabel
+                          label={
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              <Male sx={{ color: "#2563eb" }} /> Nam
+                            </Box>
+                          }
+                          value="Nam"
+                          control={<Radio sx={{ color: "#9333ea", pl:2 }} />}
+                        />
+                        <FormControlLabel
+                          value="Nữ"
+                          control={<Radio sx={{ color: "#9333ea" }} />}
+                          label={
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              <Female sx={{ color: "#2563eb" }} /> Nữ
+                            </Box>
+                          }
+                        />
+                      </RadioGroup>
+                    </FormControl>
+                  </Grid>
+                  <Grid size={6}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Ngày sinh"
+                      placeholder="DD/MM/YYYY"
+                      type="date"
+                      value={patientInfo.birthDateString}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <CalendarToday sx={{ color: "#9333ea" }} />
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+                  <Grid size={6}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Số điện thoại"
+                      value={patientInfo.phone}
+                      onFocus={() => setFocusedField("phone")}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, phone: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Phone color="secondary" />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton onClick={() => {searchPatient(patientInfo.phone, 1)} }>
+                                  <Search sx={{ color: "#2563eb" }} />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+
+                  <Grid size={6}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Số CMND/CCCD" 
+                      value={patientInfo.idNumber}
+                      onFocus={() => setFocusedField("idNumber")}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, idNumber: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <ContactEmergency sx={{ color: "#2563eb" }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton onClick={() => {searchPatient(patientInfo.idNumber, 2)} }>
+                                  <Search sx={{ color: "#2563eb" }} />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+
+                  <Grid size={6}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Mã số thẻ BHYT"
+                      value={patientInfo.insuranceNumber}
+                      onFocus={() => setFocusedField("insuranceNumber")}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, insuranceNumber: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <IdCard sx={{ color: "#dc2626" }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton onClick={() => {if (patientInfo.insuranceNumber){searchPatient(patientInfo.insuranceNumber, 3)}} }>
+                                  <Search sx={{ color: "#2563eb" }} />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+                  <Grid size={12}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Địa chỉ"
+                      value={patientInfo.address}
+                      onFocus={() => setFocusedField("address")}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, address: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <LocationOn sx={{ color: "#dc2626" }} />
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+                  <Grid size={12}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Lý do khám bệnh (nếu có)"
+                      value={patientInfo.chiefComplaint}
+                      onFocus={() => setFocusedField("chiefComplaint")}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, chiefComplaint: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <EditNote sx={{ color: "#dc2626" }} />
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ display: "flex", justifyContent: "center", pt: 4 }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    sx={{
+                      height: 64,
+                      fontSize: "1.25rem",
+                      fontWeight: 600,
+                      px: 6,
+                      background: "linear-gradient(45deg, #2563eb 30%, #059669 90%)",
+                    }}
+                    onClick={handleFormSubmit}
+                  >
+                    Hoàn tất đăng ký
+                  </Button>
+                  {!isConnectPort && (
+
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      sx={{
+                        height: 64,
+                        fontSize: "1.25rem",
+                        px: 6,
+                        ml: 3,
+                  }}
+                      onClick={() => scannerRef.current?.autoConnect()}
+                    >
+                      Kết nối thiết bị quét QR
+                    </Button>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          )}
+          {currentStep === "success" && (
+            <Card sx={{ maxWidth: 900, mx: "auto", textAlign: "center" }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box
+                  sx={{
+                    width: 96,
+                    height: 96,
+                    mx: "auto",
+                    mb: 3,
+                    bgcolor: "secondary.light",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: 0.6,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      bgcolor: "secondary.main",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <CheckCircle sx={{ fontSize: 24, color: "white" }} />
+                  </Box>
+                </Box>
+
+                <Typography variant="h3" component="h2" sx={{ fontWeight: "bold", color: "secondary.main", mb: 2 }}>
+                  Đăng ký thành công!
+                </Typography>
+
+                <Paper
+                  sx={{
+                    background: "linear-gradient(135deg, #2563eb 0%, #059669 100%)",
+                    color: "white",
+                    p: 3,
+                    borderRadius: 3,
+                    mb: 4,
+                    boxShadow: 4,
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 2 }}>
+                    <AssignmentLate sx={{ fontSize: 32, mr: 1 }} />
+                    <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                      SỐ THỨ TỰ CỦA BẠN
+                    </Typography>
+                  </Box>
+                  <Typography variant="h1" sx={{ fontWeight: "bold", fontSize: "4rem", mb: 1 }}>
+                    {patientInfo.queueNumber}
+                  </Typography>
+                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                    Loại khám: {selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "Dịch vụ" : "Khám sức khỏe"}
+                  </Typography>
+                </Paper>
+                <Paper
+                  sx={{
+                    background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                    p: 3,
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "primary.light",
+                    mb: 4,
+                    textAlign: "left",
+                  }}
+                >
+                  <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: "primary.main", textAlign: "center" }}>
+                    THÔNG TIN ĐĂNG KÝ
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid size={6}>
+                      <Typography variant="body1" sx={{ mb: 1 }}>
+                        <strong>Họ tên:</strong> {patientInfo.fullname}
+                      </Typography>
+                      <Typography variant="body1" sx={{ mb: 1 }}>
+                        <strong>Ngày sinh:</strong> {patientInfo.birthDateString?.replace(/-/g, "/")}
+                      </Typography>
+                      <Typography variant="body1" sx={{ mb: 1 }}>
+                        <strong>Số điện thoại:</strong> {patientInfo.phone}
+                      </Typography>
+                    </Grid>
+                    <Grid size={6}>
+                      <Typography variant="body1" sx={{ mb: 1 }}>
+                        <strong>Giới tính:</strong> {patientInfo.gender}
+                      </Typography>
+                      <Typography variant="body1" sx={{ mb: 1 }}>
+                        <strong>Số CMND/CCCD:</strong> {patientInfo.idNumber}
+                      </Typography>
+                      {selectedExamType === "bhyt" && (
+                        <Typography variant="body1" sx={{ mb: 1 }}>
+                          <strong>Số thẻ BHYT:</strong> {patientInfo.insuranceNumber}
+                        </Typography>
+                      )}
+                      <Typography variant="body1" sx={{ mb: 1 }}>
+                        <strong>Thời gian:</strong> {patientInfo.registrationTime}
+                      </Typography>
+                    </Grid>
+                    <Grid size={12}>
+                      <Typography variant="body1">
+                        <strong>Địa chỉ:</strong> {patientInfo.address}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+
+                <Box sx={{ display: "flex", gap: 3, justifyContent: "center", flexWrap: "wrap" }}>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    startIcon={<Print />}
+                    sx={{
+                      height: 64,
+                      fontSize: "1.25rem",
+                      fontWeight: 600,
+                      px: 4,
+                      borderWidth: 2,
+                      "&:hover": { borderWidth: 2 },
+                    }}
+                    onClick={handlePrint}
+                  >
+                    In phiếu đăng ký
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    size="large"
+                    sx={{
+                      height: 64,
+                      fontSize: "1.25rem",
+                      fontWeight: 600,
+                      px: 4,
+                      background: "linear-gradient(45deg, #2563eb 30%, #059669 90%)",
+                    }}
+                    onClick={resetKiosk}
+                  >
+                    Đăng ký mới
+                  </Button>
+                </Box>
+
+                <Typography variant="body1" sx={{ mt: 3, color: "text.secondary", fontStyle: "italic" }}>
+                  Vui lòng giữ phiếu đăng ký và đến quầy lễ tân để hoàn tất thủ tục khám bệnh
+                </Typography>
+              </CardContent>
+            </Card>
+          )}
+      </Container>
+      <Dialog
+        open={patientSelectOpen}
+        onClose={() => setPatientSelectOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3, p: 1 }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Chọn bệnh nhân</DialogTitle>
+        <DialogContent dividers>
+          <List>
+            {patientCandidates.map((p, idx) => (
+              <>
+                <ListItemButton key={idx} onClick={() => handleSelectPatient(p)}>
+                  <ListItemText
+                    primary={p.Hoten}
+                    secondary={`${p.Birthday ? `Ngày sinh: ${p.Birthday} • ` : ""}${p.Dienthoai ? `SDT: ${p.Dienthoai} • ` : ""}${p.SoCMND ? `CCCD: ${p.SoCMND} • ` : ""}${p.SoBHYT ? `BHYT: ${p.SoBHYT} • ` : ""}${p.Diachi ? `Đ/c: ${p.Diachi}` : ""}`}
+                  />
+                </ListItemButton>
+                {idx < patientCandidates.length - 1 && <Divider component="li" />}
+              </>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPatientSelectOpen(false)} variant="outlined">Đóng</Button>
+        </DialogActions>
+      </Dialog>
+       <Dialog
+          open={errorDialog.open}
+          onClose={closeErrorDialog}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              p: 2,
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              pb: 2,
+              fontSize: "1.5rem",
+              fontWeight: 600,
+            }}
+          >
+            {errorDialog.type === "error" && <Error sx={{ color: "#dc2626", fontSize: 32 }} />}
+            {errorDialog.type === "warning" && <Warning sx={{ color: "#ea580c", fontSize: 32 }} />}
+            {errorDialog.type === "info" && <CheckCircle sx={{ color: "#059669", fontSize: 32 }} />}
+            {errorDialog.title}
+          </DialogTitle>
+
+          <DialogContent sx={{ pb: 3 }}>
+            <Typography variant="body1" sx={{ fontSize: "1.1rem", lineHeight: 1.6 }}>
+              {errorDialog.message}
+            </Typography>
+          </DialogContent>
+
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button
+              onClick={closeErrorDialog}
+              variant="contained"
+              size="large"
+              sx={{
+                height: 48,
+                fontSize: "1.1rem",
+                fontWeight: 600,
+                px: 4,
+                background:
+                  errorDialog.type === "error"
+                    ? "linear-gradient(45deg, #dc2626 30%, #b91c1c 90%)"
+                    : errorDialog.type === "warning"
+                      ? "linear-gradient(45deg, #ea580c 30%, #c2410c 90%)"
+                      : "linear-gradient(45deg, #059669 30%, #047857 90%)",
+              }}
+            >
+              Đã hiểu
+            </Button>
+          </DialogActions>
+        </Dialog>
+            <div className="p-4 flex flex-col gap-4 items-center">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        className="border rounded-lg w-80 h-60 bg-black hidden"
+      />
+      <canvas ref={canvasRef} style={{ display: "none" }} />
+
+      {photo && (
+        <img src={photo} alt="Ảnh đã chụp" className="border rounded-lg w-80 hidden" />
+      )}
+    </div>
+    </Box>
+  )
+}

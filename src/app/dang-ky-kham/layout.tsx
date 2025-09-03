@@ -1,0 +1,30 @@
+import type { Metadata } from "next"
+import { DM_Sans } from "next/font/google"
+import "./globals.css"
+import RootLayoutClient from "./RootLayoutClient"
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-dm-sans",
+})
+
+export const metadata: Metadata = {
+  title: "Đăng ký khám bệnh",
+  description: "Hệ thống đăng ký thông tin bệnh nhân",
+  generator: "v0.app",
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en" className={dmSans.variable}>
+      <body>
+        <RootLayoutClient>{children}</RootLayoutClient>
+      </body>
+    </html>
+  )
+}
