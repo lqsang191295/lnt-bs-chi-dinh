@@ -1,28 +1,29 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { getClaimsFromToken } from "./utils/auth";
 
 export async function middleware(request: NextRequest) {
   try {
-    // const token = request.cookies.get("authToken")?.value;
+    const token = request.cookies.get("authToken")?.value;
 
-    // if (!token) {
-    //   return NextResponse.redirect(new URL("/login", request.url));
-    // }
+    if (!token) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
 
-    // const payload = getClaimsFromToken(token);
+    const payload = getClaimsFromToken(token);
 
-    // if (payload.exp && Date.now() >= payload.exp * 1000) {
-    //   const response = NextResponse.redirect(new URL("/login", request.url));
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      const response = NextResponse.redirect(new URL("/login", request.url));
 
-    //   response.cookies.set({
-    //     name: "authToken",
-    //     value: "",
-    //     path: "/",
-    //     expires: new Date(0),
-    //   });
+      response.cookies.set({
+        name: "authToken",
+        value: "",
+        path: "/",
+        expires: new Date(0),
+      });
 
-    //   return response;
-    // }
+      return response;
+    }
 
     return NextResponse.next();
   } catch (error) {

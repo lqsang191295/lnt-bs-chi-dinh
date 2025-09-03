@@ -18,9 +18,8 @@ import {
   Box,
   Button,
   CircularProgress,
-  FormControl,
   FormControlLabel,
-  FormLabel,
+  Grid,
   MenuItem,
   Radio,
   RadioGroup,
@@ -299,96 +298,54 @@ export default function MuonTraHsbaPage() {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <HeadMetadata title="Quản lý mượn trả hồ sơ bệnh án" />
 
-      {/* Container chính với height cố định */}
-      <Box
-        sx={{
-          height: "calc(100vh - 64px)", // Trừ height của header/navbar
-          width: "100%",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          p: 2,
-          gap: 1,
-        }}>
+      <Box p={1} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"
-          sx={{
-            color: "#1976d2",
-            fontWeight: "bold",
-            letterSpacing: 1,
-            flexShrink: 0,
-          }}>
+          gutterBottom
+          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           QUẢN LÝ MƯỢN TRẢ HỒ SƠ BỆNH ÁN
         </Typography>
 
         {/* Filter/Search Bar */}
-        <Box
-          display="flex"
-          gap={2}
-          sx={{
-            flexShrink: 0,
-            flexWrap: "wrap",
-          }}>
-          <Box flex={3}>
-            <Select
-              fullWidth
-              value={selectedKhoa}
-              size="small"
-              onChange={(e) => setSelectedKhoa(e.target.value)}
-              displayEmpty>
-              {khoaList.map((item) => (
-                <MenuItem key={item.value} value={item.value}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
-          <Box flex={2}>
-            <FormControl>
-              <FormLabel
-                id="popt-radio-group-label"
-                sx={{ color: "#1976d2", fontWeight: "bold" }}
-              />
+        <Grid container spacing={1} mb={1}>
+          {/* Ô Select Khoa */}
+          <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+            <Box className="flex flex-row" gap={2}>
+              <Select
+                value={selectedKhoa}
+                size="small"
+                onChange={(e) => setSelectedKhoa(e.target.value)}
+                displayEmpty
+                className="flex-1">
+                {khoaList.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </Select>
               <RadioGroup
                 row
                 aria-labelledby="popt-radio-group-label"
                 name="popt-radio-group"
                 value={popt}
-                onChange={(e) => setPopt(e.target.value)}>
+                onChange={(e) => setPopt(e.target.value)}
+                className="w-auto">
                 <FormControlLabel
                   value="1"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
+                  control={<Radio size="small" />}
                   label="Ngày vào"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
                 <FormControlLabel
                   value="2"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
+                  control={<Radio size="small" />}
                   label="Ngày ra"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
-            </FormControl>
-          </Box>
+            </Box>
+          </Grid>
 
           {/* DatePicker "Từ ngày" */}
-          <Box flex={1}>
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
@@ -396,10 +353,10 @@ export default function MuonTraHsbaPage() {
               format="dd/MM/yyyy"
               slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
+          </Grid>
 
           {/* DatePicker "Đến ngày" */}
-          <Box flex={1}>
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
@@ -407,25 +364,23 @@ export default function MuonTraHsbaPage() {
               format="dd/MM/yyyy"
               slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<Search />}
-            onClick={handleSearch}
-            disabled={searchingData}>
-            {searchingData ? "Đang tìm..." : "Tìm kiếm"}
-          </Button>
-        </Box>
+          </Grid>
+
+          {/* Nút "Tìm kiếm" */}
+          <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+            <Button
+              fullWidth
+              startIcon={<Search />}
+              variant="contained"
+              onClick={handleSearch}
+              disabled={searchingData}>
+              {searchingData ? "Đang tìm..." : "Tìm kiếm"}
+            </Button>
+          </Grid>
+        </Grid>
 
         {/* Tab Navigation */}
-        <Box
-          sx={{
-            bgcolor: "white",
-            display: "flex",
-            gap: 2,
-            p: 2,
-            flexShrink: 0,
-          }}>
+        <Box className="bg-white flex gap-2 p-2">
           <Button
             variant="contained"
             startIcon={<NoteAdd />}
@@ -443,16 +398,8 @@ export default function MuonTraHsbaPage() {
           </Button>
         </Box>
 
-        {/* Main Content Area (DataGrid với height cố định) */}
-        <Box
-          sx={{
-            flex: 1,
-            width: "100%",
-            minHeight: 400, // Đảm bảo có chiều cao tối thiểu
-            border: "1px solid #e0e0e0",
-            borderRadius: 1,
-            overflow: "hidden",
-          }}>
+        {/* Main Content Area (Padding around the table) */}
+        <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
           <DataGrid
             rows={rows}
             columns={columns}

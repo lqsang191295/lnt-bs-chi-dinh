@@ -19,7 +19,7 @@ import { useMenuStore } from "@/store/menu";
 import { useUserStore } from "@/store/user";
 import { mergePDFsWithProgress } from "@/utils/pdfLibs";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
-import { Download, NoteAdd, Refresh, Search } from "@mui/icons-material";
+import { NoteAdd, Refresh, Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import {
@@ -27,9 +27,8 @@ import {
   Box,
   Button,
   CircularProgress,
-  FormControl,
   FormControlLabel,
-  FormLabel,
+  Grid,
   IconButton,
   LinearProgress,
   MenuItem,
@@ -618,121 +617,89 @@ export default function KetXuatHsbaPage() {
       <HeadMetadata title="Kết xuất hồ sơ bệnh án" />
 
       {/* Container chính với height cố định */}
-      <Box
-        sx={{
-          height: "calc(100vh - 64px)", // Trừ height của header/navbar
-          width: "100%",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          p: 2,
-          gap: 1,
-        }}>
+      <Box p={1} className="w-full h-full flex flex-col">
         <Typography
           variant="h6"
-          sx={{
-            color: "#1976d2",
-            fontWeight: "bold",
-            letterSpacing: 1,
-            flexShrink: 0,
-          }}>
+          gutterBottom
+          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
         </Typography>
 
         {/* Bộ lọc */}
-        <Box
-          display="flex"
-          gap={2}
-          sx={{
-            flexShrink: 0,
-            flexWrap: "wrap",
-          }}>
-          <Box flex={3}>
-            <Select
-              fullWidth
-              value={selectedKhoa}
-              size="small"
-              onChange={(e) => setSelectedKhoa(e.target.value)}
-              displayEmpty>
-              {khoaList.map((item) => (
-                <MenuItem key={item.value} value={item.value}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
-          <Box flex={2}>
-            <FormControl>
-              <FormLabel
-                id="popt-radio-group-label"
-                sx={{ color: "#1976d2", fontWeight: "bold" }}
-              />
+        <Grid container spacing={1}>
+          {/* Ô Select Khoa */}
+          <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+            <Box className="flex flex-row" gap={2}>
+              <Select
+                value={selectedKhoa}
+                size="small"
+                onChange={(e) => setSelectedKhoa(e.target.value)}
+                displayEmpty
+                className="flex-1">
+                {khoaList.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </Select>
               <RadioGroup
                 row
                 aria-labelledby="popt-radio-group-label"
                 name="popt-radio-group"
                 value={popt}
-                onChange={(e) => setPopt(e.target.value)}>
+                onChange={(e) => setPopt(e.target.value)}
+                className="w-auto">
                 <FormControlLabel
                   value="1"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
+                  control={<Radio size="small" />}
                   label="Ngày vào"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
                 <FormControlLabel
                   value="2"
-                  control={
-                    <Radio
-                      sx={{
-                        color: "#1976d2",
-                        "&.Mui-checked": { color: "#1976d2" },
-                      }}
-                      size="small"
-                    />
-                  }
+                  control={<Radio size="small" />}
                   label="Ngày ra"
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
               </RadioGroup>
-            </FormControl>
-          </Box>
-          <Box flex={1}>
+            </Box>
+          </Grid>
+
+          {/* DatePicker "Từ ngày" */}
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Từ ngày"
               value={tuNgay}
               onChange={(value) => setTuNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{ textField: { size: "small" } }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Box flex={1}>
+          </Grid>
+
+          {/* DatePicker "Đến ngày" */}
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
             <DatePicker
               label="Đến ngày"
               value={denNgay}
               onChange={(value) => setDenNgay(value as Date)}
               format="dd/MM/yyyy"
-              slotProps={{ textField: { size: "small" } }}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
-          <Button
-            startIcon={<Search />}
-            variant="contained"
-            onClick={handleSearch}
-            disabled={searchingData}>
-            {searchingData ? "Đang tìm..." : "Tìm kiếm"}
-          </Button>
-        </Box>
+          </Grid>
+
+          {/* Nút "Tìm kiếm" */}
+          <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+            <Button
+              fullWidth
+              startIcon={<Search />}
+              variant="contained"
+              onClick={handleSearch}
+              disabled={searchingData}>
+              {searchingData ? "Đang tìm..." : "Tìm kiếm"}
+            </Button>
+          </Grid>
+        </Grid>
 
         {/* Tabs */}
-        <Box sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 0 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
             aria-label="basic tabs example"
             value={value}
@@ -744,14 +711,7 @@ export default function KetXuatHsbaPage() {
 
         {/* Tab Kết xuất */}
         <CustomTabPanel value={value} index={0}>
-          <Box
-            sx={{
-              bgcolor: "white",
-              display: "flex",
-              gap: 2,
-              p: 2,
-              flexShrink: 0,
-            }}>
+          <Box className="bg-white flex gap-2 p-2">
             <Button
               variant="contained"
               startIcon={<NoteAdd />}
@@ -772,7 +732,7 @@ export default function KetXuatHsbaPage() {
 
           {/* Progress indicator */}
           {loading && (
-            <Box sx={{ width: "100%", mt: 1, flexShrink: 0 }}>
+            <Box sx={{ width: "100%", mt: 1 }}>
               <LinearProgress variant="determinate" value={progress} />
               <Typography variant="caption" color="text.secondary">
                 Đang xử lý: {progress.toFixed(0)}%
@@ -782,91 +742,13 @@ export default function KetXuatHsbaPage() {
 
           {/* Error message */}
           {error && (
-            <Alert severity="error" sx={{ mt: 1, flexShrink: 0 }}>
+            <Alert severity="error" sx={{ mt: 1 }}>
               {error}
             </Alert>
           )}
 
           {/* DataGrid Danh sách kết xuất HSBA */}
-          <Box
-            sx={{
-              flex: 1,
-              width: "100%",
-              minHeight: 400, // Đảm bảo có chiều cao tối thiểu
-              border: "1px solid #e0e0e0",
-              borderRadius: 1,
-              overflow: "hidden",
-              mt: 1,
-            }}>
-            <DataGrid
-              rows={rows}
-              columns={columnsKetXuat}
-              loading={searchingData}
-              pagination
-              checkboxSelection
-              disableRowSelectionOnClick
-              density="compact"
-              onRowSelectionModelChange={handleRowSelectionChange}
-              sx={{
-                height: "100%",
-                "& .MuiDataGrid-columnHeaders": {
-                  backgroundColor: "#f5f5f5",
-                  fontWeight: "bold",
-                },
-                "& .MuiDataGrid-cell": {
-                  border: "1px solid #e0e0e0",
-                },
-                "& .MuiDataGrid-row:nth-of-type(odd)": {
-                  backgroundColor: "#f9f9f9",
-                },
-                "& .MuiDataGrid-row:nth-of-type(even)": {
-                  backgroundColor: "white",
-                },
-                "& .MuiDataGrid-row:hover": {
-                  backgroundColor: "#e3f2fd !important",
-                },
-                "& .MuiDataGrid-main": {
-                  overflow: "hidden",
-                },
-              }}
-            />
-          </Box>
-        </CustomTabPanel>
-
-        {/* Tab Lịch sử */}
-        <CustomTabPanel value={value} index={1}>
-          <Box
-            sx={{
-              bgcolor: "white",
-              display: "flex",
-              gap: 2,
-              p: 2,
-              flexShrink: 0,
-            }}>
-            <Button
-              variant="contained"
-              startIcon={<Refresh />}
-              size="small"
-              onClick={handleSearchLichSu}
-              disabled={searchingLichSu}>
-              Làm mới
-            </Button>
-            <Button variant="outlined" startIcon={<Download />} size="small">
-              Xuất Excel
-            </Button>
-          </Box>
-
-          {/* DataGrid lịch sử kết xuất HSBA */}
-          <Box
-            sx={{
-              flex: 1,
-              width: "100%",
-              minHeight: 400, // Đảm bảo có chiều cao tối thiểu
-              border: "1px solid #e0e0e0",
-              borderRadius: 1,
-              overflow: "hidden",
-              mt: 1,
-            }}>
+          <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
             <DataGrid
               rows={lichSuRows}
               columns={columnsLichSu}

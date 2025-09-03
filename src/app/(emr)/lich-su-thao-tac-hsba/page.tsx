@@ -1,19 +1,19 @@
 // app/lich-su-thao-tac-hsba/page.tsx
 "use client";
 
-import { Box, Button, Typography, CircularProgress } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import { Box, Button, CircularProgress, Grid, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
 
 import { getnhatkythaotacba } from "@/actions/act_thosobenhan";
-import HeadMetadata from "@/components/HeadMetadata";
 import AccessDeniedPage from "@/components/AccessDeniedPage";
-import { useUserStore } from "@/store/user";
+import HeadMetadata from "@/components/HeadMetadata";
 import { useMenuStore } from "@/store/menu";
+import { useUserStore } from "@/store/user";
+import { ToastError } from "@/utils/toast";
 import { Refresh, Search } from "@mui/icons-material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { ToastError } from "@/utils/toast";
 import { useRouter } from "next/navigation";
 
 // Dữ liệu cứng cho bảng
@@ -116,7 +116,7 @@ export default function LichSuThaoTacHsbaPage() {
 
   const handleSearch = async () => {
     if (!hasAccess) return;
-    
+
     try {
       console.log("Searching with:", {
         searchFromDate,
@@ -162,7 +162,7 @@ export default function LichSuThaoTacHsbaPage() {
 
   const handleRefresh = () => {
     if (!hasAccess) return;
-    
+
     console.log("Refresh clicked!");
     // Reset tất cả các trường tìm kiếm
     setSearchFromDate("");
@@ -177,16 +177,17 @@ export default function LichSuThaoTacHsbaPage() {
     return (
       <Box
         sx={{
-          height: 'calc(100vh - 64px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: 2
-        }}
-      >
+          height: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 2,
+        }}>
         <CircularProgress />
-        <Typography color="textSecondary">Đang kiểm tra quyền truy cập...</Typography>
+        <Typography color="textSecondary">
+          Đang kiểm tra quyền truy cập...
+        </Typography>
       </Box>
     );
   }
@@ -207,99 +208,70 @@ export default function LichSuThaoTacHsbaPage() {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <HeadMetadata title="Lịch sử thao tác hồ sơ bệnh án" />
 
-      {/* Container chính với height cố định */}
-      <Box 
-        sx={{ 
-          height: 'calc(100vh - 64px)', // Trừ height của header/navbar
-          width: '100%',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          p: 2,
-          gap: 1
-        }}
-      >
+      <Box p={1} className="w-full h-full flex flex-col overflow-hidden">
         <Typography
           variant="h6"
-          sx={{ 
-            color: "#1976d2", 
-            fontWeight: "bold", 
-            letterSpacing: 1,
-            flexShrink: 0
-          }}
-        >
+          gutterBottom
+          sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
           QUẢN LÝ LỊCH SỬ THAO TÁC BỆNH ÁN
         </Typography>
 
         {/* Bộ lọc */}
-        <Box 
-          display="flex" 
-          gap={2} 
-          sx={{ 
-            flexShrink: 0,
-            flexWrap: 'wrap'
-          }}
-        >
-          <Box flex={2}>
-            <DatePicker
-              label="Từ ngày"
-              format="dd/MM/yyyy"
-              value={searchTuNgay}
-              onChange={(value) => setSearchTuNgay(value as Date)}
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
-            />
-          </Box>
-          <Box flex={2}>
-            <DatePicker
-              label="Đến ngày"
-              format="dd/MM/yyyy"
-              value={searchDenNgay}
-              onChange={(value) => setSearchDenNgay(value as Date)}
-              slotProps={{
-                textField: {
-                  size: "small",
-                },
-              }}
-            />
-          </Box>
-          <Box flex={1}>
-            <Button
-              fullWidth
-              startIcon={<Search />}
-              variant="contained"
-              size="small"
-              onClick={handleSearch}
-              disabled={searchingData}>
-              {searchingData ? "Đang tìm..." : "Tìm kiếm"}
-            </Button>
-          </Box>
-          <Box flex={1}>
-            <Button
-              fullWidth
-              startIcon={<Refresh />}
-              variant="contained"
-              size="small"
-              onClick={handleRefresh}>
-              Làm mới
-            </Button>
-          </Box>
-        </Box>
+        <Grid container spacing={1} mb={1}>
+          <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+            <Box className="flex flex-row" gap={2}>
+              <DatePicker
+                label="Từ ngày"
+                format="dd/MM/yyyy"
+                value={searchTuNgay}
+                onChange={(value) => setSearchTuNgay(value as Date)}
+                className="w-full"
+                slotProps={{
+                  textField: {
+                    size: "small",
+                  },
+                }}
+              />
+              <DatePicker
+                label="Đến ngày"
+                format="dd/MM/yyyy"
+                value={searchDenNgay}
+                onChange={(value) => setSearchDenNgay(value as Date)}
+                className="w-full"
+                slotProps={{
+                  textField: {
+                    size: "small",
+                  },
+                }}
+              />
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Box flex={1}>
+              <Button
+                fullWidth
+                startIcon={<Search />}
+                variant="contained"
+                onClick={handleSearch}>
+                Tìm kiếm
+              </Button>
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Box flex={1}>
+              <Button
+                fullWidth
+                startIcon={<Refresh />}
+                variant="contained"
+                onClick={handleRefresh}>
+                Làm mới
+              </Button>
+            </Box>
+          </Grid>
+        </Grid>
 
-        {/* Main Content Area - DataGrid với height cố định */}
-        <Box 
-          sx={{
-            flex: 1,
-            width: '100%',
-            minHeight: 400, // Đảm bảo có chiều cao tối thiểu
-            border: '1px solid #e0e0e0',
-            borderRadius: 1,
-            overflow: 'hidden'
-          }}
-        >
+        {/* Main Content Area (Padding around the table) */}
+        <Box className="flex-1 w-full h-full overflow-hidden">
           <DataGrid
             rows={mockData}
             columns={columns}
@@ -309,7 +281,7 @@ export default function LichSuThaoTacHsbaPage() {
             disableRowSelectionOnClick
             density="compact"
             sx={{
-              height: '100%',
+              height: "100%",
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
                 fontWeight: "bold",
@@ -326,9 +298,9 @@ export default function LichSuThaoTacHsbaPage() {
               "& .MuiDataGrid-row:hover": {
                 backgroundColor: "#e3f2fd !important",
               },
-              '& .MuiDataGrid-main': {
-                overflow: 'hidden'
-              }
+              "& .MuiDataGrid-main": {
+                overflow: "hidden",
+              },
             }}
           />
         </Box>
