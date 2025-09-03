@@ -4,10 +4,6 @@ import { getClaimsFromToken } from "./utils/auth";
 
 export async function middleware(request: NextRequest) {
   try {
-    const { pathname } = request.nextUrl;
-    if (pathname.startsWith('/dang-ky-kham')) {
-      return NextResponse.next()
-    }
     const token = request.cookies.get("authToken")?.value;
 
     if (!token) {
@@ -38,6 +34,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next|static|icons|imgs|favicon.ico|logo.png|login|lich-su-kham).*)",
+    "/((?!api|_next|static|icons|imgs|favicon.ico|logo.png|login|lich-su-kham|banner_cls.png|dang-ky-kham|man-hinh).*)",
   ],
 };

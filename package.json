@@ -33,6 +33,7 @@
     "openai": "^5.12.1",
     "pdf-lib": "^1.17.1",
     "react": "19.1.0",
+    "react-barcode": "^1.6.1",
     "react-dom": "19.1.0",
     "react-draggable": "^4.5.0",
     "react-toastify": "^11.0.5",

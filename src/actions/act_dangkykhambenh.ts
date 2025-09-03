@@ -1,30 +1,75 @@
 import { post } from "@/api/client";
 import { 
-  IBenhNhan, 
-  IDangKyKhamBenh, 
-  ITimKiemBenhNhan, 
-  IPhieuDangKy,
-  IResponse 
+  PatientInfo, 
+  ICurrentQueueNumber, 
+  IQueueNumber,
+  IResponse,
+  BV_QlyCapThe 
 } from "@/model/dangkykhambenh";
 
-// Tìm kiếm bệnh nhân theo CCCD hoặc số điện thoại
-export const timKiemBenhNhan = async (params: ITimKiemBenhNhan): Promise<IBenhNhan[]> => {
+// lấy danh sách bệnh nhân hiện tại ở các quầy
+export const fetchCurrentQueueNumbers = async (): Promise<IResponse<ICurrentQueueNumber[]>> => {
   try {
-    const response = await post(`/api/callService`, {
+    const response = await post(`/his/call`, {
       userId: "",
       option: "",
-      funcName: "dbo.emr_pget_benhnhan_search",
+      funcName: "dbo.sp_get_danhsachdangkyhientai_trangthai",
+      paraData: [],
+    });
+    if (response.status === "error") {
+      return {
+        status: "error",
+        message: response.message || "Lỗi lấy số thứ tự hiện tại",
+        error: response.message
+      };
+    }
+    return {
+      status: "success",
+      message: "Lấy số thứ tự hiện tại thành công",
+      data: response.message
+    };
+  } catch (error) {
+    console.error("Lỗi lấy số thứ tự hiện tại:", error);
+    return null as any;
+  }
+}
+
+// Tìm kiếm bệnh nhân theo CCCD hoặc số điện thoại
+export const searchPatientInfoByType = async (params: string, type: number): Promise<BV_QlyCapThe[]> => {
+  try {
+    const response = await post(`/his/call`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.sp_get_benhnhan_search",
       paraData: [
-        { paraName: "pcccd", paraValue: params.cccd || "" },
-        { paraName: "psdt", paraValue: params.soDienThoai || "" },
-        { paraName: "photen", paraValue: params.hoTen || "" },
+        { paraName: "search", paraValue: params || "" },
+        { paraName: "type", paraValue: type || "" },
       ],
     });
 
     if (response.status === "error") {
       return [];
     }
+    return response.message || [];
+  } catch (error) {
+    console.error("Lỗi tìm kiếm bệnh nhân:", error);
+    return [];
+  }
+};
+export const searchByBHYTCode = async (params: string): Promise<PatientInfo[]> => {
+  try {
+    const response = await post(`/his/call`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.sp_search_bhyt",
+      paraData: [
+        { paraName: "bhyt", paraValue: params || "" }
+      ],
+    });
 
+    if (response.status === "error") {
+      return [];
+    }
     return response.message || [];
   } catch (error) {
     console.error("Lỗi tìm kiếm bệnh nhân:", error);
@@ -32,96 +77,36 @@ export const timKiemBenhNhan = async (params: ITimKiemBenhNhan): Promise<IBenhNh
   }
 };
 
-// Lấy thông tin bệnh nhân từ CCCD (quét CCCD)
-export const layThongTinTuCCCD = async (cccd: string): Promise<IBenhNhan | null> => {
-  try {
-    const response = await post(`/api/callService`, {
-      userId: "",
-      option: "",
-      funcName: "dbo.emr_pget_benhnhan_by_cccd",
-      paraData: [
-        { paraName: "pcccd", paraValue: cccd },
-      ],
-    });
-
-    if (response.status === "error") {
-      return null;
-    }
-
-    return response.message || null;
-  } catch (error) {
-    console.error("Lỗi lấy thông tin từ CCCD:", error);
-    return null;
-  }
-};
-
-// Thêm bệnh nhân mới
-export const themBenhNhan = async (benhNhan: IBenhNhan): Promise<IResponse<IBenhNhan>> => {
-  try {
-    const response = await post(`/api/callService`, {
-      userId: "",
-      option: "",
-      funcName: "dbo.emr_pinsert_benhnhan",
-      paraData: [
-        { paraName: "photen", paraValue: benhNhan.hoTen },
-        { paraName: "pcccd", paraValue: benhNhan.cccd },
-        { paraName: "pngaysinh", paraValue: benhNhan.ngaySinh },
-        { paraName: "pgioitinh", paraValue: benhNhan.gioiTinh },
-        { paraName: "psdt", paraValue: benhNhan.soDienThoai },
-        { paraName: "pdiachi", paraValue: benhNhan.diaChi },
-      ],
-    });
-
-    if (response.status === "error") {
-      return {
-        status: "error",
-        message: response.message || "Lỗi thêm bệnh nhân",
-        error: response.message
-      };
-    }
-
-    return {
-      status: "success",
-      message: "Thêm bệnh nhân thành công",
-      data: response.message
-    };
-  } catch (error) {
-    console.error("Lỗi thêm bệnh nhân:", error);
-    return {
-      status: "error",
-      message: "Lỗi hệ thống",
-      error: error instanceof Error ? error.message : "Unknown error"
-    };
-  }
-};
-
-
-
 // Đăng ký khám bệnh
-export const dangKyKhamBenh = async (dangKy: IDangKyKhamBenh): Promise<IResponse<IDangKyKhamBenh>> => {
+export const dangKyKhamBenh = async (dangKy: PatientInfo): Promise<IResponse<IQueueNumber[]>> => {
   try {
-    const response = await post(`/api/callService`, {
+    const response = await post(`/his/call`, {
       userId: "",
       option: "",
-      funcName: "dbo.emr_pinsert_dangkykhambenh",
+      funcName: "dbo.sp_BV_DangKyLaySo",
       paraData: [
-        { paraName: "pmanbn", paraValue: dangKy.maBN },
-        { paraName: "pngaydangky", paraValue: dangKy.ngayDangKy },
-        { paraName: "pgiogio", paraValue: dangKy.gioDangKy },
-        { paraName: "plydokham", paraValue: dangKy.lyDoKham },
-        { paraName: "pghichu", paraValue: dangKy.ghiChu || "" },
-        { paraName: "pnguoidangky", paraValue: dangKy.nguoiDangKy || "" },
+        { paraName: "hoten", paraValue: dangKy.fullname },
+        { paraName: "cccd", paraValue: dangKy.idNumber || null },
+        { paraName: "ngaysinh", paraValue: dangKy.birthDate ? dangKy.birthDate.getDate() : null },
+        { paraName: "thangsinh", paraValue: dangKy.birthDate ? (dangKy.birthDate.getMonth() + 1).toString().padStart(2, '0') : null },
+        { paraName: "namsinh", paraValue: dangKy.birthDate ? dangKy.birthDate.getFullYear().toString() : null },
+        { paraName: "gioitinh", paraValue: dangKy.gender || null },
+        { paraName: "diachi", paraValue: dangKy.address || null },
+        { paraName: "dienthoai", paraValue: dangKy.phone || null },
+        { paraName: "bhyt", paraValue: dangKy.insuranceNumber || null },
+        { paraName: "quay", paraValue: dangKy.quay || null },
+        { paraName: "lydokham", paraValue: dangKy.chiefComplaint || null },
+        { paraName: "anhBN", paraValue: dangKy.anh || null },
       ],
     });
-
-    if (response.status === "error") {
+    console.log("Response đăng ký khám bệnh:", response);
+    if (response.message === null || response.message === undefined) {
       return {
         status: "error",
-        message: response.message || "Lỗi đăng ký khám bệnh",
-        error: response.message
+        message: "Lỗi đăng ký khám bệnh, vui lòng liên hệ quầy đăng ký để được hỗ trợ.",
+        error: "Lỗi"
       };
     }
-
     return {
       status: "success",
       message: "Đăng ký khám bệnh thành công",
@@ -137,25 +122,3 @@ export const dangKyKhamBenh = async (dangKy: IDangKyKhamBenh): Promise<IResponse
   }
 };
 
-
-
-// Tạo mã phiếu đăng ký tự động
-export const taoMaPhieuTuDong = async (): Promise<string> => {
-  try {
-    const response = await post(`/api/callService`, {
-      userId: "",
-      option: "",
-      funcName: "dbo.emr_pget_maphieu_tudong",
-      paraData: [],
-    });
-
-    if (response.status === "error") {
-      return `PK${new Date().getTime()}`; // Fallback mã phiếu
-    }
-
-    return response.message || `PK${new Date().getTime()}`;
-  } catch (error) {
-    console.error("Lỗi tạo mã phiếu:", error);
-    return `PK${new Date().getTime()}`; // Fallback mã phiếu
-  }
-};
