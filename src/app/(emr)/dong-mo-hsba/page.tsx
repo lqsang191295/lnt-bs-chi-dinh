@@ -1,12 +1,13 @@
 // app/dong-mo-hsba/page.tsx
 "use client";
 import { capnhathosobenhan, getHosobenhan } from "@/actions/act_thosobenhan";
+import AccessDeniedPage from "@/components/AccessDeniedPage";
 import HeadMetadata from "@/components/HeadMetadata";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
-import { useUserStore } from "@/store/user";
 import { useMenuStore } from "@/store/menu";
+import { useUserStore } from "@/store/user";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { Search } from "@mui/icons-material";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
@@ -14,6 +15,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {
   Box,
   Button,
+  CircularProgress,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -22,14 +24,12 @@ import {
   RadioGroup,
   Select,
   Typography,
-  CircularProgress,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AccessDeniedPage from "@/components/AccessDeniedPage";
+import { useCallback, useEffect, useState } from "react";
 
 const columns: GridColDef[] = [
   { field: "ID", headerName: "ID", width: 60 },
@@ -119,9 +119,9 @@ export default function DongMoHsbaPage() {
     }
   }, [menuData, loginedUser, router]);
 
-  const fetchKhoaList = async () => {
+  const fetchKhoaList = useCallback(async () => {
     if (!hasAccess) return;
-    
+
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
@@ -129,14 +129,14 @@ export default function DongMoHsbaPage() {
       console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
-  };
+  }, [hasAccess]);
 
   // Fetch khoa list from API
   useEffect(() => {
     if (hasAccess && !isCheckingAccess) {
       fetchKhoaList();
     }
-  }, [hasAccess, isCheckingAccess]);
+  }, [hasAccess, isCheckingAccess, fetchKhoaList]);
 
   // Hàm xử lý đóng/mở HSBA
   const dongmohsba = async (
@@ -144,7 +144,7 @@ export default function DongMoHsbaPage() {
     danhSachHSBA: IHoSoBenhAn[]
   ) => {
     if (!hasAccess) return;
-    
+
     if (!danhSachHSBA || danhSachHSBA.length === 0) {
       ToastWarning("Vui lòng chọn ít nhất một hồ sơ bệnh án!");
       return;
@@ -178,7 +178,7 @@ export default function DongMoHsbaPage() {
   // Hàm xử lý khi chọn rows trong DataGrid
   const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
     if (!hasAccess) return;
-    
+
     let selectionArray: unknown[] = [];
 
     //console.log("Selected rows for update:", selectionModel);
@@ -198,7 +198,7 @@ export default function DongMoHsbaPage() {
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
     if (!hasAccess) return;
-    
+
     try {
       if (!tuNgay || !denNgay) return;
 
@@ -238,16 +238,17 @@ export default function DongMoHsbaPage() {
     return (
       <Box
         sx={{
-          height: 'calc(100vh - 64px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: 2
-        }}
-      >
+          height: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 2,
+        }}>
         <CircularProgress />
-        <Typography color="textSecondary">Đang kiểm tra quyền truy cập...</Typography>
+        <Typography color="textSecondary">
+          Đang kiểm tra quyền truy cập...
+        </Typography>
       </Box>
     );
   }
@@ -270,38 +271,35 @@ export default function DongMoHsbaPage() {
       <HeadMetadata title="Đóng mở hồ sơ bệnh án" />
 
       {/* Container chính với height cố định */}
-      <Box 
-        sx={{ 
-          height: 'calc(100vh - 64px)', // Trừ height của header/navbar
-          width: '100%',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+      <Box
+        sx={{
+          height: "calc(100vh - 64px)", // Trừ height của header/navbar
+          width: "100%",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           p: 2,
-          gap: 1
-        }}
-      >
+          gap: 1,
+        }}>
         <Typography
           variant="h6"
-          sx={{ 
-            color: "#1976d2", 
-            fontWeight: "bold", 
+          sx={{
+            color: "#1976d2",
+            fontWeight: "bold",
             letterSpacing: 1,
-            flexShrink: 0
-          }}
-        >
+            flexShrink: 0,
+          }}>
           ĐÓNG MỞ HỒ SƠ BỆNH ÁN
         </Typography>
 
         {/* Search Bar */}
-        <Box 
-          display="flex" 
-          gap={2} 
-          sx={{ 
+        <Box
+          display="flex"
+          gap={2}
+          sx={{
             flexShrink: 0,
-            flexWrap: 'wrap'
-          }}
-        >
+            flexWrap: "wrap",
+          }}>
           <Box flex={3}>
             <Select
               fullWidth
@@ -394,15 +392,14 @@ export default function DongMoHsbaPage() {
         </Box>
 
         {/* Tab Navigation */}
-        <Box 
+        <Box
           sx={{
-            bgcolor: 'white',
-            display: 'flex',
+            bgcolor: "white",
+            display: "flex",
             gap: 2,
             p: 2,
-            flexShrink: 0
-          }}
-        >
+            flexShrink: 0,
+          }}>
           <Button
             startIcon={<LockOutlinedIcon />}
             variant="contained"
@@ -424,16 +421,15 @@ export default function DongMoHsbaPage() {
         </Box>
 
         {/* Main Content Area - DataGrid với height cố định */}
-        <Box 
+        <Box
           sx={{
             flex: 1,
-            width: '100%',
+            width: "100%",
             minHeight: 400, // Đảm bảo có chiều cao tối thiểu
-            border: '1px solid #e0e0e0',
+            border: "1px solid #e0e0e0",
             borderRadius: 1,
-            overflow: 'hidden'
-          }}
-        >
+            overflow: "hidden",
+          }}>
           <DataGrid
             rows={rows}
             columns={columns}
@@ -444,7 +440,7 @@ export default function DongMoHsbaPage() {
             density="compact"
             onRowSelectionModelChange={handleRowSelectionChange}
             sx={{
-              height: '100%',
+              height: "100%",
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "#f5f5f5",
                 fontWeight: "bold",
@@ -461,9 +457,9 @@ export default function DongMoHsbaPage() {
               "& .MuiDataGrid-row:hover": {
                 backgroundColor: "#e3f2fd !important",
               },
-              '& .MuiDataGrid-main': {
-                overflow: 'hidden'
-              }
+              "& .MuiDataGrid-main": {
+                overflow: "hidden",
+              },
             }}
           />
         </Box>

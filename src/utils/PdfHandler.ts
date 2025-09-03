@@ -17,7 +17,7 @@ export class PdfHandler {
       // Chuyển đổi base64 thành binary
       const binaryString = atob(cleanBase64);
       const bytes = new Uint8Array(binaryString.length);
-      
+
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
@@ -39,7 +39,10 @@ export class PdfHandler {
    * @param fileName - Tên file (không bao gồm extension)
    * @returns Promise<boolean> - true nếu thành công
    */
-  static async printPdf(base64Data: string, fileName: string = "document"): Promise<boolean> {
+  static async printPdf(
+    base64Data: string,
+    fileName: string = "document"
+  ): Promise<boolean> {
     if (!base64Data) {
       console.error("No PDF data provided");
       return false;
@@ -47,25 +50,25 @@ export class PdfHandler {
 
     try {
       const pdfBlobUrl = this.createPdfBlobUrl(base64Data);
-      
+
       if (!pdfBlobUrl) {
         throw new Error("Failed to create PDF blob URL");
       }
 
       // Mở PDF trong cửa sổ mới để in
-      const printWindow = window.open(pdfBlobUrl, '_blank');
-      
+      const printWindow = window.open(pdfBlobUrl, "_blank");
+
       if (printWindow) {
         // Đợi PDF load xong rồi mới in
         printWindow.onload = () => {
           printWindow.print();
         };
-        
+
         // Auto cleanup sau 30 giây
         setTimeout(() => {
           URL.revokeObjectURL(pdfBlobUrl);
         }, 30000);
-        
+
         return true;
       } else {
         // Fallback: tải file PDF về máy nếu không thể mở cửa sổ mới
@@ -84,7 +87,10 @@ export class PdfHandler {
    * @param fileName - Tên file (không bao gồm extension)
    * @returns boolean - true nếu thành công
    */
-  static downloadPdf(base64Data: string, fileName: string = "document"): boolean {
+  static downloadPdf(
+    base64Data: string,
+    fileName: string = "document"
+  ): boolean {
     if (!base64Data) {
       console.error("No PDF data provided");
       return false;
@@ -92,24 +98,24 @@ export class PdfHandler {
 
     try {
       const pdfBlobUrl = this.createPdfBlobUrl(base64Data);
-      
+
       if (!pdfBlobUrl) {
         throw new Error("Failed to create PDF blob URL");
       }
 
       // Tạo link và trigger download
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = pdfBlobUrl;
       link.download = `${fileName}.pdf`;
-      
+
       // Add to DOM, click, then remove
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up
       setTimeout(() => URL.revokeObjectURL(pdfBlobUrl), 100);
-      
+
       return true;
     } catch (error) {
       console.error("Error downloading PDF:", error);
@@ -130,12 +136,12 @@ export class PdfHandler {
 
     try {
       const pdfBlobUrl = this.createPdfBlobUrl(base64Data);
-      
+
       if (pdfBlobUrl) {
-        window.open(pdfBlobUrl, '_blank');
+        window.open(pdfBlobUrl, "_blank");
         return pdfBlobUrl;
       }
-      
+
       return "";
     } catch (error) {
       console.error("Error viewing PDF:", error);
@@ -149,7 +155,7 @@ export class PdfHandler {
    * @returns boolean - true nếu valid
    */
   static validatePdfData(base64Data: string): boolean {
-    if (!base64Data || typeof base64Data !== 'string') {
+    if (!base64Data || typeof base64Data !== "string") {
       return false;
     }
 
@@ -169,7 +175,7 @@ export class PdfHandler {
       // Thử decode để kiểm tra
       atob(cleanBase64);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

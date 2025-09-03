@@ -57,4 +57,11 @@ export async function sentOTP(
 export function genOTP(): string {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   return otp;
+} 
+
+export async function verifyOTP(otp: string, storedOtp: string) {
+  // Verify OTP locally or call API
+  return {
+    status: otp === storedOtp ? "success" : "error",
+  };
 }

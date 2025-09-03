@@ -6,30 +6,31 @@ import {
   getHosobenhan,
   getnhatkyketxuatba,
   ketxuathosobenhan,
-} from "@/actions/act_thosobenhan"; 
+} from "@/actions/act_thosobenhan";
+import AccessDeniedPage from "@/components/AccessDeniedPage";
+import HeadMetadata from "@/components/HeadMetadata";
 import { PdfComponents } from "@/components/pdfComponents"; // Import PdfComponents
 import { IPDFItem } from "@/model/ipdf";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
 import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
-import { useUserStore } from "@/store/user";
 import { useMenuStore } from "@/store/menu";
+import { useUserStore } from "@/store/user";
 import { mergePDFsWithProgress } from "@/utils/pdfLibs";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { Download, NoteAdd, Refresh, Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
-import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined"; 
-import HeadMetadata from "@/components/HeadMetadata";
-import AccessDeniedPage from "@/components/AccessDeniedPage"; 
+import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid, 
+  IconButton,
   LinearProgress,
   MenuItem,
   Radio,
@@ -38,14 +39,12 @@ import {
   Tab,
   Tabs,
   Typography,
-  IconButton,
-  CircularProgress,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 // Cập nhật interface cho dữ liệu lịch sử kết xuất
 interface INhatKyKetXuat {
@@ -164,35 +163,43 @@ export default function KetXuatHsbaPage() {
   );
 
   // Hàm xử lý download PDF cho tab Kết xuất
-  const handleDownload = useCallback((hsba: IHoSoBenhAn) => {
-    if (!hasAccess) return;
-    
-    if (!hsba.NoiDungPdf) {
-      ToastWarning("Hồ sơ bệnh án chưa được kết xuất PDF!");
-      return;
-    }
+  const handleDownload = useCallback(
+    (hsba: IHoSoBenhAn) => {
+      if (!hasAccess) return;
+
+      if (!hsba.NoiDungPdf) {
+        ToastWarning("Hồ sơ bệnh án chưa được kết xuất PDF!");
+        return;
+      }
 
       if (Number(hsba.TrangThaiKetXuat) !== 1) {
         ToastWarning("Hồ sơ này chưa được kết xuất!");
         return;
       }
 
-    const fileName = `HSBA_${hsba.MaBN}_${hsba.SoVaoVien}`;
-    downloadPdf(hsba.NoiDungPdf, fileName);
-  }, [downloadPdf, hasAccess]);
+      const fileName = `HSBA_${hsba.MaBN}_${hsba.SoVaoVien}`;
+      downloadPdf(hsba.NoiDungPdf, fileName);
+    },
+    [downloadPdf, hasAccess]
+  );
 
   // Hàm xử lý download PDF cho lịch sử
-  const handleDownloadLichSu = useCallback((lichSu: INhatKyKetXuat) => {
-    if (!hasAccess) return;
-    
-    if (!lichSu.cnoidungketxuat) {
-      ToastWarning("Không có nội dung PDF để tải xuống!");
-      return;
-    }
+  const handleDownloadLichSu = useCallback(
+    (lichSu: INhatKyKetXuat) => {
+      if (!hasAccess) return;
 
-    const fileName = `HSBA_${lichSu.MaBN || lichSu.cmabenhan}_${lichSu.SoVaoVien || 'NA'}`;
-    downloadPdf(lichSu.cnoidungketxuat, fileName);
-  }, [downloadPdf, hasAccess]);
+      if (!lichSu.cnoidungketxuat) {
+        ToastWarning("Không có nội dung PDF để tải xuống!");
+        return;
+      }
+
+      const fileName = `HSBA_${lichSu.MaBN || lichSu.cmabenhan}_${
+        lichSu.SoVaoVien || "NA"
+      }`;
+      downloadPdf(lichSu.cnoidungketxuat, fileName);
+    },
+    [downloadPdf, hasAccess]
+  );
 
   // Columns cho tab Kết xuất
   const columnsKetXuat: GridColDef[] = useMemo(
@@ -347,7 +354,7 @@ export default function KetXuatHsbaPage() {
   // Function để lấy dữ liệu lịch sử kết xuất
   const handleSearchLichSu = async () => {
     if (!hasAccess) return;
-    
+
     try {
       if (!tuNgay || !denNgay) return;
 
@@ -385,7 +392,7 @@ export default function KetXuatHsbaPage() {
   // Cập nhật handleChange để load data khi chuyển tab
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     if (!hasAccess) return;
-    
+
     setValue(newValue);
 
     // Nếu chuyển sang tab lịch sử và chưa có dữ liệu, tự động load
@@ -395,9 +402,8 @@ export default function KetXuatHsbaPage() {
   };
 
   // Fetch khoa list from API
-  const fetchKhoaList = async () => {
+  const fetchKhoaList = useCallback(async () => {
     if (!hasAccess) return;
-    
     try {
       const dataKhoaPhong = await DataManager.getDmKhoaPhong();
       setKhoaList(dataKhoaPhong);
@@ -405,19 +411,19 @@ export default function KetXuatHsbaPage() {
       console.error("Error fetching khoa list:", error);
       setKhoaList([{ value: "all", label: "Tất cả" }]);
     }
-  };
+  }, [hasAccess]);
 
   // Fetch khoa list from API
   useEffect(() => {
     if (hasAccess && !isCheckingAccess) {
       fetchKhoaList();
     }
-  }, [hasAccess, isCheckingAccess]);
+  }, [hasAccess, isCheckingAccess, fetchKhoaList]);
 
   // Hàm xử lý kết xuất
   const handleKetXuat = async () => {
     if (!hasAccess) return;
-    
+
     try {
       // Kiểm tra có dữ liệu được chọn không
       if (!selectedRows || selectedRows.length === 0) {
@@ -464,7 +470,7 @@ export default function KetXuatHsbaPage() {
             pdfList,
             "HỒ SƠ BỆNH ÁN ĐIỆN TỬ BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG",
             true,
-            (current, total, currentHSBA) => {
+            (current, total) => {
               setProgress((current / total) * 100);
             }
           );
@@ -494,7 +500,7 @@ export default function KetXuatHsbaPage() {
               );
             }
           }
-        } catch (error) {
+        } catch {
           // console.error(`Error getting PDF for HSBA ${hsba.ID}:`, error);
           continue;
         }
@@ -522,7 +528,7 @@ export default function KetXuatHsbaPage() {
   // Hàm xử lý khi chọn rows trong DataGrid
   const handleRowSelectionChange = (selectionModel: GridRowSelectionModel) => {
     if (!hasAccess) return;
-    
+
     let selectionArray: unknown[] = [];
 
     if (selectionModel && selectionModel.ids) {
@@ -540,7 +546,7 @@ export default function KetXuatHsbaPage() {
   // Hàm tìm kiếm hồ sơ bệnh án
   const handleSearch = async () => {
     if (!hasAccess) return;
-    
+
     try {
       if (!tuNgay || !denNgay) return;
 
@@ -580,16 +586,17 @@ export default function KetXuatHsbaPage() {
     return (
       <Box
         sx={{
-          height: 'calc(100vh - 64px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: 2
-        }}
-      >
+          height: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 2,
+        }}>
         <CircularProgress />
-        <Typography color="textSecondary">Đang kiểm tra quyền truy cập...</Typography>
+        <Typography color="textSecondary">
+          Đang kiểm tra quyền truy cập...
+        </Typography>
       </Box>
     );
   }
@@ -611,46 +618,42 @@ export default function KetXuatHsbaPage() {
       <HeadMetadata title="Kết xuất hồ sơ bệnh án" />
 
       {/* Container chính với height cố định */}
-      <Box 
-        sx={{ 
-          height: 'calc(100vh - 64px)', // Trừ height của header/navbar
-          width: '100%',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+      <Box
+        sx={{
+          height: "calc(100vh - 64px)", // Trừ height của header/navbar
+          width: "100%",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           p: 2,
-          gap: 1
-        }}
-      >
+          gap: 1,
+        }}>
         <Typography
           variant="h6"
-          sx={{ 
-            color: "#1976d2", 
-            fontWeight: "bold", 
+          sx={{
+            color: "#1976d2",
+            fontWeight: "bold",
             letterSpacing: 1,
-            flexShrink: 0
-          }}
-        >
+            flexShrink: 0,
+          }}>
           QUẢN LÝ KẾT XUẤT HỒ SƠ BỆNH ÁN
         </Typography>
-        
+
         {/* Bộ lọc */}
-        <Box 
-          display="flex" 
-          gap={2} 
-          sx={{ 
+        <Box
+          display="flex"
+          gap={2}
+          sx={{
             flexShrink: 0,
-            flexWrap: 'wrap'
-          }}
-        >
+            flexWrap: "wrap",
+          }}>
           <Box flex={3}>
             <Select
               fullWidth
               value={selectedKhoa}
               size="small"
               onChange={(e) => setSelectedKhoa(e.target.value)}
-              displayEmpty
-            >
+              displayEmpty>
               {khoaList.map((item) => (
                 <MenuItem key={item.value} value={item.value}>
                   {item.label}
@@ -669,8 +672,7 @@ export default function KetXuatHsbaPage() {
                 aria-labelledby="popt-radio-group-label"
                 name="popt-radio-group"
                 value={popt}
-                onChange={(e) => setPopt(e.target.value)}
-              >
+                onChange={(e) => setPopt(e.target.value)}>
                 <FormControlLabel
                   value="1"
                   control={
@@ -699,7 +701,7 @@ export default function KetXuatHsbaPage() {
                   label="Ngày ra"
                   sx={{ color: "#1976d2", fontWeight: "bold" }}
                 />
-              </RadioGroup> 
+              </RadioGroup>
             </FormControl>
           </Box>
           <Box flex={1}>
@@ -724,8 +726,7 @@ export default function KetXuatHsbaPage() {
             startIcon={<Search />}
             variant="contained"
             onClick={handleSearch}
-            disabled={searchingData}
-          >
+            disabled={searchingData}>
             {searchingData ? "Đang tìm..." : "Tìm kiếm"}
           </Button>
         </Box>
@@ -743,15 +744,14 @@ export default function KetXuatHsbaPage() {
 
         {/* Tab Kết xuất */}
         <CustomTabPanel value={value} index={0}>
-          <Box 
+          <Box
             sx={{
-              bgcolor: 'white',
-              display: 'flex',
+              bgcolor: "white",
+              display: "flex",
               gap: 2,
               p: 2,
-              flexShrink: 0
-            }}
-          >
+              flexShrink: 0,
+            }}>
             <Button
               variant="contained"
               startIcon={<NoteAdd />}
@@ -788,17 +788,16 @@ export default function KetXuatHsbaPage() {
           )}
 
           {/* DataGrid Danh sách kết xuất HSBA */}
-          <Box 
+          <Box
             sx={{
               flex: 1,
-              width: '100%',
+              width: "100%",
               minHeight: 400, // Đảm bảo có chiều cao tối thiểu
-              border: '1px solid #e0e0e0',
+              border: "1px solid #e0e0e0",
               borderRadius: 1,
-              overflow: 'hidden',
-              mt: 1
-            }}
-          >
+              overflow: "hidden",
+              mt: 1,
+            }}>
             <DataGrid
               rows={rows}
               columns={columnsKetXuat}
@@ -809,7 +808,7 @@ export default function KetXuatHsbaPage() {
               density="compact"
               onRowSelectionModelChange={handleRowSelectionChange}
               sx={{
-                height: '100%',
+                height: "100%",
                 "& .MuiDataGrid-columnHeaders": {
                   backgroundColor: "#f5f5f5",
                   fontWeight: "bold",
@@ -826,9 +825,9 @@ export default function KetXuatHsbaPage() {
                 "& .MuiDataGrid-row:hover": {
                   backgroundColor: "#e3f2fd !important",
                 },
-                '& .MuiDataGrid-main': {
-                  overflow: 'hidden'
-                }
+                "& .MuiDataGrid-main": {
+                  overflow: "hidden",
+                },
               }}
             />
           </Box>
@@ -836,15 +835,14 @@ export default function KetXuatHsbaPage() {
 
         {/* Tab Lịch sử */}
         <CustomTabPanel value={value} index={1}>
-          <Box 
+          <Box
             sx={{
-              bgcolor: 'white',
-              display: 'flex',
+              bgcolor: "white",
+              display: "flex",
               gap: 2,
               p: 2,
-              flexShrink: 0
-            }}
-          >
+              flexShrink: 0,
+            }}>
             <Button
               variant="contained"
               startIcon={<Refresh />}
@@ -859,17 +857,16 @@ export default function KetXuatHsbaPage() {
           </Box>
 
           {/* DataGrid lịch sử kết xuất HSBA */}
-          <Box 
+          <Box
             sx={{
               flex: 1,
-              width: '100%',
+              width: "100%",
               minHeight: 400, // Đảm bảo có chiều cao tối thiểu
-              border: '1px solid #e0e0e0',
+              border: "1px solid #e0e0e0",
               borderRadius: 1,
-              overflow: 'hidden',
-              mt: 1
-            }}
-          >
+              overflow: "hidden",
+              mt: 1,
+            }}>
             <DataGrid
               rows={lichSuRows}
               columns={columnsLichSu}
@@ -878,7 +875,7 @@ export default function KetXuatHsbaPage() {
               disableRowSelectionOnClick
               density="compact"
               sx={{
-                height: '100%',
+                height: "100%",
                 "& .MuiDataGrid-columnHeaders": {
                   backgroundColor: "#e8f5e8",
                   fontWeight: "bold",
@@ -895,9 +892,9 @@ export default function KetXuatHsbaPage() {
                 "& .MuiDataGrid-row:hover": {
                   backgroundColor: "#e8f5e8 !important",
                 },
-                '& .MuiDataGrid-main': {
-                  overflow: 'hidden'
-                }
+                "& .MuiDataGrid-main": {
+                  overflow: "hidden",
+                },
               }}
             />
           </Box>
