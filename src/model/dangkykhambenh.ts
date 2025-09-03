@@ -57,7 +57,6 @@ export interface IPhieuDangKy {
 }
 
 export interface IResponse<T> {
-  [x: string]: any
   status: "success" | "error";
   message: string;
   data?: T;

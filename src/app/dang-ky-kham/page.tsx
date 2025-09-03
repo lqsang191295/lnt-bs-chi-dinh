@@ -1,9 +1,57 @@
 "use client"
 import { searchPatientInfoByType, dangKyKhamBenh } from "@/actions/act_dangkykhambenh";
-import { PatientInfo } from "@/model/dangkykhambenh";
+import { PatientInfo, BV_QlyCapThe } from "@/model/dangkykhambenh";
 import { createQRScanner } from "@/actions/act_qrscan";
 import { useState, useEffect, useRef } from "react"
 import JsBarcode from "jsbarcode";
+
+// Định nghĩa interface cho Speech Recognition API
+interface SpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  readonly length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognition;
+    webkitSpeechRecognition?: new () => SpeechRecognition;
+  }
+}
 
 import {
   Box,
@@ -40,6 +88,7 @@ import {
   Print, ContactEmergency,
   Mic, Search
 } from "@mui/icons-material"
+import Image from "next/image";
 type RegistrationStep = "home" | "bhyt" | "dv" | "form" | "success"
 type ExamType = "bhyt" | "dv" | "ksk"
 
@@ -71,12 +120,12 @@ function DebouncedTextField(props: TextFieldProps & { debounceMs?: number }) {
     setLocal(v)
     if (timerRef.current) window.clearTimeout(timerRef.current)
     timerRef.current = window.setTimeout(() => {
-      onChange?.(e as any)
+      onChange?.(e)
       timerRef.current = null
     }, debounceMs)
   }
 
-  return <TextField {...(rest as any)} value={local} onChange={handleLocalChange} />
+  return <TextField {...rest} value={local} onChange={handleLocalChange} />
 }
 export default function MedicalKioskPage() {
   const [focusedField, setFocusedField] = useState<keyof PatientInfo | null>(null);
@@ -84,14 +133,14 @@ export default function MedicalKioskPage() {
   const scannerRef = useRef<ReturnType<typeof createQRScanner> | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [selectedExamType, setSelectedExamType] = useState<ExamType | null>(null)
   const [currentStep, setCurrentStep] = useState<RegistrationStep>("form")
   const [isConnectPort, setIsConnectPort] = useState(false)
   const [patientSelectOpen, setPatientSelectOpen] = useState(false)
-  const [patientCandidates, setPatientCandidates] = useState<any[]>([])
+  const [patientCandidates, setPatientCandidates] = useState<BV_QlyCapThe[]>([])
   const showErrorDialog = (title: string, message: string, type: "error" | "warning" | "info" = "error") => {
     setErrorDialog({
       open: true,
@@ -102,8 +151,8 @@ export default function MedicalKioskPage() {
   }
   const startVoiceInput = (field: keyof typeof patientInfo) => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       alert("Trình duyệt không hỗ trợ voice input");
@@ -127,7 +176,7 @@ export default function MedicalKioskPage() {
         setIsListening(false); // Dừng ghi âm
       };
 
-      recognitionRef.current.onresult = (event: any) => {
+      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
         if (focusedFieldRef.current) {
           setPatientInfo((prev) => ({
@@ -137,13 +186,15 @@ export default function MedicalKioskPage() {
         }
       };
 
-      recognitionRef.current.onerror = (event: any) => {
+      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error:", event.error);
         setIsListening(false);
       };
     }
 
-    recognitionRef.current.start();
+    if (recognitionRef.current) {
+      recognitionRef.current.start();
+    }
   };  
   const searchPatient = async (name: string, type: number) => {
     const respone = await searchPatientInfoByType(name, type);
@@ -167,7 +218,7 @@ export default function MedicalKioskPage() {
       showErrorDialog("Không tìm thấy bệnh nhân", "Vui lòng kiểm tra lại thông tin hoặc đăng ký bệnh nhân mới.", "warning" )
     }
   }
-  const handleSelectPatient = (p: any) => {
+  const handleSelectPatient = (p: BV_QlyCapThe) => {
     setPatientInfo({
       id: p.Ma,
       fullname: p.Hoten,
@@ -1119,7 +1170,7 @@ export default function MedicalKioskPage() {
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
       {photo && (
-        <img src={photo} alt="Ảnh đã chụp" className="border rounded-lg w-80 hidden" />
+        <Image src={photo} alt="Ảnh đã chụp" className="border rounded-lg w-80 hidden" />
       )}
     </div>
     </Box>
