@@ -30,7 +30,11 @@ export const fetchCurrentQueueNumbers = async (): Promise<IResponse<ICurrentQueu
     };
   } catch (error) {
     console.error("Lỗi lấy số thứ tự hiện tại:", error);
-    return null as any;
+    return {
+      status: "error",
+      message: "Lỗi hệ thống khi lấy số thứ tự hiện tại",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
   }
 }
 

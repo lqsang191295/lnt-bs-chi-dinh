@@ -223,7 +223,7 @@ export default function QueueDisplayPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {queueData.map((queue, index) => (
+              {queueData.map((queue) => (
                 <TableRow
                   key={queue.id}
                   sx={{

@@ -6,12 +6,30 @@ import {
 declare global {
   interface Navigator {
     serial?: {
-      getPorts: () => Promise<any[]>;
-      requestPort: () => Promise<any>;
+      getPorts: () => Promise<SerialPort[]>;
+      requestPort: () => Promise<SerialPort>;
     };
   }
   var currentType: string | undefined;
 }
+
+// Định nghĩa các interface cho Serial API
+interface SerialPort {
+  readable: ReadableStream<Uint8Array> | null;
+  writable: WritableStream<Uint8Array> | null;
+  open: (options: SerialOptions) => Promise<void>;
+  close: () => Promise<void>;
+}
+
+interface SerialOptions {
+  baudRate: number;
+  dataBits?: number;
+  stopBits?: number;
+  parity?: 'none' | 'even' | 'odd';
+  bufferSize?: number;
+  flowControl?: 'none' | 'hardware';
+}
+
 export function setTypeQR(val: string) {
   globalThis.currentType = val;
 }
@@ -34,7 +52,7 @@ export function createQRScanner(opts?: {
   const onStatus = opts?.onStatus;
   const onConnect = opts?.onConnect;
 
-  let portRef: any | null = null;
+  let portRef: SerialPort | null = null;
   let readerRef: ReadableStreamDefaultReader<Uint8Array> | null = null;
   async function startReading(): Promise<void> {
     if (!portRef?.readable) return;
@@ -147,8 +165,9 @@ export function createQRScanner(opts?: {
 
     return null; // không parse được
   }
-  async function clearBuffer(port: any) {
+  async function clearBuffer(port: SerialPort) {
   const reader = port.readable?.getReader();
+  if (!reader) return;
   try {
     await reader.cancel();  
   } catch (err) {
@@ -157,7 +176,7 @@ export function createQRScanner(opts?: {
     reader.releaseLock();
   }
 }
-  async function connectToPort(port: any) {
+  async function connectToPort(port: SerialPort) {
     try {
       if (!port.readable) {
       await port.open({ 
@@ -188,8 +207,9 @@ export function createQRScanner(opts?: {
     try {
       const port = await navigator.serial.requestPort();
       await connectToPort(port);
-    } catch (e: any) {
-      onStatus?.(e.toString());
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      onStatus?.(errorMessage);
       onStatus?.("Người dùng chưa cấp quyền hoặc đã hủy.");
     }
   }
