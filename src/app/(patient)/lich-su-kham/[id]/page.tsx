@@ -8,13 +8,12 @@ import { IPatientInfo, IPatientLichSuKham } from "@/model/tpatient";
 import { getTextBirthday, StringToDate, StringToTime } from "@/utils/timer";
 import { CalendarMonth, LocationPin, PhoneIphone } from "@mui/icons-material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import {
   Accordion,
   AccordionSummary,
   Avatar,
   Box,
-  Card,
-  Divider,
   Stack,
   Typography,
 } from "@mui/material";
@@ -97,113 +96,126 @@ export default function PatientDetailPage() {
   if (isChecking) return null;
 
   return (
-    <Box
-      className="h-screen overflow-auto"
-      sx={{
-        maxWidth: { xs: "100vw", sm: "100vw", md: "80vw", lg: "70vw" },
-        mx: "auto",
-        bgcolor: "#f5f7fa",
-        boxShadow: 2,
-        p: 1,
-      }}>
-      {/* Thông tin cơ bản bệnh nhân */}
-      <Card
-        className="!bg-blue-500"
-        sx={{ p: 1, mb: 3, borderRadius: 3, color: "#fff" }}>
-        {loadingInfo ? (
-          <PatientInfoSkeleton />
-        ) : (
-          <Stack direction="row" spacing={3} alignItems="center">
-            <Avatar
-              sx={{ width: 72, height: 72, fontSize: 32, bgcolor: "#1565c0" }}>
-              AS
-            </Avatar>
-            <Box>
-              <Typography variant="h5" fontWeight={700} fontSize={20}>
-                {patientInfo?.Hoten}
-              </Typography>
-              <Stack spacing={1} mt={1} fontSize={12}>
-                <Box className="flex items-center gap-1">
-                  <CalendarMonth fontSize="small" />
-                  {getTextBirthday(
-                    patientInfo?.Ngaysinh,
-                    patientInfo?.Thangsinh,
-                    patientInfo?.Namsinh
-                  )}{" "}
-                  -{" "}
-                  {`${
-                    new Date().getFullYear() - Number(patientInfo?.Namsinh || 0)
-                  }`}
-                  tuổi
-                </Box>
-                {patientInfo?.Diachi && (
-                  <Typography
-                    variant="body2"
-                    className="flex items-center gap-1">
-                    <LocationPin fontSize="small" />
-                    {patientInfo?.Diachi}
-                  </Typography>
-                )}
-                {patientInfo?.Dienthoai && (
-                  <Typography
-                    variant="body2"
-                    className="flex items-center gap-1">
-                    <PhoneIphone fontSize="small" />
-                    {patientInfo?.Dienthoai}
-                  </Typography>
-                )}
-              </Stack>
-            </Box>
-          </Stack>
-        )}
-      </Card>
-
-      {/* Lịch sử khám chữa bệnh */}
-      <Box>
-        <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-          Lịch sử khám chữa bệnh
-        </Typography>
-
-        {loadingLsKham ? (
-          <PatientLsKhamSkeleton />
-        ) : (
-          patientLsKham?.map((item, idx) => (
-            <Accordion
-              key={idx}
-              sx={{ mb: 1 }}
-              expanded={expanded === idx}
-              onChange={handleChange(idx)}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  justifyContent="space-between"
-                  sx={{ width: "100%" }}>
-                  <Box className="flex gap-1">
-                    <Typography fontWeight={600}>Ngày:</Typography>
-                    <Typography>{StringToDate(item.TGVao)}</Typography>
-                    <Divider
-                      orientation="vertical"
-                      flexItem
-                      sx={{ mx: 1, borderColor: "#1976d2" }}
-                    />
-                    <Typography color="text.secondary">
-                      {StringToTime(item.TGVao)}
+    <div className="min-h-screen p-4 md:p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Thông tin cơ bản bệnh nhân */}
+        <Box className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl glass-card border-0 shadow-2xl">
+          <Box className="p-6">
+            <Box className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              {loadingInfo ? (
+                <PatientInfoSkeleton />
+              ) : (
+                <Stack direction="row" spacing={3} alignItems="center">
+                  <Avatar
+                    sx={{
+                      width: 72,
+                      height: 72,
+                      fontSize: 32,
+                      bgcolor: "#1565c0",
+                    }}>
+                    AS
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h5" fontWeight={600} fontSize={20}>
+                      {patientInfo?.Hoten}
                     </Typography>
-                  </Box>
-                  <Box className="flex gap-1">
-                    <Typography>Chẩn đoán:</Typography>
-                    <Typography color="text.secondary">
-                      {item.VVIET_ChanDoanChinh}
-                    </Typography>
+                    <Stack spacing={1} mt={1} fontSize="small">
+                      <Box className="flex gap-2">
+                        <Box className="flex items-center gap-1">
+                          <CalendarMonth fontSize="small" />
+                          {getTextBirthday(
+                            patientInfo?.Ngaysinh,
+                            patientInfo?.Thangsinh,
+                            patientInfo?.Namsinh
+                          )}{" "}
+                          -{" "}
+                          {`${
+                            new Date().getFullYear() -
+                            Number(patientInfo?.Namsinh || 0)
+                          }`}
+                          tuổi
+                        </Box>
+                        {patientInfo?.Dienthoai && (
+                          <Typography
+                            variant="body2"
+                            className="flex items-center gap-1"
+                            fontSize={"small"}>
+                            <PhoneIphone fontSize="small" />
+                            {patientInfo?.Dienthoai}
+                          </Typography>
+                        )}
+                      </Box>
+
+                      {patientInfo?.Diachi && (
+                        <Typography
+                          variant="body2"
+                          className="flex items-center gap-1"
+                          fontSize={"small"}>
+                          <LocationPin fontSize="small" />
+                          {patientInfo?.Diachi}
+                        </Typography>
+                      )}
+                    </Stack>
                   </Box>
                 </Stack>
-              </AccordionSummary>
-              {expanded === idx && <ItemDetail lsKham={item} />}
-            </Accordion>
-          ))
-        )}
-      </Box>
-    </Box>
+              )}
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Lịch sử khám chữa bệnh */}
+        <Box className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl glass-card border-0 shadow-2xl">
+          <Box className="p-6">
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+              <TimelineIcon className="text-[#10b981]" /> Lịch sử khám chữa bệnh
+            </Typography>
+
+            {loadingLsKham ? (
+              <PatientLsKhamSkeleton />
+            ) : (
+              patientLsKham?.map((item, idx) => (
+                <Accordion
+                  key={idx}
+                  sx={{
+                    mb: 1,
+                    boxShadow: "none",
+                    background: "none",
+                  }}
+                  expanded={expanded === idx}
+                  onChange={handleChange(idx)}>
+                  <AccordionSummary
+                    className="!p-0"
+                    expandIcon={<ExpandMoreIcon />}>
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      sx={{ width: "100%" }}>
+                      <div className="flex items-center gap-3">
+                        <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse"></div>
+                        <div>
+                          <p className="font-medium">
+                            Ngày: {StringToDate(item.TGVao)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Thời gian: {StringToTime(item.TGVao)}
+                          </p>
+                        </div>
+                      </div>
+                      <Box className="flex gap-1 items-center border-1 border-green-500 px-3 rounded-lg">
+                        <Typography fontSize="small">Chẩn đoán:</Typography>
+                        <Typography fontSize="small" color="text.secondary">
+                          {item.VVIET_ChanDoanChinh}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </AccordionSummary>
+                  {expanded === idx && <ItemDetail lsKham={item} />}
+                </Accordion>
+              ))
+            )}
+          </Box>
+        </Box>
+      </div>
+    </div>
   );
 }

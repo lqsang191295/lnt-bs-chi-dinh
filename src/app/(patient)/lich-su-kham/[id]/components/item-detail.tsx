@@ -13,7 +13,11 @@ import {
   IPatientPkBenh,
   IPatientToaThuoc,
 } from "@/model/tpatient";
+import ContentPasteGoOutlinedIcon from "@mui/icons-material/ContentPasteGoOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import {
   Accordion,
   AccordionDetails,
@@ -138,7 +142,7 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
   }, [lsKham]);
 
   return (
-    <AccordionDetails className="bg-blue-100">
+    <AccordionDetails className="!p-0">
       {dataPkBenh && (
         <Accordion sx={{ mb: 1, boxShadow: 0, background: "none" }}>
           <AccordionSummary
@@ -147,7 +151,13 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
               p: 0,
               margin: 0,
             }}>
-            <Typography fontWeight={600}>Phiếu khám bệnh</Typography>
+            <Typography className="flex items-center gap-1 ">
+              <DescriptionOutlinedIcon
+                className="text-[#10b981]"
+                fontSize="small"
+              />
+              Phiếu khám bệnh
+            </Typography>
           </AccordionSummary>
           <AccordionDetails
             sx={{
@@ -184,7 +194,13 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
               p: 0,
               margin: 0,
             }}>
-            <Typography fontWeight={600}>Chỉ định</Typography>
+            <Typography className="flex items-center gap-1 ">
+              <ContentPasteGoOutlinedIcon
+                className="text-[#10b981]"
+                fontSize="small"
+              />
+              Chỉ định
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
             {!loadingChiDinh && dataChiDinh && dataChiDinh.length > 0 && (
@@ -217,7 +233,13 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
               p: 0,
               margin: 0,
             }}>
-            <Typography fontWeight={600}>Toa thuốc</Typography>
+            <Typography className="flex items-center gap-1 ">
+              <MedicalServicesOutlinedIcon
+                className="text-[#10b981]"
+                fontSize="small"
+              />
+              Toa thuốc
+            </Typography>
           </AccordionSummary>
           <AccordionDetails
             sx={{
@@ -254,7 +276,13 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
               p: 0,
               margin: 0,
             }}>
-            <Typography fontWeight={600}>Bảng kê</Typography>
+            <Typography className="flex items-center gap-1 ">
+              <ReceiptLongOutlinedIcon
+                className="text-[#10b981]"
+                fontSize="small"
+              />
+              Bảng kê
+            </Typography>
           </AccordionSummary>
           <AccordionDetails
             sx={{

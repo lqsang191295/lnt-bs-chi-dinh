@@ -12,7 +12,9 @@ export default function RootLayout({
     <>
       <HeadMetadata title="Lịch sử khám" />
       <Box className="flex w-screen h-screen">
-        <Box className="bg-blue-100 h-full w-full">{children}</Box>
+        <Box className="h-full w-full bg-[linear-gradient(135deg,#f0fdf4_0%,#dcfce7_50%,#bbf7d0_100%)]">
+          {children}
+        </Box>
       </Box>
       <Toaster />
     </>
