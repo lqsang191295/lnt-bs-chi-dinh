@@ -202,7 +202,11 @@ function ItemDetail({ lsKham }: ItemDetailProps) {
               Chỉ định
             </Typography>
           </AccordionSummary>
-          <AccordionDetails>
+          <AccordionDetails
+            sx={{
+              p: 0,
+              margin: 0,
+            }}>
             {!loadingChiDinh && dataChiDinh && dataChiDinh.length > 0 && (
               <PdfGallery
                 files={dataChiDinh

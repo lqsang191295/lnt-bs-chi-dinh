@@ -93,14 +93,18 @@ export default function PatientDetailPage() {
     getPatientLsKham();
   }, [getPatientLsKham]);
 
+  if (!id || id == "null") {
+    return router.push(`/lich-su-kham`);
+  }
+
   if (isChecking) return null;
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8">
+    <div className="w-full h-full min-h-screen sm:p-4 md:p-6 lg:p-8 overflow-hidden">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Thông tin cơ bản bệnh nhân */}
-        <Box className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl glass-card border-0 shadow-2xl">
-          <Box className="p-6">
+        <Box className="bg-card text-card-foreground flex flex-col gap-6 sm:rounded-xl glass-card border-0 shadow-2xl">
+          <Box className="p-2 sm:p-4 md:p-4 lg:p-6">
             <Box className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {loadingInfo ? (
                 <PatientInfoSkeleton />
@@ -164,9 +168,9 @@ export default function PatientDetailPage() {
         </Box>
 
         {/* Lịch sử khám chữa bệnh */}
-        <Box className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl glass-card border-0 shadow-2xl">
+        <Box className="bg-card text-card-foreground flex flex-col gap-6 sm:rounded-xl glass-card border-0 shadow-2xl">
           <Box className="p-6">
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+            <Typography variant="h6" fontWeight={700}>
               <TimelineIcon className="text-[#10b981]" /> Lịch sử khám chữa bệnh
             </Typography>
 
@@ -187,7 +191,7 @@ export default function PatientDetailPage() {
                     className="!p-0"
                     expandIcon={<ExpandMoreIcon />}>
                     <Stack
-                      direction="row"
+                      direction={{ xs: "column", sm: "row" }}
                       justifyContent="space-between"
                       sx={{ width: "100%" }}>
                       <div className="flex items-center gap-3">
@@ -201,7 +205,7 @@ export default function PatientDetailPage() {
                           </p>
                         </div>
                       </div>
-                      <Box className="flex gap-1 items-center border-1 border-green-500 px-3 rounded-lg">
+                      <Box className="flex gap-1 items-center border-1 border-green-500 px-3 rounded-lg mt-2 sm:mt-0">
                         <Typography fontSize="small">Chẩn đoán:</Typography>
                         <Typography fontSize="small" color="text.secondary">
                           {item.VVIET_ChanDoanChinh}

@@ -1,6 +1,8 @@
 "use client";
 
+import { getPatientBySoDienThoai } from "@/actions/act_patient";
 import { sendOTP } from "@/actions/act_tnguoidung";
+import { IPatientInfo } from "@/model/tpatient";
 import { ToastError, ToastSuccess } from "@/utils/toast";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -17,18 +19,24 @@ import { useEffect, useRef, useState } from "react";
 export default function LichSuKhamPage() {
   const router = useRouter();
 
-  const [form, setForm] = useState<"phone" | "otp">("phone");
+  const [form, setForm] = useState<"phone" | "otp" | "choose-patient">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const [sendingOTP, setSendingOTP] = useState(false);
   const [otpError, setOtpError] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [dataPatient, setDataPatient] = useState<IPatientInfo[] | null>(null);
   const otpValue = useRef(""); // giữ giá trị OTP
   const searchParams = useSearchParams();
   const mabn = searchParams?.get("mabn");
 
   useEffect(() => {
+    if (!mabn) {
+      setIsChecking(false);
+      return;
+    }
+
     const token = localStorage.getItem("token-patient");
 
     if (!token) {
@@ -84,7 +92,17 @@ export default function LichSuKhamPage() {
       );
       localStorage.setItem("token-patient", fakeToken);
 
+      const dataPatientByPhone = await getPatientBySoDienThoai(phone);
+
       ToastSuccess("Đăng nhập thành công");
+
+      if (dataPatientByPhone && dataPatientByPhone.length > 1) {
+        setDataPatient(dataPatientByPhone);
+        setForm("choose-patient");
+
+        return;
+      }
+
       router.push(`/lich-su-kham/${mabn}`);
     } catch (ex) {
       console.error("ex handleLogin", ex);
@@ -96,13 +114,13 @@ export default function LichSuKhamPage() {
 
   return (
     <Box
+      className="w-full"
       sx={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
-        bgcolor: (theme) => theme.palette.grey[200],
         p: 3,
       }}>
       <Box
@@ -151,7 +169,7 @@ export default function LichSuKhamPage() {
 
         <Card sx={{ width: "100%", maxWidth: 400, borderRadius: 2 }}>
           <CardHeader
-            title="Đăng nhập"
+            title="Xem lịch sử khám"
             subheader="Nhập số điện thoại → Nhận mã OTP → Nhập OTP để đăng nhập"
             className="text-center"
             sx={{ pb: 0 }}
@@ -244,6 +262,24 @@ export default function LichSuKhamPage() {
                     "Gửi lại mã OTP"
                   )}
                 </Button>
+              </Box>
+            )}
+
+            {form === "choose-patient" && (
+              <Box className="flex flex-col gap-1">
+                {dataPatient?.map((item: IPatientInfo) => (
+                  <Box
+                    key={item.Ma}
+                    className="p-3 border rounded cursor-pointer hover:bg-gray-50"
+                    onClick={() => router.push(`/lich-su-kham/${item.Ma}`)}>
+                    <Typography
+                      variant="body2"
+                      component="label"
+                      htmlFor="mobile">
+                      {item.Hoten}
+                    </Typography>
+                  </Box>
+                ))}
               </Box>
             )}
           </CardContent>

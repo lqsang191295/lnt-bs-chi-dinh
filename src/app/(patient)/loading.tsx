@@ -1,11 +1,10 @@
 "use client";
 
-import React from "react";
 import "./loading.css"; // chứa phần CSS animation
 
 const LoadingPage = () => {
   return (
-    <div className="flex relative justify-center items-center min-h-screen bg-[rgba(249,251,255,0.6)]">
+    <div className="flex relative justify-center items-center min-h-screen bg-[rgba(249,251,255,0.6)] w-full h-full">
       <div className="boxes">
         <div className="box">
           <div></div>

@@ -1,4 +1,5 @@
 export interface IPatientInfo {
+  Ma: string;
   Hoten: string;
   Ngaysinh: string;
   Thangsinh: string;

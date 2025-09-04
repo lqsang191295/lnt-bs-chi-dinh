@@ -14,6 +14,7 @@ export const getPatientInfoByMaBN = async (
         { paraName: "popt", paraValue: 0 },
         { paraName: "mabn", paraValue: mabn },
         { paraName: "sovaovien", paraValue: sovaovien },
+        { paraName: "sdt", paraValue: null },
       ],
     });
 
@@ -46,6 +47,7 @@ export const getPatientLichSuKhamByMaBN = async (
         { paraName: "popt", paraValue: 1 },
         { paraName: "mabn", paraValue: mabn },
         { paraName: "sovaovien", paraValue: sovaovien },
+        { paraName: "sdt", paraValue: null },
       ],
     });
 
@@ -71,6 +73,7 @@ export const getPatientToaThuocByMaBN_SoVaoVien = async (
         { paraName: "popt", paraValue: 3 },
         { paraName: "mabn", paraValue: mabn },
         { paraName: "sovaovien", paraValue: sovaovien },
+        { paraName: "sdt", paraValue: null },
       ],
     });
 
@@ -96,6 +99,7 @@ export const getPatientChiDinhByMaBN_SoVaoVien = async (
         { paraName: "popt", paraValue: 2 },
         { paraName: "mabn", paraValue: mabn },
         { paraName: "sovaovien", paraValue: sovaovien },
+        { paraName: "sdt", paraValue: null },
       ],
     });
 
@@ -121,6 +125,7 @@ export const getPatientBangKeByMaBN_SoVaoVien = async (
         { paraName: "popt", paraValue: 4 },
         { paraName: "mabn", paraValue: mabn },
         { paraName: "sovaovien", paraValue: sovaovien },
+        { paraName: "sdt", paraValue: null },
       ],
     });
 
@@ -146,6 +151,32 @@ export const getPatientPkBenhByMaBN_SoVaoVien = async (
         { paraName: "popt", paraValue: 5 },
         { paraName: "mabn", paraValue: mabn },
         { paraName: "sovaovien", paraValue: sovaovien },
+        { paraName: "sdt", paraValue: null },
+      ],
+    });
+
+    if (response.status === "error") {
+      return null;
+    }
+    return response.message;
+  } catch {
+    return null;
+  }
+};
+
+export const getPatientBySoDienThoai = async (
+  sodienthoai: string
+): Promise<IPatientInfo[] | null> => {
+  try {
+    const response = await post(`/his/call`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_parientinfo_by_mabn",
+      paraData: [
+        { paraName: "popt", paraValue: 6 },
+        { paraName: "mabn", paraValue: null },
+        { paraName: "sdt", paraValue: sodienthoai },
+        { paraName: "sovaovien", paraValue: null },
       ],
     });
 
