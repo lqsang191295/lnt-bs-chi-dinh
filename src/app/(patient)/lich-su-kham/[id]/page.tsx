@@ -68,6 +68,24 @@ export default function PatientDetailPage() {
     }
   }, [id]);
 
+  const getInitials = (name?: string): string => {
+    if (!name) return "";
+
+    // Tách từ theo khoảng trắng, loại bỏ chuỗi rỗng
+    const parts = name.trim().split(/\s+/);
+
+    if (parts.length === 1) {
+      // Nếu chỉ có 1 từ thì lấy ký tự đầu
+      return parts[0][0].toUpperCase();
+    }
+
+    // Nếu có nhiều hơn 1 từ thì lấy ký tự đầu của từ đầu & từ cuối
+    const first = parts[0][0].toUpperCase();
+    const last = parts[parts.length - 1][0].toUpperCase();
+
+    return first + last;
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("token-patient");
     if (token) {
@@ -115,9 +133,8 @@ export default function PatientDetailPage() {
                       width: 72,
                       height: 72,
                       fontSize: 32,
-                      bgcolor: "#1565c0",
                     }}>
-                    AS
+                    {getInitials(patientInfo?.Hoten)}
                   </Avatar>
                   <Box>
                     <Typography variant="h5" fontWeight={600} fontSize={20}>
@@ -126,7 +143,10 @@ export default function PatientDetailPage() {
                     <Stack spacing={1} mt={1} fontSize="small">
                       <Box className="flex gap-2">
                         <Box className="flex items-center gap-1">
-                          <CalendarMonth fontSize="small" />
+                          <CalendarMonth
+                            fontSize="small"
+                            className="text-[#bdbdbd]"
+                          />
                           {getTextBirthday(
                             patientInfo?.Ngaysinh,
                             patientInfo?.Thangsinh,
@@ -136,7 +156,7 @@ export default function PatientDetailPage() {
                           {`${
                             new Date().getFullYear() -
                             Number(patientInfo?.Namsinh || 0)
-                          }`}
+                          }`}{" "}
                           tuổi
                         </Box>
                         {patientInfo?.Dienthoai && (
@@ -144,7 +164,10 @@ export default function PatientDetailPage() {
                             variant="body2"
                             className="flex items-center gap-1"
                             fontSize={"small"}>
-                            <PhoneIphone fontSize="small" />
+                            <PhoneIphone
+                              fontSize="small"
+                              className="text-[#bdbdbd]"
+                            />
                             {patientInfo?.Dienthoai}
                           </Typography>
                         )}
@@ -155,7 +178,10 @@ export default function PatientDetailPage() {
                           variant="body2"
                           className="flex items-center gap-1"
                           fontSize={"small"}>
-                          <LocationPin fontSize="small" />
+                          <LocationPin
+                            fontSize="small"
+                            className="text-[#bdbdbd]"
+                          />
                           {patientInfo?.Diachi}
                         </Typography>
                       )}

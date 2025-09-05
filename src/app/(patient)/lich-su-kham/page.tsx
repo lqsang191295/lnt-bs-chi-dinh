@@ -32,7 +32,7 @@ export default function LichSuKhamPage() {
   const mabn = searchParams?.get("mabn");
 
   useEffect(() => {
-    if (!mabn) {
+    if (!mabn || mabn == "null") {
       setIsChecking(false);
       return;
     }
@@ -96,7 +96,12 @@ export default function LichSuKhamPage() {
 
       ToastSuccess("Đăng nhập thành công");
 
-      if (dataPatientByPhone && dataPatientByPhone.length > 1) {
+      if (
+        mabn &&
+        mabn != "null" &&
+        dataPatientByPhone &&
+        dataPatientByPhone.length > 1
+      ) {
         setDataPatient(dataPatientByPhone);
         setForm("choose-patient");
 
