@@ -97,8 +97,7 @@ export default function LichSuKhamPage() {
       ToastSuccess("Đăng nhập thành công");
 
       if (
-        mabn &&
-        mabn != "null" &&
+        (!mabn || mabn != "null") &&
         dataPatientByPhone &&
         dataPatientByPhone.length > 1
       ) {
