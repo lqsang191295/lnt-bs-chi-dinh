@@ -1,9 +1,10 @@
 "use client"
 
 import type React from "react"
-import Image from "next/image"
 import {fetchCurrentQueueNumbers} from "@/actions/act_dangkykhambenh"
+import HeaderBVLNT from "@/components/HeaderBVLNT"
 import { useState, useEffect } from "react"
+import { useRef, useLayoutEffect } from "react"
 import {
   Box,
   Typography,
@@ -31,9 +32,7 @@ interface QueueData {
 }
 
 export default function QueueDisplayPage() {
-  const [currentTime, setCurrentTime] = useState(new Date())
-
-  // Mock data for queue numbers - in real app this would come from API
+    // Mock data for queue numbers - in real app this would come from API
   const [queueData, setQueueData] = useState<QueueData[]>([
     {
       id: "bhyt",
@@ -60,14 +59,45 @@ export default function QueueDisplayPage() {
       patientName: "",
     },
   ])
+  // ref for scaling the whole content to fit the viewport
+  const contentRef = useRef<HTMLDivElement | null>(null)
 
-  // Update time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
+  // scale content so entire page fits in one viewport without scroll
+  useLayoutEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+
+    const updateScale = () => {
+      // reset transform to measure natural size
+      el.style.transform = "scale(1)"
+      const rect = el.getBoundingClientRect()
+      const contentW = rect.width
+      const contentH = rect.height
+      const viewportW = window.innerWidth
+      const viewportH = window.innerHeight
+      // keep a tiny margin so we never touch scrollbars
+      const margin = 12
+      const scale = Math.min(1, (viewportW - margin) / contentW, (viewportH - margin) / contentH)
+      el.style.transformOrigin = "top center"
+      el.style.transform = `scale(${scale})`
+      // ensure container stays full viewport and prevents page scroll
+      document.documentElement.style.height = "100%"
+      document.body.style.height = "100%"
+      document.body.style.overflow = "hidden"
+    }
+
+    updateScale()
+    window.addEventListener("resize", updateScale)
+    return () => {
+      window.removeEventListener("resize", updateScale)
+      // restore overflow on unmount
+      document.body.style.overflow = ""
+      document.body.style.height = ""
+      document.documentElement.style.height = ""
+    }
+  }, [queueData])
+
+
 
   // Simulate queue number updates
   useEffect(() => {
@@ -94,22 +124,6 @@ export default function QueueDisplayPage() {
     return () => clearInterval(interval)
   }, [])
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    })
-  }
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("vi-VN", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
   return (
     <Box
@@ -120,228 +134,183 @@ export default function QueueDisplayPage() {
       }}
     >
       <Container maxWidth="xl">
-        {/* Header */}
-        <Paper
-          elevation={3}
-          sx={{
-            mb: 4,
-            p: 3,
-            borderRadius: 3,
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Image src={"/logo.png"} width={100} height={100} alt="Logo" />
-              <Box>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    fontWeight: "bold",
-                    color: "#1976D2",
-                    mb: 0.5,
-                  }}
-                >
-                  Bệnh viện Đa khoa <Typography component="span" variant="h4" sx={{
-                    fontWeight: "bold",
-                    color: "#d21919ff",
-                  }}>Lê Ngọc Tùng</Typography>
-                </Typography>
-              </Box>
-            </Box>
-
-            <Box sx={{ textAlign: "right" }}>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: "bold",
-                  color: "#1976D2",
-                  fontFamily: "monospace",
-                }}
-              >
-                {formatTime(currentTime)}
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: "#666",
-                  mt: 0.5,
-                }}
-              >
-                {formatDate(currentTime)}
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-        {/* Queue Display */}
-        <TableContainer
-          component={Paper}
-          sx={{
-            borderRadius: 4,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.1)",
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          <Table sx={{ minWidth: 650 }} size="medium">
-            <TableHead>
-              <TableRow sx={{ background: "linear-gradient(135deg, #1976D2 0%, #4CAF50 100%)" }}>
-                <TableCell
-                  sx={{
-                    color: "white",
-                    fontWeight: "bold",
-                    fontSize: "1.2rem",
-                    textAlign: "center",
-                    py: 3,
-                  }}
-                >
-                  QUẦY ĐĂNG KÝ
-                </TableCell>
-                <TableCell
-                  sx={{
-                    color: "white",
-                    fontWeight: "bold",
-                    fontSize: "1.2rem",
-                    textAlign: "center",
-                    py: 3,
-                  }}
-                >
-                  HỌ TÊN - NĂM SINH
-                </TableCell>
-                <TableCell
-                  sx={{
-                    color: "white",
-                    fontWeight: "bold",
-                    fontSize: "1.2rem",
-                    textAlign: "center",
-                    py: 3,
-                  }}
-                >
-                  SỐ THỨ TỰ
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {queueData.map((queue) => (
-                <TableRow
-                  key={queue.id}
-                  sx={{
-                    "&:nth-of-type(odd)": {
-                      backgroundColor: `${queue.color}08`,
-                    },
-                    height: 120,
-                  }}
-                >
-                  {/* Queue Column */}
-                  <TableCell sx={{ textAlign: "center", py: 4 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
-                      <Box sx={{ color: queue.color }}>{queue.icon}</Box>
-                      <Chip
-                        label={queue.title}
-                        sx={{
-                          background: `linear-gradient(135deg, ${queue.color}20 0%, ${queue.color}30 100%)`,
-                          color: queue.color,
-                          fontWeight: "bold",
-                          fontSize: "1rem",
-                          height: 40,
-                          border: `2px solid ${queue.color}40`,
-                        }}
-                      />
-                    </Box>
+        {/* content wrapper that will be scaled to fit viewport */}
+        <div ref={contentRef}>
+          <HeaderBVLNT />
+          {/* Queue Display */}
+          <TableContainer
+            component={Paper}
+            sx={{
+              borderRadius: 4,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.1)",
+              background: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(10px)",
+              // prevent internal scroll, we rely on scaling instead
+              overflow: "hidden",
+            }}
+          >
+            <Table sx={{ minWidth: 650 }} size="medium">
+              <TableHead>
+                <TableRow sx={{ background: "linear-gradient(135deg, #1976D2 0%, #4CAF50 100%)" }}>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "clamp(0.9rem, 1.6vw, 1.2rem)",
+                      textAlign: "center",
+                      py: 3,
+                    }}
+                  >
+                    QUẦY ĐĂNG KÝ
                   </TableCell>
-
-                  {/* Patient Name and Birth Year Column */}
-                  <TableCell sx={{ textAlign: "center", py: 4 }}>
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontWeight: "bold",
-                        color: "#333",
-                        mb: 1,
-                      }}
-                    >
-                      {queue.patientName}
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: "#666",
-                        fontWeight: "medium",
-                      }}
-                    >
-                      Năm sinh: {queue.birthYear}
-                    </Typography>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "clamp(0.9rem, 1.6vw, 1.2rem)",
+                      textAlign: "center",
+                      py: 3,
+                    }}
+                  >
+                    HỌ TÊN - NĂM SINH
                   </TableCell>
-
-                  {/* Current Number Column */}
-                  <TableCell sx={{ textAlign: "center", py: 4 }}>
-                    <Paper
-                      elevation={3}
-                      sx={{
-                        display: "inline-block",
-                        p: 3,
-                        borderRadius: 3,
-                        background: `linear-gradient(135deg, ${queue.color}15 0%, ${queue.color}25 100%)`,
-                        border: `3px solid ${queue.color}`,
-                        minWidth: 100,
-                      }}
-                    >
-                      <Typography
-                        variant="h2"
-                        sx={{
-                          fontWeight: "bold",
-                          color: queue.color,
-                          fontFamily: "monospace",
-                          fontSize: "3rem",
-                          lineHeight: 1,
-                        }}
-                      >
-                        {queue.currentNumber.toString().padStart(2, "0")}
-                      </Typography>
-                    </Paper>
+                  <TableCell
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: "clamp(0.9rem, 1.6vw, 1.2rem)",
+                      textAlign: "center",
+                      py: 3,
+                    }}
+                  >
+                    SỐ THỨ TỰ
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {queueData.map((queue) => (
+                  <TableRow
+                    key={queue.id}
+                    sx={{
+                      "&:nth-of-type(odd)": {
+                        backgroundColor: `${queue.color}08`,
+                      },
+                      // let row height be responsive but constrained so overall table stays compact
+                      height: { xs: 84, sm: 100, md: 120 },
+                    }}
+                  >
+                    {/* Queue Column */}
+                    <TableCell sx={{ textAlign: "center", py: 4 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
+                        <Box sx={{ color: queue.color }}>{queue.icon}</Box>
+                        <Chip
+                          label={queue.title}
+                          sx={{
+                            background: `linear-gradient(135deg, ${queue.color}20 0%, ${queue.color}30 100%)`,
+                            color: queue.color,
+                            fontWeight: "bold",
+                            fontSize: "clamp(0.8rem, 1.4vw, 1rem)",
+                            height: { xs: 32, sm: 36, md: 40 },
+                            border: `2px solid ${queue.color}40`,
+                          }}
+                        />
+                      </Box>
+                    </TableCell>
 
-        {/* Footer Contact Three Columns */}
-        <Paper
-          elevation={2}
-          sx={{
-            mt: 6,
-            p: 3,
-            borderRadius: 3,
-            background: "rgba(255, 255, 255, 0.9)",
-          }}
-        >
-          <Grid container spacing={2} alignItems="center">
-            <Grid size={4}>
-              <Box sx={{ textAlign: { xs: "left", md: "left" } }}>
-                <Typography variant="h6" sx={{ color: "#1976D2", fontWeight: "bold" }}>
-                  Tổng đài: 02763 797999
-                </Typography>
-              </Box>
-            </Grid>
+                    {/* Patient Name and Birth Year Column */}
+                    <TableCell sx={{ textAlign: "center", py: 4 }}>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontWeight: "bold",
+                          color: "#333",
+                          mb: 1,
+                          fontSize: "clamp(1rem, 2.2vw, 1.6rem)",
+                        }}
+                      >
+                        {queue.patientName}
+                      </Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: "#666",
+                          fontWeight: "medium",
+                          fontSize: "clamp(0.85rem, 1.6vw, 1.1rem)",
+                        }}
+                      >
+                        Năm sinh: {queue.birthYear}
+                      </Typography>
+                    </TableCell>
 
-            <Grid size={4}>
-              <Box sx={{ textAlign: "center" }}>
-                <Typography variant="h6" sx={{ color: "#1976D2", fontWeight: "bold" }}>
-                  Hotline: 900 561 510
-                </Typography>
-              </Box>
+                    {/* Current Number Column */}
+                    <TableCell sx={{ textAlign: "center", py: 4 }}>
+                      <Paper
+                        elevation={3}
+                        sx={{
+                          display: "inline-block",
+                          p: 3,
+                          borderRadius: 3,
+                          background: `linear-gradient(135deg, ${queue.color}15 0%, ${queue.color}25 100%)`,
+                          border: `3px solid ${queue.color}`,
+                          minWidth: { xs: 80, sm: 90, md: 100 },
+                        }}
+                      >
+                        <Typography
+                          variant="h2"
+                          sx={{
+                            fontWeight: "bold",
+                            color: queue.color,
+                            fontFamily: "monospace",
+                            fontSize: { xs: "2rem", sm: "2.6rem", md: "3rem" },
+                            lineHeight: 1,
+                          }}
+                        >
+                          {queue.currentNumber.toString().padStart(2, "0")}
+                        </Typography>
+                      </Paper>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Footer Contact Three Columns */}
+          <Paper
+            elevation={2}
+            sx={{
+              mt: 6,
+              p: 3,
+              borderRadius: 3,
+              background: "rgba(255, 255, 255, 0.9)",
+            }}
+          >
+            <Grid container spacing={2} alignItems="center">
+              <Grid size={{xs:12, md:4}}>
+                <Box sx={{ textAlign: { xs: "left", md: "left" } }}>
+                  <Typography variant="h6" sx={{ color: "#1976D2", fontWeight: "bold", fontSize: "clamp(0.9rem, 1.8vw, 1.1rem)" }}>
+                    Tổng đài: <Box component="span" sx={{ fontWeight: 900 }}>02763 797999</Box>
+                  </Typography>
+                </Box>
+              </Grid>
+
+              <Grid size={{xs:12, md:4}}>
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography variant="h6" sx={{ color: "#1976D2", fontWeight: "bold", fontSize: "clamp(0.9rem, 1.8vw, 1.1rem)" }}>
+                    Hotline: <Box component="span" sx={{ fontWeight: 900 }}>1900 561 510</Box>
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid size={{xs:12, md:4}}>
+                <Box sx={{ textAlign: { xs: "right", md: "right" } }}>
+                  <Typography variant="h6" sx={{ color: "#1976D2", fontWeight: "bold", fontSize: "clamp(0.9rem, 1.8vw, 1.1rem)" }}>
+                    Cấp cứu: <Box component="span" sx={{ fontWeight: 900 }}>0888 79 52 59</Box>
+                  </Typography>
+                </Box>
+              </Grid>
             </Grid>
-            <Grid size={4}>
-              <Box sx={{ textAlign: { xs: "right", md: "right" } }}>
-                <Typography variant="h6" sx={{ color: "#1976D2", fontWeight: "bold" }}>
-                  Cấp cứu: 0888 79 52 59
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
+          </Paper>
+        </div>
       </Container>
     </Box>
   )

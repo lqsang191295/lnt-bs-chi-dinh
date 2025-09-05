@@ -12,7 +12,18 @@ export interface PatientInfo {
   registrationTime?: string // Thời gian đăng ký
   chiefComplaint?: string // Lý do khám
   quay?: string // Quầy đăng ký
-  anh?: string // Ảnh bệnh nhân (base64)
+  anh?: string | null // Ảnh bệnh nhân (base64)
+}
+export interface APIKey {
+  access_token: string
+  id_token: string
+  token_type: string
+  username: string
+  expires_in: string
+}
+export interface TokenApiBHXH {
+  maKetQua: string
+  APIKey: APIKey
 }
 export interface BV_QlyCapThe{
   Ma: string;

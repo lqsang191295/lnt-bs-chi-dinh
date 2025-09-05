@@ -46,7 +46,19 @@ export async function get(endpoint: string, options: RequestOptions = {}) {
 
   return res.json();
 }
-
+export async function postExternal(url: string, body: unknown){
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    return { status: "error", message: res.statusText };
+  }
+  return res.json();
+}
 /**
  * Hàm POST request
  */
