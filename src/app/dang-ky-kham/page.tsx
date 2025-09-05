@@ -1,10 +1,16 @@
 "use client"
-import { searchPatientInfoByType, dangKyKhamBenh } from "@/actions/act_dangkykhambenh";
+import { searchPatientInfoByType, dangKyKhamBenh, CheckBHXHByPatientInfo } from "@/actions/act_dangkykhambenh";
 import { PatientInfo, BV_QlyCapThe } from "@/model/dangkykhambenh";
 import { createQRScanner } from "@/actions/act_qrscan";
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import JsBarcode from "jsbarcode";
-
+import HeaderBVLNT from "@/components/HeaderBVLNT"
+import VirtualKeyboard from "@/components/VirtualKeyboard"
+import {DateWheelPickerPopup, useDateWheelPicker} from "@/components/date-wheel-picker"
+import LoadingOverlay, { useLoading } from "@/components/LoadingOverlay"
+import { CURRENT_DATE, DateUtils } from "@/utils/dateUtils"
+import { useClickOutside } from "@/utils/useClickOutside"
+import "react-simple-keyboard/build/css/index.css";
 // Định nghĩa interface cho Speech Recognition API
 interface SpeechRecognition extends EventTarget {
   lang: string;
@@ -69,7 +75,6 @@ import {
   Grid,
   Container,
   Paper,
-  Fade,
   InputAdornment,
   Dialog, DialogTitle, DialogContent,
   DialogActions,
@@ -83,14 +88,14 @@ import {
   CalendarToday,
   LocalHospital,
   HealthAndSafety,
-  MedicalServices, Female, Male, Badge as IdCard, EditNote, Error, Warning,CheckCircle,
+  MedicalServices, Badge as IdCard, EditNote, Error, Warning,CheckCircle,
   AssignmentLate,
   Print, ContactEmergency,
-  Mic, Search
+  Mic, Search, Keyboard
 } from "@mui/icons-material"
-import Image from "next/image";
 type RegistrationStep = "home" | "bhyt" | "dv" | "form" | "success"
 type ExamType = "bhyt" | "dv" | "ksk"
+type KeyboardField = "fullname" | "phone" | "address" | "birthDateString" | "idNumber" | "insuranceNumber" | "chiefComplaint"
 
 interface ErrorDialog {
   open: boolean
@@ -103,22 +108,36 @@ function DebouncedTextField(props: TextFieldProps & { debounceMs?: number }) {
   const { value, onChange, debounceMs = 250, ...rest } = props
   const [local, setLocal] = useState<string>(() => (value as string) || "")
   const timerRef = useRef<number | null>(null)
+  const prevValueRef = useRef<string>((value as string) || "")
 
   useEffect(() => {
-    // keep local in sync when parent value changes externally
-    setLocal((value as string) || "")
+    // Chỉ update local khi value thực sự thay đổi từ bên ngoài
+    const stringValue = (value as string) || ""
+    if (stringValue !== prevValueRef.current) {
+      setLocal(stringValue)
+      prevValueRef.current = stringValue
+    }
   }, [value])
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) window.clearTimeout(timerRef.current)
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
     }
   }, [])
 
   const handleLocalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const v = e.target.value
     setLocal(v)
-    if (timerRef.current) window.clearTimeout(timerRef.current)
+    
+    // Clear timer cũ
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current)
+    }
+    
+    // Set timer mới
     timerRef.current = window.setTimeout(() => {
       onChange?.(e)
       timerRef.current = null
@@ -128,8 +147,18 @@ function DebouncedTextField(props: TextFieldProps & { debounceMs?: number }) {
   return <TextField {...rest} value={local} onChange={handleLocalChange} />
 }
 export default function MedicalKioskPage() {
-  const [focusedField, setFocusedField] = useState<keyof PatientInfo | null>(null);
-  const focusedFieldRef = useRef<keyof PatientInfo | null>(null);
+  const datePickerHook = useDateWheelPicker(CURRENT_DATE)
+  const datePickerHookRef = useRef(datePickerHook)
+  const { loading, message, subMessage, showLoading, hideLoading, withLoading } = useLoading()
+  
+  // Cập nhật ref khi datePickerHook thay đổi
+  useEffect(() => {
+    datePickerHookRef.current = datePickerHook
+  }, [datePickerHook])
+  const [focusedField, setFocusedField] = useState<KeyboardField | null>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardText, setKeyboardText] = useState("");
+  const focusedFieldRef = useRef<KeyboardField | null>(null);
   const scannerRef = useRef<ReturnType<typeof createQRScanner> | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -141,6 +170,15 @@ export default function MedicalKioskPage() {
   const [isConnectPort, setIsConnectPort] = useState(false)
   const [patientSelectOpen, setPatientSelectOpen] = useState(false)
   const [patientCandidates, setPatientCandidates] = useState<BV_QlyCapThe[]>([])
+  const [isCheckingBHYT, setIsCheckingBHYT] = useState(false)
+  
+  // Click outside refs cho các Dialog
+  const patientSelectDialogRef = useClickOutside<HTMLDivElement>(() => {
+    if (patientSelectOpen) {
+      setPatientSelectOpen(false)
+    }
+  }, patientSelectOpen)
+  
   const showErrorDialog = (title: string, message: string, type: "error" | "warning" | "info" = "error") => {
     setErrorDialog({
       open: true,
@@ -149,7 +187,62 @@ export default function MedicalKioskPage() {
       type,
     })
   }
-  const startVoiceInput = (field: keyof typeof patientInfo) => {
+  const handleKeyboardTextChange = (text: string) => {
+    setKeyboardText(text);
+    if (focusedField) {
+      setPatientInfo(prev => ({
+        ...prev,
+        [focusedField]: text
+      }));
+    }
+  };
+  const handleCheckBHYT = async () => {
+    if (selectedExamType !== "bhyt") return;
+    const { fullname, birthDateString, idNumber } = patientInfo;
+    if (!fullname || !birthDateString || !idNumber) {
+      showErrorDialog(
+        "Thiếu thông tin",
+        "Vui lòng nhập đầy đủ Họ tên, Ngày sinh và Số CMND/CCCD trước khi kiểm tra.",
+        "warning"
+      );
+      return;
+    }
+    
+    await withLoading(
+      async () => {
+        // TODO: Gọi API kiểm tra BHXH/BHYT tại đây
+        const result = await CheckBHXHByPatientInfo(fullname, idNumber, birthDateString);
+        if (result?.maKetQua != "000")
+        {
+          showErrorDialog("Lỗi", result?.ghiChu || "Vui lòng đến quầy đăng ký để được tư vấn", "warning")
+        }
+        else if (result?.maKetQua === "000"){
+          showErrorDialog("Thông tin", result?.ghiChu, "info" )
+          setPatientInfo(prev => ({
+            ...prev,
+            insuranceNumber: result?.maThe
+          }));
+        }
+      },
+      "Đang kiểm tra BHYT",
+      "Vui lòng chờ trong giây lát..."
+    );
+  }
+
+
+
+  const handleFieldFocus = (field: KeyboardField) => {
+    // setFocusedField(field);
+    setKeyboardText(patientInfo[field] || "");
+    setKeyboardVisible(true);
+  };
+
+  const handleKeyboardClose = () => {
+    setKeyboardVisible(false);
+    setFocusedField(null);
+  };
+
+  const startVoiceInput = (field: KeyboardField) => {
     const SpeechRecognition =
       window.SpeechRecognition ||
       window.webkitSpeechRecognition;
@@ -197,26 +290,32 @@ export default function MedicalKioskPage() {
     }
   };  
   const searchPatient = async (name: string, type: number) => {
-    const respone = await searchPatientInfoByType(name, type);
-    if (respone && respone.length > 1){
-      setPatientCandidates(respone)
-      setPatientSelectOpen(true)
-    }
-    else if (respone && respone.length === 1) {
-      setPatientInfo({
-        id: respone[0].Ma,
-        fullname: respone[0].Hoten,
-        address: respone[0].Diachi,
-        birthDateString: respone[0].Birthday,
-        gender: respone[0].Gioitinh,
-        idNumber: respone[0].SoCMND,
-        insuranceNumber: respone[0].SoBHYT,
-        phone: respone[0].Dienthoai,
-      })
-    }
-    else {
-      showErrorDialog("Không tìm thấy bệnh nhân", "Vui lòng kiểm tra lại thông tin hoặc đăng ký bệnh nhân mới.", "warning" )
-    }
+    await withLoading(
+      async () => {
+        const respone = await searchPatientInfoByType(name, type);
+        if (respone && respone.length > 1){
+          setPatientCandidates(respone)
+          setPatientSelectOpen(true)
+        }
+        else if (respone && respone.length === 1) {
+          setPatientInfo({
+            id: respone[0].Ma,
+            fullname: respone[0].Hoten,
+            address: respone[0].Diachi,
+            birthDateString: respone[0].Birthday,
+            gender: respone[0].Gioitinh,
+            idNumber: respone[0].SoCMND,
+            insuranceNumber: respone[0].SoBHYT,
+            phone: respone[0].Dienthoai,
+          })
+        }
+        else {
+          showErrorDialog("Không tìm thấy bệnh nhân", "Vui lòng kiểm tra lại thông tin hoặc đăng ký bệnh nhân mới.", "warning" )
+        }
+      },
+      "Đang tìm kiếm bệnh nhân",
+      "Đang tra cứu trong hệ thống..."
+    );
   }
   const handleSelectPatient = (p: BV_QlyCapThe) => {
     setPatientInfo({
@@ -259,12 +358,12 @@ export default function MedicalKioskPage() {
             text-align: center;
             font-weight: bold;
             margin-bottom: 10px;
-            font-size: 14px;
+            font-size: 15px;
           }
           .header {
             font-weight: bold;
             margin-bottom: 10px;
-            font-size: 12px;
+            font-size: 16px;
             text-align: center;
           }
 
@@ -299,6 +398,7 @@ export default function MedicalKioskPage() {
           .date-time {
             margin-top: 10px;
             font-size: 14px;
+            text-align: right;
           }
           .barcode {
             margin-top: 10px;
@@ -309,6 +409,7 @@ export default function MedicalKioskPage() {
         <body onload="window.print()">
         <div class="title">BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG</div>
           <div class="header">THÔNG TIN ĐĂNG KÝ</div>
+          <div class="queue-label">Loại khám: ${selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "Dịch vụ" : "Khám sức khỏe"}</div>
           <div class="line"></div>
           <div class="queue-label">SỐ THỨ TỰ</div>
           <div class="queue-number">${patientInfo.queueNumber}</div>
@@ -320,13 +421,12 @@ export default function MedicalKioskPage() {
             Số CMND/CCCD: ${patientInfo.idNumber}</br>
             Số thẻ BHYT: ${patientInfo.insuranceNumber || "N/A"}</br>
             Số điện thoại: ${patientInfo.phone || "N/A"}</br>
-            Loại đăng ký khám: ${selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "Dịch vụ" : "Khám sức khỏe"} </br>   
           </div>
           ${patientInfo.id ? `<div class="barcode">${barcodeHTML}</div>` : ''}
-          <div class="date-time">
-            Đăng ký lúc: ${patientInfo.registrationTime}
-          </div>
           <div class="line"></div>
+          <div class="date-time">
+            ${patientInfo.registrationTime}
+          </div>
         </body>
         </html>
       `)
@@ -346,6 +446,13 @@ export default function MedicalKioskPage() {
     message: "",
     type: "error",
   })
+  
+  const errorDialogRef = useClickOutside<HTMLDivElement>(() => {
+    if (errorDialog.open) {
+      closeErrorDialog()
+    }
+  }, errorDialog.open)
+  
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     id: "",
     fullname: "",
@@ -362,31 +469,105 @@ export default function MedicalKioskPage() {
   useEffect(() => {
   focusedFieldRef.current = focusedField;
 }, [focusedField]);
-  function formatDateForInput(date: Date): string {
+
+const formatDateForInput = useCallback((date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-  async function initCamera(): Promise<void> {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+    return `${day}/${month}/${year}`;
+  }, []);
+
+// Đồng bộ hóa giữa datePickerHook và patientInfo.birthDateString
+useEffect(() => {
+  if (datePickerHook.value) {
+    const formattedDate = formatDateForInput(datePickerHook.value);
+    setPatientInfo(prev => {
+      // Chỉ update nếu giá trị thực sự thay đổi
+      if (prev.birthDateString !== formattedDate) {
+        return {
+          ...prev,
+          birthDateString: formattedDate
+        };
       }
-    } catch (err) {
-      console.error("Không thể truy cập camera:", err);
-    }
+      return prev;
+    });
   }
+}, [datePickerHook.value, formatDateForInput]);
+  // Helpers cho dropdown ngày/tháng/năm
+  // const pad2 = (n: number | string) => String(n).toString().padStart(2, "0");
+  // const parseYMD = (s?: string) => {
+  //   if (!s) return { y: "", m: "", d: "" } as { y: string | number; m: string | number; d: string | number };
+  //   const parts = s.split("-");
+  //   if (parts.length !== 3) return { y: "", m: "", d: "" } as { y: string | number; m: string | number; d: string | number };
+  //   return { y: parts[0], m: parts[1], d: parts[2] } as { y: string | number; m: string | number; d: string | number };
+  // };
+  // const currentYear = new Date().getFullYear();
+  // const years: number[] = Array.from({ length: 120 }, (_, i) => currentYear - i); // 120 năm về trước
+  // const months: number[] = Array.from({ length: 12 }, (_, i) => i + 1);
+  // const days: number[] = Array.from({ length: 31 }, (_, i) => i + 1);
+  // // State cho DatePicker cảm ứng
+  // const [dobPickerOpen, setDobPickerOpen] = useState(false);
+  // const [dobTemp, setDobTemp] = useState<{ y: number | string; m: number | string; d: number | string }>({ y: "", m: "", d: "" });
+  // const openDobPicker = () => {
+  //   const { y, m, d } = parseYMD(patientInfo.birthDateString);
+  //   setDobTemp({ y: y || "", m: m || "", d: d || "" });
+  //   setDobPickerOpen(true);
+  // };
+  // const closeDobPicker = () => setDobPickerOpen(false);
+  // const confirmDobPicker = () => {
+  //   const { y, m, d } = dobTemp;
+  //   const newStr = y && m && d
+  //     ? `${y}-${pad2(m)}-${pad2(d)}`
+  //     : y && m
+  //       ? `${y}-${pad2(m)}-01`
+  //       : y
+  //         ? `${y}-01-01`
+  //         : "";
+  //   setPatientInfo(prev => ({ ...prev, birthDateString: newStr }));
+  //   setDobPickerOpen(false);
+  // };
+
+  // State cho picker Tỉnh/Xã
+  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+  const [locationTemp, setLocationTemp] = useState<{ province: string; commune: string }>({ province: "", commune: "" });
+  const [selectedLocation, setSelectedLocation] = useState<{ province: string; commune: string }>({ province: "", commune: "" });
+  // Dữ liệu sẽ được fill sau
+  const provinces: string[] = [];
+  const communesByProvince: Record<string, string[]> = {};
+  const openLocationPicker = () => {
+    setLocationTemp(selectedLocation);
+    setLocationPickerOpen(true);
+  };
+  const closeLocationPicker = () => setLocationPickerOpen(false);
+  const confirmLocationPicker = () => {
+    setSelectedLocation(locationTemp);
+    setLocationPickerOpen(false);
+  };
+
+useEffect(() => {
+  const initalCamera = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+    } 
+    initalCamera();
+})
+
   useEffect(() => {
-    console.log("Initializing camera and QR scanner...");
-    initCamera();
+    console.log("Initializing camera and QR scanner...");  
     const scanner = createQRScanner({
       onStatus:(status) => console.log(status),
       onConnect: (connected) => {if(connected) {setIsConnectPort(true)} else {setIsConnectPort(false)}},
       onData: (data) => {
         if(data !== null) {
           console.log("QR Data:", data);
+          
+          // Set giá trị cho datePickerHook nếu có birthDate
+          if (data.birthDate) {
+            datePickerHookRef.current.setValue(data.birthDate);
+          }
+          
           setPatientInfo({
             id: "",
             fullname: data.fullname || "",
@@ -412,7 +593,7 @@ export default function MedicalKioskPage() {
         scannerRef.current.disconnect();
       }
     };
-  }, []);
+  }, [formatDateForInput]);
   const examTypes = [
     {
       id: "bhyt" as ExamType,
@@ -481,48 +662,56 @@ export default function MedicalKioskPage() {
       )
       return
     }
-    const respone = await dangKyKhamBenh({
-        id: patientInfo.id || "",
-        fullname: patientInfo.fullname,
-        idNumber: patientInfo.idNumber,
-        insuranceNumber: patientInfo.insuranceNumber,
-        birthDate: patientInfo.birthDateString ? new Date(patientInfo.birthDateString) : undefined, 
-        gender: patientInfo.gender as "Nam" | "Nữ",
-        phone: patientInfo.phone,
-        address: patientInfo.address,
-        quay: selectedExamType,
-        chiefComplaint: patientInfo.chiefComplaint || "",
-        anh: photo || undefined,
-      });
-      const registrationTime = new Date().toLocaleString("vi-VN")
-      if(respone.status === "success" && respone.data && respone.data.length > 0) {
-        const queueNumber = respone.data[0].SoThuTu
-        setPatientInfo((prev) => ({
-          ...prev,
-          queueNumber,
-          registrationTime,
-        }))
-        setCurrentStep("success")
-      }
-      else{
-        showErrorDialog(
-          "Đăng ký thất bại",
-          respone.message || "Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại hoặc liên hệ quầy lễ tân để được hỗ trợ.",
-          "error",
-        )
-        resetKiosk();
-      }
+    
+    await withLoading(
+      async () => {
+        console.log(patientInfo);
+        const respone = await dangKyKhamBenh({
+            id: patientInfo.id || "",
+            fullname: patientInfo.fullname,
+            idNumber: patientInfo.idNumber,
+            insuranceNumber: patientInfo.insuranceNumber,
+            birthDate: patientInfo.birthDateString ? new Date(patientInfo.birthDateString) : undefined, 
+            gender: patientInfo.gender as "Nam" | "Nữ",
+            phone: patientInfo.phone,
+            address: patientInfo.address,
+            quay: selectedExamType,
+            chiefComplaint: patientInfo.chiefComplaint || "",
+            anh: photo || null,
+          });
+          const registrationTime = DateUtils.getCurrentDateFormatted("vi-VN")
+          if(respone.status === "success" && respone.data && respone.data.length > 0) {
+            const queueNumber = respone.data[0].SoThuTu
+            setPatientInfo((prev) => ({
+              ...prev,
+              queueNumber,
+              registrationTime,
+            }))
+            setCurrentStep("success")
+          }
+          else{
+            showErrorDialog(
+              "Đăng ký thất bại",
+              respone.message || "Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại hoặc liên hệ quầy lễ tân để được hỗ trợ.",
+              "error",
+            )
+            resetKiosk();
+          }
+      },
+      "Đang đăng ký khám bệnh",
+      "Vui lòng chờ trong giây lát..."
+    );
   }
 
-  const getTransformOffset = () => {
-    if (!selectedExamType) return 0
-    const selectedIndex = examTypes.findIndex((type) => type.id === selectedExamType)
-    // Calculate offset to move selected box to center
-    // Left box (index 0): move right, Right box (index 2): move left, Center box (index 1): no movement
-    if (selectedIndex === 0) return 120 // Move right by one column width
-    if (selectedIndex === 2) return -120 // Move left by one column width
-    return 0 // Center box stays in place
-  }
+  // const getTransformOffset = () => {
+  //   if (!selectedExamType) return 0
+  //   const selectedIndex = examTypes.findIndex((type) => type.id === selectedExamType)
+  //   // Calculate offset to move selected box to center
+  //   // Left box (index 0): move right, Right box (index 2): move left, Center box (index 1): no movement
+  //   if (selectedIndex === 0) return 120 // Move right by one column width
+  //   if (selectedIndex === 2) return -120 // Move left by one column width
+  //   return 0 // Center box stays in place
+  // }
 
   return (
     <Box
@@ -531,13 +720,14 @@ export default function MedicalKioskPage() {
         background: "linear-gradient(135deg, #E3F2FD 0%, #E8F5E8 100%)",
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="xl" sx={{position: "relative"}}>
+        <HeaderBVLNT />
           {/* Exam Type Selection */}
           {currentStep === "form" && (
           <Box>
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "180px" }}>
             <Grid container spacing={6} justifyContent="center">
-              {examTypes.map((type, index) => {
+              {examTypes.map((type) => {
                 const isSelected = selectedExamType === type.id
                 const isHidden = selectedExamType !== null && !isSelected
                 return (
@@ -545,15 +735,14 @@ export default function MedicalKioskPage() {
                     size={4}
                     key={type.id}
                     sx={{
-                      transform: isSelected ? `translateX(${getTransformOffset()}%)` : "translateX(0)",
+                      // transform: isSelected ? `translateX(${getTransformOffset()}%)` : "translateX(0)",
                       transition: "all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
-                      opacity: isHidden ? 0 : 1,
-                      visibility: isHidden ? "hidden" : "visible",
-                      zIndex: isSelected ? 10 : 1,
-                      minWidth: 300,
+                      opacity: isHidden ? 0.5 : 1,
+                      // visibility: isHidden ? "hidden" : "visible",
+                      minWidth: 250,
                     }}
                   >
-                    <Fade in={!isHidden} timeout={isSelected ? 0 : 500 + index * 150}>
+                    {/* <Fade in={!isHidden} timeout={isSelected ? 0 : 500 + index * 150}> */}
                       <Card
                         sx={{
                           cursor: "pointer",
@@ -580,7 +769,7 @@ export default function MedicalKioskPage() {
                         }}
                         onClick={() => (isSelected ? setSelectedExamType(null) : handleExamTypeSelect(type.id))}
                       >
-                        <CardContent sx={{ textAlign: "center", py: 4 }}>
+                        <CardContent sx={{ textAlign: "center" }}>
                           <Box
                             sx={{
                               color: type.color,
@@ -605,21 +794,9 @@ export default function MedicalKioskPage() {
                           >
                             {type.subtitle}
                           </Typography>
-                          {isSelected && (
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                color: type.color,
-                                fontStyle: "italic",
-                                opacity: 0.8,
-                              }}
-                            >
-                              Nhấn để thay đổi lựa chọn
-                            </Typography>
-                          )}
                         </CardContent>
                       </Card>
-                    </Fade>
+                    {/* </Fade> */}
                   </Grid>
                 )
               })}
@@ -629,41 +806,150 @@ export default function MedicalKioskPage() {
         )}
 
         {currentStep === "form" && (
-            <Card sx={{ maxWidth: 1000, mx: "auto" }}>
-              <CardContent sx={{ p: 4 }}>
-                <Typography
-                  variant="h3"
-                  component="h2"
-                  sx={{ fontWeight: "bold", textAlign: "center", color: "primary.main" }}
-                >
-                  Thông tin đăng ký
-
-                </Typography>     
-                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                  <IconButton
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      if (focusedField) startVoiceInput(focusedField);
-                      else showErrorDialog("Chọn trường nhập", "Vui lòng chọn một ô nhập trước khi ghi âm.", "warning");
-                    }}
-                    sx={{
-                      background: isListening ? "red" : "linear-gradient(45deg, #2563eb 30%, #059669 90%)",
-                      color: "white",
-                      borderRadius: "50%",
-                      width: 45,
-                      height: 45,
-                      justifySelf: "center",
-                      mb: 2,
-                      mt: 1,
-                      alignItems:"center"
-                    }}
-                  >
-                    <Mic />
-                  </IconButton>
-                  </Box>         
-                  
+            <Card sx={{ maxWidth: 1920, mx: "auto" }}>
+              <CardContent sx={{ p: 2 }}>                        
                 <Grid container spacing={3}>
-                  <Grid size={6}>
+                <Grid size={4}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Số điện thoại"
+                      value={patientInfo.phone}
+                      onFocus={() => setFocusedField("phone")}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, phone: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <Phone color="secondary" />
+                              </InputAdornment>
+                            ),
+                            endAdornment: focusedField === "phone" && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    startVoiceInput("phone")
+                                  }}
+                                  sx={{
+                                    color: isListening ? "red" : "primary"
+                                  }}
+                                >
+                                  <Mic />
+                                </IconButton>
+                                <IconButton onClick={() => {searchPatient(patientInfo.phone, 1)} }>
+                                  <Search sx={{ color: "#2563eb" }} />
+                                </IconButton>
+                                <IconButton 
+                                  onClick={() => handleFieldFocus("phone")}
+                                  sx={{ color: "#059669" }}
+                                >
+                                  <Keyboard />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+
+                  <Grid size={4}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Số CMND/CCCD" 
+                      value={patientInfo.idNumber}
+                      onFocus={() => setFocusedField("idNumber")}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, idNumber: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <ContactEmergency sx={{ color: "#2563eb" }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: focusedField === "idNumber" && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    startVoiceInput("idNumber")
+                                  }}
+                                  sx={{
+                                    color: isListening ? "red" : "primary"
+                                  }}
+                                >
+                                  <Mic />
+                                </IconButton>
+                                <IconButton onClick={() => {searchPatient(patientInfo.idNumber, 2)} }>
+                                  <Search sx={{ color: "#2563eb" }} />
+                                </IconButton>
+                                <IconButton 
+                                  onClick={() => handleFieldFocus("idNumber")}
+                                  sx={{ color: "#059669" }}
+                                >
+                                  <Keyboard />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+
+                  <Grid size={4}>
+                    <DebouncedTextField
+                      fullWidth
+                      label="Mã số thẻ BHYT"
+                      value={patientInfo.insuranceNumber}
+                      onFocus={() => setFocusedField("insuranceNumber")}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, insuranceNumber: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <IdCard sx={{ color: "#dc2626" }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: focusedField === "insuranceNumber" && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    startVoiceInput("insuranceNumber")
+                                  }}
+                                  sx={{
+                                    color: isListening ? "red" : "primary"
+                                  }}
+                                >
+                                  <Mic />
+                                </IconButton>
+                                <IconButton onClick={() => {if (patientInfo.insuranceNumber){searchPatient(patientInfo.insuranceNumber, 3)}} }>
+                                  <Search sx={{ color: "#2563eb" }} />
+                                </IconButton>
+                                <IconButton 
+                                  onClick={() => handleFieldFocus("insuranceNumber")}
+                                  sx={{ color: "#059669" }}
+                                >
+                                  <Keyboard />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+                  <Grid size={8}>
                     <DebouncedTextField
                       fullWidth
                       label="Họ và tên"
@@ -677,10 +963,27 @@ export default function MedicalKioskPage() {
                                 <Person color="primary" />
                               </InputAdornment>
                             ),
-                            endAdornment: (
+                            endAdornment: focusedField === "fullname" && (
                               <InputAdornment position="end">
+                                <IconButton
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    startVoiceInput("fullname")
+                                  }}
+                                  sx={{
+                                    color: isListening ? "red" : "#4a5770ff"
+                                  }}
+                                >
+                                  <Mic />
+                                </IconButton>
                                 <IconButton onClick={() => {searchPatient(patientInfo.fullname, 0)} }>
                                   <Search sx={{ color: "#2563eb" }} />
+                                </IconButton>
+                                <IconButton 
+                                  onClick={() => handleFieldFocus("fullname")}
+                                  sx={{ color: "#059669" }}
+                                >
+                                  <Keyboard />
                                 </IconButton>
                               </InputAdornment>
                             ),
@@ -692,7 +995,37 @@ export default function MedicalKioskPage() {
                         }}
                       />
                   </Grid>
-                   <Grid size={6} mt={-1}>
+                  <Grid size={2}>
+                  {/* <DateWheelPicker value={selectedDate} onChange={setSelectedDate} /> */}
+                  <DebouncedTextField
+                      fullWidth
+                      label="Ngày sinh"
+                      value={datePickerHook.formatDate(datePickerHook.value)}
+                      onClick={datePickerHook.openPicker}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, birthDateString: e.target.value })}
+                        slotProps={{
+                          input: {
+                            readOnly: true,
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <CalendarToday sx={{ color: "#9333ea" }} />
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                      <DateWheelPickerPopup
+                        isOpen={datePickerHook.isOpen}
+                        onClose={datePickerHook.closePicker}
+                        value={datePickerHook.value}
+                        onChange={datePickerHook.setValue}
+                      />
+                  </Grid>
+                  <Grid size={2} mt={-1}>
                     <FormControl
                     fullWidth
                       component="fieldset"
@@ -715,7 +1048,7 @@ export default function MedicalKioskPage() {
                         <FormControlLabel
                           label={
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              <Male sx={{ color: "#2563eb" }} /> Nam
+                               Nam
                             </Box>
                           }
                           value="Nam"
@@ -726,123 +1059,12 @@ export default function MedicalKioskPage() {
                           control={<Radio sx={{ color: "#9333ea" }} />}
                           label={
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              <Female sx={{ color: "#2563eb" }} /> Nữ
+                               Nữ
                             </Box>
                           }
                         />
                       </RadioGroup>
                     </FormControl>
-                  </Grid>
-                  <Grid size={6}>
-                    <DebouncedTextField
-                      fullWidth
-                      label="Ngày sinh"
-                      placeholder="DD/MM/YYYY"
-                      type="date"
-                      value={patientInfo.birthDateString}
-                        slotProps={{
-                          input: {
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <CalendarToday sx={{ color: "#9333ea" }} />
-                              </InputAdornment>
-                            ),
-                            sx: { height: 56, fontSize: "1.1rem" },
-                          },
-                          inputLabel: {
-                            sx: { fontSize: "1.1rem", fontWeight: 600 },
-                          },
-                        }}
-                      />
-                  </Grid>
-                  <Grid size={6}>
-                    <DebouncedTextField
-                      fullWidth
-                      label="Số điện thoại"
-                      value={patientInfo.phone}
-                      onFocus={() => setFocusedField("phone")}
-                      onChange={(e) => setPatientInfo({ ...patientInfo, phone: e.target.value })}
-                        slotProps={{
-                          input: {
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <Phone color="secondary" />
-                              </InputAdornment>
-                            ),
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton onClick={() => {searchPatient(patientInfo.phone, 1)} }>
-                                  <Search sx={{ color: "#2563eb" }} />
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                            sx: { height: 56, fontSize: "1.1rem" },
-                          },
-                          inputLabel: {
-                            sx: { fontSize: "1.1rem", fontWeight: 600 },
-                          },
-                        }}
-                      />
-                  </Grid>
-
-                  <Grid size={6}>
-                    <DebouncedTextField
-                      fullWidth
-                      label="Số CMND/CCCD" 
-                      value={patientInfo.idNumber}
-                      onFocus={() => setFocusedField("idNumber")}
-                      onChange={(e) => setPatientInfo({ ...patientInfo, idNumber: e.target.value })}
-                        slotProps={{
-                          input: {
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <ContactEmergency sx={{ color: "#2563eb" }} />
-                              </InputAdornment>
-                            ),
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton onClick={() => {searchPatient(patientInfo.idNumber, 2)} }>
-                                  <Search sx={{ color: "#2563eb" }} />
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                            sx: { height: 56, fontSize: "1.1rem" },
-                          },
-                          inputLabel: {
-                            sx: { fontSize: "1.1rem", fontWeight: 600 },
-                          },
-                        }}
-                      />
-                  </Grid>
-
-                  <Grid size={6}>
-                    <DebouncedTextField
-                      fullWidth
-                      label="Mã số thẻ BHYT"
-                      value={patientInfo.insuranceNumber}
-                      onFocus={() => setFocusedField("insuranceNumber")}
-                      onChange={(e) => setPatientInfo({ ...patientInfo, insuranceNumber: e.target.value })}
-                        slotProps={{
-                          input: {
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <IdCard sx={{ color: "#dc2626" }} />
-                              </InputAdornment>
-                            ),
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton onClick={() => {if (patientInfo.insuranceNumber){searchPatient(patientInfo.insuranceNumber, 3)}} }>
-                                  <Search sx={{ color: "#2563eb" }} />
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                            sx: { height: 56, fontSize: "1.1rem" },
-                          },
-                          inputLabel: {
-                            sx: { fontSize: "1.1rem", fontWeight: 600 },
-                          },
-                        }}
-                      />
                   </Grid>
                   <Grid size={12}>
                     <DebouncedTextField
@@ -856,6 +1078,48 @@ export default function MedicalKioskPage() {
                             startAdornment: (
                               <InputAdornment position="start">
                                 <LocationOn sx={{ color: "#dc2626" }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: focusedField === "address" && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    startVoiceInput("address")
+                                  }}
+                                  sx={{
+                                    color: isListening ? "red" : "primary"
+                                  }}
+                                >
+                                  <Mic />
+                                </IconButton>
+                                <IconButton 
+                                  onClick={() => handleFieldFocus("address")}
+                                  sx={{ color: "#059669" }}
+                                >
+                                  <Keyboard />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                            sx: { height: 56, fontSize: "1.1rem" },
+                          },
+                          inputLabel: {
+                            sx: { fontSize: "1.1rem", fontWeight: 600 },
+                          },
+                        }}
+                      />
+                  </Grid>
+                  <Grid size={4} hidden>
+                  <DebouncedTextField
+                      fullWidth
+                      label="Tỉnh, xã"
+                      onClick={openLocationPicker}
+                      // onChange={(e) => setPatientInfo({ ...patientInfo, birthDateString: e.target.value })}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <CalendarToday sx={{ color: "#9333ea" }} />
                               </InputAdornment>
                             ),
                             sx: { height: 56, fontSize: "1.1rem" },
@@ -880,6 +1144,27 @@ export default function MedicalKioskPage() {
                                 <EditNote sx={{ color: "#dc2626" }} />
                               </InputAdornment>
                             ),
+                            endAdornment: focusedField === "chiefComplaint" && (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    startVoiceInput("chiefComplaint")
+                                  }}
+                                  sx={{
+                                    color: isListening ? "red" : "primary"
+                                  }}
+                                >
+                                  <Mic />
+                                </IconButton>
+                                <IconButton 
+                                  onClick={() => handleFieldFocus("chiefComplaint")}
+                                  sx={{ color: "#059669" }}
+                                >
+                                  <Keyboard />
+                                </IconButton>
+                              </InputAdornment>
+                            ),
                             sx: { height: 56, fontSize: "1.1rem" },
                           },
                           inputLabel: {
@@ -890,7 +1175,7 @@ export default function MedicalKioskPage() {
                   </Grid>
                 </Grid>
 
-                <Box sx={{ display: "flex", justifyContent: "center", pt: 4 }}>
+                <Box sx={{ display: "flex", justifyContent: "center", pt: 4, gap: 2, flexWrap: 'wrap' }}>
                   <Button
                     variant="contained"
                     size="large"
@@ -905,8 +1190,23 @@ export default function MedicalKioskPage() {
                   >
                     Hoàn tất đăng ký
                   </Button>
+                  {selectedExamType === 'bhyt' && (
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      disabled={isCheckingBHYT}
+                      sx={{
+                        height: 64,
+                        fontSize: "1.1rem",
+                        fontWeight: 600,
+                        px: 4,
+                      }}
+                      onClick={handleCheckBHYT}
+                    >
+                      {isCheckingBHYT ? 'Đang kiểm tra...' : 'Kiểm tra BHXH'}
+                    </Button>
+                  )}
                   {!isConnectPort && (
-
                     <Button
                       variant="outlined"
                       size="large"
@@ -1074,6 +1374,7 @@ export default function MedicalKioskPage() {
               </CardContent>
             </Card>
           )}
+        
       </Container>
       <Dialog
         open={patientSelectOpen}
@@ -1081,7 +1382,8 @@ export default function MedicalKioskPage() {
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: 3, p: 1 }
+          sx: { borderRadius: 3, p: 1 },
+          ref: patientSelectDialogRef
         }}
       >
         <DialogTitle sx={{ fontWeight: 700 }}>Chọn bệnh nhân</DialogTitle>
@@ -1104,6 +1406,157 @@ export default function MedicalKioskPage() {
           <Button onClick={() => setPatientSelectOpen(false)} variant="outlined">Đóng</Button>
         </DialogActions>
       </Dialog>
+      <Dialog
+        open={locationPickerOpen}
+        onClose={closeLocationPicker}
+        fullScreen
+        PaperProps={{
+          sx: { p: 2,
+            width: "800px",
+            height: "600px"
+           }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>Chọn Tỉnh / Xã</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={6}>
+              <Typography sx={{ mb: 1, fontWeight: 600 }}>Tỉnh</Typography>
+              <Box sx={{ maxHeight: '60vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                {(provinces.length ? provinces : ["(Chưa có dữ liệu)"]).map((p) => (
+                  <Box
+                    key={p}
+                    onClick={() => setLocationTemp(prev => ({ ...prev, province: p, commune: "" }))}
+                    sx={{
+                      p: 2,
+                      fontSize: '1.25rem',
+                      cursor: provinces.length ? 'pointer' : 'default',
+                      bgcolor: locationTemp.province === p ? 'primary.light' : 'transparent',
+                      color: locationTemp.province === p ? 'primary.contrastText' : 'inherit',
+                      '&:hover': { bgcolor: provinces.length ? 'primary.light' : 'transparent', color: provinces.length ? 'primary.contrastText' : 'inherit' }
+                    }}
+                  >
+                    {p}
+                  </Box>
+                ))}
+              </Box>
+            </Grid>
+            <Grid size={6}>
+              <Typography sx={{ mb: 1, fontWeight: 600 }}>Xã</Typography>
+              <Box sx={{ maxHeight: '60vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                {(
+                  (locationTemp.province && communesByProvince[locationTemp.province])
+                    ? communesByProvince[locationTemp.province]
+                    : ["(Chưa có dữ liệu)"]
+                ).map((c) => (
+                  <Box
+                    key={c}
+                    onClick={() => provinces.length ? setLocationTemp(prev => ({ ...prev, commune: c })) : null}
+                    sx={{
+                      p: 2,
+                      fontSize: '1.25rem',
+                      cursor: (locationTemp.province && communesByProvince[locationTemp.province]) ? 'pointer' : 'default',
+                      bgcolor: locationTemp.commune === c ? 'primary.light' : 'transparent',
+                      color: locationTemp.commune === c ? 'primary.contrastText' : 'inherit',
+                      '&:hover': { bgcolor: (locationTemp.province && communesByProvince[locationTemp.province]) ? 'primary.light' : 'transparent', color: (locationTemp.province && communesByProvince[locationTemp.province]) ? 'primary.contrastText' : 'inherit' }
+                    }}
+                  >
+                    {c}
+                  </Box>
+                ))}
+              </Box>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'space-between' }}>
+          <Button variant="outlined" size="large" onClick={closeLocationPicker}>Hủy</Button>
+          <Button variant="contained" size="large" onClick={confirmLocationPicker} disabled={!locationTemp.province || !locationTemp.commune}>Xác nhận</Button>
+        </DialogActions>
+      </Dialog>
+      {/* <Dialog
+        open={dobPickerOpen}
+        onClose={closeDobPicker}
+        fullScreen
+        PaperProps={{
+          sx: { p: 2,
+            width: "800px",
+            height: "600px"
+           }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>Chọn ngày sinh</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={4}>
+              <Typography sx={{ mb: 1, fontWeight: 600 }}>Ngày</Typography>
+              <Box sx={{ maxHeight: '40vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                {days.map((d) => (
+                  <Box
+                    key={d}
+                    onClick={() => setDobTemp(prev => ({ ...prev, d }))}
+                    sx={{
+                      p: 2,
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      bgcolor: dobTemp.d === d ? 'primary.light' : 'transparent',
+                      color: dobTemp.d === d ? 'primary.contrastText' : 'inherit',
+                      '&:hover': { bgcolor: 'primary.light', color: 'primary.contrastText' }
+                    }}
+                  >
+                    {d}
+                  </Box>
+                ))}
+              </Box>
+            </Grid>
+            <Grid size={4}>
+              <Typography sx={{ mb: 1, fontWeight: 600 }}>Tháng</Typography>
+              <Box sx={{ maxHeight: '40vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                {months.map((m) => (
+                  <Box
+                    key={m}
+                    onClick={() => setDobTemp(prev => ({ ...prev, m }))}
+                    sx={{
+                      p: 2,
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      bgcolor: dobTemp.m === m ? 'primary.light' : 'transparent',
+                      color: dobTemp.m === m ? 'primary.contrastText' : 'inherit',
+                      '&:hover': { bgcolor: 'primary.light', color: 'primary.contrastText' }
+                    }}
+                  >
+                    {m}
+                  </Box>
+                ))}
+              </Box>
+            </Grid>
+            <Grid size={4}>
+              <Typography sx={{ mb: 1, fontWeight: 600 }}>Năm</Typography>
+              <Box sx={{ maxHeight: '40vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                {years.map((y) => (
+                  <Box
+                    key={y}
+                    onClick={() => setDobTemp(prev => ({ ...prev, y }))}
+                    sx={{
+                      p: 2,
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      bgcolor: dobTemp.y === y ? 'primary.light' : 'transparent',
+                      color: dobTemp.y === y ? 'primary.contrastText' : 'inherit',
+                      '&:hover': { bgcolor: 'primary.light', color: 'primary.contrastText' }
+                    }}
+                  >
+                    {y}
+                  </Box>
+                ))}
+              </Box>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'space-between' }}>
+          <Button variant="outlined" size="large" onClick={closeDobPicker}>Hủy</Button>
+          <Button variant="contained" size="large" onClick={confirmDobPicker}>Xác nhận</Button>
+        </DialogActions>
+      </Dialog> */}
        <Dialog
           open={errorDialog.open}
           onClose={closeErrorDialog}
@@ -1114,6 +1567,7 @@ export default function MedicalKioskPage() {
               borderRadius: 3,
               p: 2,
             },
+            ref: errorDialogRef
           }}
         >
           <DialogTitle
@@ -1160,7 +1614,17 @@ export default function MedicalKioskPage() {
             </Button>
           </DialogActions>
         </Dialog>
-            <div className="p-4 flex flex-col gap-4 items-center">
+        
+        {/* Loading Overlay */}
+        <LoadingOverlay
+          open={loading}
+          message={message}
+          subMessage={subMessage}
+          type="spinner"
+          backdrop={true}
+        />
+        
+      <div className="p-4 flex flex-col gap-4 items-center">
       <video
         ref={videoRef}
         autoPlay
@@ -1169,10 +1633,18 @@ export default function MedicalKioskPage() {
       />
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
-      {photo && (
+      {/* {photo && (
         <Image src={photo} alt="Ảnh đã chụp" className="border rounded-lg w-80 hidden" />
-      )}
+      )} */}
     </div>
+
+      {/* Bàn phím ảo */}
+      <VirtualKeyboard
+        visible={keyboardVisible}
+        onClose={handleKeyboardClose}
+        onTextChange={handleKeyboardTextChange}
+        currentText={keyboardText}
+      />
     </Box>
   )
 }

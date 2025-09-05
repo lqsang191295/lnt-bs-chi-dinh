@@ -1,11 +1,14 @@
-import { post } from "@/api/client";
+import { post, postExternal } from "@/api/client";
 import { 
   PatientInfo, 
   ICurrentQueueNumber, 
   IQueueNumber,
   IResponse,
-  BV_QlyCapThe 
+  BV_QlyCapThe,
+  APIKey
 } from "@/model/dangkykhambenh";
+import {ObBHXH} from "@/model/baohiemxahoimodel";
+
 
 // lấy danh sách bệnh nhân hiện tại ở các quầy
 export const fetchCurrentQueueNumbers = async (): Promise<IResponse<ICurrentQueueNumber[]>> => {
@@ -35,6 +38,48 @@ export const fetchCurrentQueueNumbers = async (): Promise<IResponse<ICurrentQueu
       message: "Lỗi hệ thống khi lấy số thứ tự hiện tại",
       error: error instanceof Error ? error.message : "Unknown error"
     };
+  }
+}
+export const getTokenBHXH = async (): Promise<APIKey | null>=> {
+  try{
+    const respone = await postExternal(`https://egw.baohiemxahoi.gov.vn/api/token/take`, {
+      Username: "72122_BV",
+      Password: "9FBEE874F62B8D7B486EFE31CC9E178B"
+    })
+    if (respone.maKetQua === "200"){
+      return respone.APIKey
+    }
+    console.error("getTokenBHXH respone", respone)
+    return null;
+  }
+  catch (ex){
+    console.error("getTokenBHXH exeption", ex);
+    return null;
+  }
+}
+export const CheckBHXHByPatientInfo = async (hoten: string, cccd: string, ngaysinh: string): Promise<ObBHXH | null> => {
+  try {
+    const responeAPIKey = await postExternal(`https://egw.baohiemxahoi.gov.vn/api/token/take`, {
+      Username: "72122_BV",
+      Password: "9FBEE874F62B8D7B486EFE31CC9E178B"
+    })
+    if (responeAPIKey.maKetQua === "200"){
+      const apiUrl = `https://egw.baohiemxahoi.gov.vn/api/egw/KQNhanLichSuKCB2024?token=${responeAPIKey.APIKey.access_token}&id_token=${responeAPIKey.APIKey.id_token}&username=${responeAPIKey.APIKey.username}&password=9FBEE874F62B8D7B486EFE31CC9E178B`;
+      console.log("url request", apiUrl);
+      const response = await postExternal(apiUrl, {
+        maThe: cccd,
+        hoTen: hoten,
+        ngaySinh: ngaysinh.split("/")[2],
+        hoTenCb: "Nguyễn Thảo Chi",
+        cccdCb: "072188004365"
+      });
+      return response
+    }
+    return null;
+  }
+  catch (ex){
+    console.error("Lỗi tìm kiếm bệnh nhân:", ex);
+    return null;
   }
 }
 
