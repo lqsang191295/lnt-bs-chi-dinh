@@ -148,7 +148,7 @@ function DebouncedTextField(props: TextFieldProps & { debounceMs?: number }) {
 export default function MedicalKioskPage() {
   const datePickerHook = useDateWheelPicker(CURRENT_DATE)
   const datePickerHookRef = useRef(datePickerHook)
-  const { loading, message, subMessage, showLoading, hideLoading, withLoading } = useLoading()
+  const { loading, message, subMessage, withLoading } = useLoading()
   
   // Cập nhật ref khi datePickerHook thay đổi
   useEffect(() => {
@@ -170,7 +170,6 @@ export default function MedicalKioskPage() {
   const [isConnectPort, setIsConnectPort] = useState(false)
   const [patientSelectOpen, setPatientSelectOpen] = useState(false)
   const [patientCandidates, setPatientCandidates] = useState<BV_QlyCapThe[]>([])
-  const [isCheckingBHYT, setIsCheckingBHYT] = useState(false)
   
   // Click outside refs cho các Dialog
   const patientSelectDialogRef = useClickOutside<HTMLDivElement>(() => {
@@ -1144,7 +1143,6 @@ useEffect(() => {
                   <Button
                       variant="outlined"
                       size="large"
-                      disabled={isCheckingBHYT}
                       sx={{
                         height: 64,
                         fontSize: "1.1rem",
@@ -1154,7 +1152,7 @@ useEffect(() => {
                       }}
                       onClick={handleCheckBHYT}
                     >
-                      {isCheckingBHYT ? 'Đang kiểm tra...' : 'Kiểm tra thẻ BHYT'}
+                      Kiểm tra thẻ BHYT
                     </Button>
                   <Button
                     variant="contained"

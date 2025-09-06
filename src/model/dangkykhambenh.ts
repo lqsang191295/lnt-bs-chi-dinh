@@ -14,6 +14,12 @@ export interface PatientInfo {
   quay?: string // Quầy đăng ký
   anh?: string | null // Ảnh bệnh nhân (base64)
 }
+export interface IDMQuayDangKy{
+  Ma: string,
+  TenQuay: string,
+  Icon: string,
+  Color: string
+}
 export interface APIKey {
   access_token: string
   id_token: string
