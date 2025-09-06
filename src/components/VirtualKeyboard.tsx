@@ -11,13 +11,15 @@ type VirtualKeyboardProps = {
   onClose: () => void;
   onTextChange: (text: string) => void;
   currentText: string;
+  keyboardMode?: "text" | "numeric";
 };
 
-export default function VirtualKeyboard({ 
-  visible, 
-  onClose, 
-  onTextChange, 
-  currentText 
+export default function VirtualKeyboard({
+  visible,
+  onClose,
+  onTextChange,
+  currentText,
+  keyboardMode = "text"
 }: VirtualKeyboardProps) {
   const [text, setText] = useState(currentText || "");
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -25,6 +27,7 @@ export default function VirtualKeyboard({
   const [scale, setScale] = useState(1);
   const offsetRef = useRef({ dx: 0, dy: 0 });
   const keyboardRef = useRef<HTMLDivElement>(null);
+  const isNumeric = keyboardMode === "numeric";
   
   // Sử dụng click outside để đóng bàn phím
   const clickOutsideRef = useClickOutside<HTMLDivElement>(() => {
@@ -46,8 +49,9 @@ export default function VirtualKeyboard({
   }, [visible]);
 
   const handleKeyPress = (button: string) => {
+  console.debug('[VK] keypress', { button, text });
     let newText = text;
-    
+
     if (button === "{bksp}") {
       newText = text.slice(0, -1);
     } else if (button === "{space}") {
@@ -58,11 +62,123 @@ export default function VirtualKeyboard({
       onClose();
       return;
     } else {
-      newText = text + button;
+      // nếu numeric mode, chỉ cho phép ký tự hợp lệ (số + dấu chấm/phẩy/plus/minus/space/paren)
+      if (isNumeric) {
+        const allowed = /^[0-9\.\,\+\-\s\(\)]$/;
+        if (!allowed.test(button)) {
+          return; // bỏ qua ký tự không hợp lệ
+        }
+        newText = text + button;
+      } else {
+  // text mode: append then try to compose Telex if appropriate
+  newText = text + button;
+  const composed = composeTelex(newText);
+  console.debug('[VK] composeTelex', { before: newText, after: composed });
+  newText = composed;
+      }
     }
+
     setText(newText);
     onTextChange(newText);
   };
+
+  // ------------------ Telex composition helpers ------------------
+  const TONE_MAP: Record<string, number> = { s: 1, f: 2, r: 3, x: 4, j: 5 };
+
+  const VOWEL_TONE_TABLE: Record<string, string[]> = {
+    a: ["a","á","à","ả","ã","ạ"],
+    ă: ["ă","ắ","ằ","ẳ","ẵ","ặ"],
+    â: ["â","ấ","ầ","ẩ","ẫ","ậ"],
+    e: ["e","é","è","ẻ","ẽ","ẹ"],
+    ê: ["ê","ế","ề","ể","ễ","ệ"],
+    i: ["i","í","ì","ỉ","ĩ","ị"],
+    o: ["o","ó","ò","ỏ","õ","ọ"],
+    ô: ["ô","ố","ồ","ổ","ỗ","ộ"],
+    ơ: ["ơ","ớ","ờ","ở","ỡ","ợ"],
+    u: ["u","ú","ù","ủ","ũ","ụ"],
+    ư: ["ư","ứ","ừ","ử","ữ","ự"],
+    y: ["y","ý","ỳ","ỷ","ỹ","ỵ"],
+  };
+
+  const VOWELS = Object.keys(VOWEL_TONE_TABLE);
+
+  function applyToneToChar(ch: string, toneIndex: number): string {
+    const lower = ch.toLowerCase();
+    const table = VOWEL_TONE_TABLE[lower];
+    if (!table) return ch;
+    const toned = table[toneIndex] || table[0];
+    // preserve case
+    return ch === lower ? toned : toned.toUpperCase();
+  }
+
+  function replaceDiacriticVowel(token: string): string {
+    // replace common Telex vowel modifiers first: aa->â, aw->ă, ee->ê, oo->ô, ow->ơ, uw->ư, dd->đ
+    // prioritize double-letter forms
+    const patterns: [RegExp, string][] = [
+      [/dd/gi, "đ"],
+      [/aa/gi, "â"],
+      [/aw/gi, "ă"],
+      [/ee/gi, "ê"],
+      [/oo/gi, "ô"],
+      [/ow/gi, "ơ"],
+      [/uw/gi, "ư"],
+    ];
+    for (const [re, repl] of patterns) {
+      if (re.test(token)) {
+        token = token.replace(re, (m) => (m === m.toLowerCase() ? repl : repl.toUpperCase()));
+        break; // only one modifier per token typically
+      }
+    }
+    return token;
+  }
+
+  function composeTelex(fullText: string): string {
+    // find last word-like token (letters and diacritics)
+    const m = fullText.match(/([\p{L}0-9]+)$/u);
+  if (!m) return fullText;
+    const token = m[1];
+    let transformed = token;
+
+    // tone marker at end
+    const lastChar = token.slice(-1).toLowerCase();
+    let toneIndex: number | null = null;
+    if (TONE_MAP[lastChar] !== undefined) {
+      toneIndex = TONE_MAP[lastChar];
+      transformed = token.slice(0, -1);
+    }
+    console.debug('[VK] composeTelex token/tone', { token, lastChar, toneIndex });
+
+    // apply dd/aa/aw/ee/oo/ow/uw
+    transformed = replaceDiacriticVowel(transformed);
+
+    // if we had a tone marker, apply it to the main vowel
+  if (toneIndex !== null) {
+      // find vowel positions
+      const chars = Array.from(transformed);
+      // choose target vowel by priority order
+      const priority = ["a","ă","â","e","ê","o","ô","ơ","u","ư","i","y"];
+      let targetIdx = -1;
+      for (const p of priority) {
+        const idx = chars.findIndex(c => c.toLowerCase() === p);
+        if (idx !== -1) { targetIdx = idx; break; }
+      }
+      if (targetIdx === -1) {
+        // fallback to any vowel
+        targetIdx = chars.findIndex(c => VOWELS.includes(c.toLowerCase()));
+      }
+      if (targetIdx !== -1) {
+        const orig = chars[targetIdx];
+        const newChar = applyToneToChar(orig, toneIndex);
+        chars[targetIdx] = newChar;
+        transformed = chars.join("");
+        console.debug('[VK] applied tone', { orig, newChar, targetIdx, transformed });
+      }
+    }
+
+    // if replaceDiacriticVowel changed letters and token ended with tone marker that we consumed, we already updated
+    // Put transformed token back into fullText
+    return fullText.slice(0, fullText.length - token.length) + transformed;
+  }
 
   // Mouse events for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -187,8 +303,8 @@ export default function VirtualKeyboard({
         transform: `scale(${scale})`,
         transformOrigin: "top left",
         transition: dragging ? "none" : "transform 0.2s ease",
-        minWidth: 800,
-        maxWidth: 1200,
+        minWidth: isNumeric ? 420 : 800,
+        maxWidth: isNumeric ? 700 : 1200,
         cursor: dragging ? "grabbing" : "default",
       }}
     >
@@ -299,67 +415,97 @@ export default function VirtualKeyboard({
         {text || "Văn bản sẽ hiển thị ở đây..."}
       </Box>
 
-      {/* Bàn phím */}
+      {/* Nếu numeric -> chỉ render numeric layout, còn không render full layout */}
       <Grid container spacing={2} sx={{ p: 2 }}>
-        {/* Bàn phím chữ */}
-        <Grid size={8}>
-          <Keyboard
-            onKeyPress={handleKeyPress}
-            layout={{
-              default: [
-                "q w e r t y u i o p {bksp}",
-                "a s d f g h j k l",
-                "z x c v b n m , . {clear}",
-                "{space} {enter}"
-              ]
-            }}
-            display={{
-              "{bksp}": "⌫",
-              "{space}": "Space",
-              "{clear}": "Clear",
-              "{enter}": "Enter"
-            }}
-            buttonTheme={[
-              {
-                class: "hg-spacebar",
-                buttons: "{space}"
-              },
-              {
-                class: "hg-enter",
-                buttons: "{enter}"
-              }
-            ]}
-            theme="hg-theme-default hg-layout-default"
-            physicalKeyboardHighlight={false}
-            physicalKeyboardHighlightTextColor="#000"
-            physicalKeyboardHighlightBgColor="#f0f0f0"
-          />
-        </Grid>
-
-        {/* Bàn phím số */}
-        <Grid size={4}>
-          <Keyboard
-            onKeyPress={handleKeyPress}
-            layout={{
-              default: [
-                "1 2 3",
-                "4 5 6", 
-                "7 8 9",
-                "0"
-              ]
-            }}
-            theme="hg-theme-default hg-layout-default"
-            physicalKeyboardHighlight={false}
-            physicalKeyboardHighlightTextColor="#000"
-            physicalKeyboardHighlightBgColor="#f0f0f0"
-          />
-        </Grid>
+        {isNumeric ? (
+          <Grid size={{xs:12}}>
+            <Keyboard
+              onKeyPress={handleKeyPress}
+              layout={{
+                default: [
+                  "1 2 3",
+                  "4 5 6",
+                  "7 8 9",
+                  "0 {bksp} {clear}"
+                ]
+              }}
+              display={{
+                "{bksp}": "⌫",
+                "{clear}": "Clear",
+              }}
+              buttonTheme={[
+                { class: "hg-num", buttons: "1 2 3 4 5 6 7 8 9 0" },
+                { class: "hg-bksp", buttons: "{bksp}" },
+              ]}
+              theme="hg-theme-default hg-layout-default"
+              physicalKeyboardHighlight={false}
+              physicalKeyboardHighlightTextColor="#000"
+              physicalKeyboardHighlightBgColor="#f0f0f0"
+            />
+          </Grid>
+        ) : (
+          <>
+            <Grid size={{xs:8}}>
+              <Keyboard
+                onKeyPress={handleKeyPress}
+                layout={{
+                  default: [
+                    "q w e r t y u i o p {bksp}",
+                    "a s d f g h j k l",
+                    "z x c v b n m , . {clear}",
+                    "{space}"
+                  ]
+                }}
+                display={{
+                  "{bksp}": "⌫",
+                  "{space}": "Space",
+                  "{clear}": "Clear",
+                }}
+                buttonTheme={[
+                  {
+                    class: "hg-spacebar",
+                    buttons: "{space}"
+                  },
+                  {
+                    class: "hg-enter",
+                    buttons: "{enter}"
+                  }
+                ]}
+                theme="hg-theme-default hg-layout-default"
+                physicalKeyboardHighlight={false}
+                physicalKeyboardHighlightTextColor="#000"
+                physicalKeyboardHighlightBgColor="#f0f0f0"
+              />
+            </Grid>
+            <Grid size={{xs:4}}>
+              <Keyboard
+                onKeyPress={handleKeyPress}
+                layout={{
+                  default: [
+                    "1 2 3",
+                    "4 5 6",
+                    "7 8 9",
+                    "0"
+                  ]
+                }}
+                theme="hg-theme-default hg-layout-default"
+                physicalKeyboardHighlight={false}
+                physicalKeyboardHighlightTextColor="#000"
+                physicalKeyboardHighlightBgColor="#f0f0f0"
+              />
+            </Grid>
+          </>
+        )}
       </Grid>
 
       {/* CSS tùy chỉnh cho bàn phím */}
       <style jsx global>{`
         .simple-keyboard {
           background: transparent !important;
+        }
+        .hg-num .hg-button {
+          min-height: 70px !important;
+          font-size: 1.25rem !important;
         }
         .simple-keyboard .hg-button {
           background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;

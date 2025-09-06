@@ -109,7 +109,6 @@ function DebouncedTextField(props: TextFieldProps & { debounceMs?: number }) {
   const [local, setLocal] = useState<string>(() => (value as string) || "")
   const timerRef = useRef<number | null>(null)
   const prevValueRef = useRef<string>((value as string) || "")
-
   useEffect(() => {
     // Chỉ update local khi value thực sự thay đổi từ bên ngoài
     const stringValue = (value as string) || ""
@@ -155,6 +154,7 @@ export default function MedicalKioskPage() {
   useEffect(() => {
     datePickerHookRef.current = datePickerHook
   }, [datePickerHook])
+  const [keyboardMode, setKeyboardMode] = useState<"text" | "numeric">()
   const [focusedField, setFocusedField] = useState<KeyboardField | null>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardText, setKeyboardText] = useState("");
@@ -202,7 +202,7 @@ export default function MedicalKioskPage() {
     if (!fullname || !birthDateString || !idNumber) {
       showErrorDialog(
         "Thiếu thông tin",
-        "Vui lòng nhập đầy đủ Họ tên, Ngày sinh và Số CMND/CCCD trước khi kiểm tra.",
+        "Vui lòng nhập đầy đủ Họ tên, Ngày sinh và Số CCCD trước khi kiểm tra.",
         "warning"
       );
       return;
@@ -233,6 +233,7 @@ export default function MedicalKioskPage() {
 
   const handleFieldFocus = (field: KeyboardField) => {
     // setFocusedField(field);
+    setKeyboardMode(field === "phone" || field === "idNumber" ? "numeric" : "text");
     setKeyboardText(patientInfo[field] || "");
     setKeyboardVisible(true);
   };
@@ -298,11 +299,15 @@ export default function MedicalKioskPage() {
           setPatientSelectOpen(true)
         }
         else if (respone && respone.length === 1) {
+          const newBirthDate = new Date(respone[0].Birthday);
+          if (newBirthDate) {
+            datePickerHookRef.current.setValue(newBirthDate);
+          }
           setPatientInfo({
             id: respone[0].Ma,
             fullname: respone[0].Hoten,
             address: respone[0].Diachi,
-            birthDateString: respone[0].Birthday,
+            birthDateString: newBirthDate ? formatDateForInput(newBirthDate) : "",
             gender: respone[0].Gioitinh,
             idNumber: respone[0].SoCMND,
             insuranceNumber: respone[0].SoBHYT,
@@ -318,11 +323,12 @@ export default function MedicalKioskPage() {
     );
   }
   const handleSelectPatient = (p: BV_QlyCapThe) => {
+    const newBirthDate = new Date(p.Birthday);
     setPatientInfo({
       id: p.Ma,
       fullname: p.Hoten,
       address: p.Diachi,
-      birthDateString: p.Birthday,
+      birthDateString: newBirthDate ? formatDateForInput(newBirthDate) : "",
       gender: p.Gioitinh,
       idNumber: p.SoCMND,
       insuranceNumber: p.SoBHYT,
@@ -418,7 +424,7 @@ export default function MedicalKioskPage() {
             Ngày sinh: ${patientInfo.birthDateString}</br>
             Giới tính: ${patientInfo.gender}</br>
             Địa chỉ: ${patientInfo.address}</br>
-            Số CMND/CCCD: ${patientInfo.idNumber}</br>
+            Số CCCD: ${patientInfo.idNumber}</br>
             Số thẻ BHYT: ${patientInfo.insuranceNumber || "N/A"}</br>
             Số điện thoại: ${patientInfo.phone || "N/A"}</br>
           </div>
@@ -470,6 +476,11 @@ export default function MedicalKioskPage() {
   focusedFieldRef.current = focusedField;
 }, [focusedField]);
 
+// Format datetime theo dạng từ dd/mm/yyyy sang Date react
+function parseDDMMYYYY(dateStr: string): Date {
+  const [day, month, year] = dateStr.split("/");
+  return new Date(Number(year), Number(month) - 1, Number(day));
+}
 const formatDateForInput = useCallback((date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -493,39 +504,6 @@ useEffect(() => {
     });
   }
 }, [datePickerHook.value, formatDateForInput]);
-  // Helpers cho dropdown ngày/tháng/năm
-  // const pad2 = (n: number | string) => String(n).toString().padStart(2, "0");
-  // const parseYMD = (s?: string) => {
-  //   if (!s) return { y: "", m: "", d: "" } as { y: string | number; m: string | number; d: string | number };
-  //   const parts = s.split("-");
-  //   if (parts.length !== 3) return { y: "", m: "", d: "" } as { y: string | number; m: string | number; d: string | number };
-  //   return { y: parts[0], m: parts[1], d: parts[2] } as { y: string | number; m: string | number; d: string | number };
-  // };
-  // const currentYear = new Date().getFullYear();
-  // const years: number[] = Array.from({ length: 120 }, (_, i) => currentYear - i); // 120 năm về trước
-  // const months: number[] = Array.from({ length: 12 }, (_, i) => i + 1);
-  // const days: number[] = Array.from({ length: 31 }, (_, i) => i + 1);
-  // // State cho DatePicker cảm ứng
-  // const [dobPickerOpen, setDobPickerOpen] = useState(false);
-  // const [dobTemp, setDobTemp] = useState<{ y: number | string; m: number | string; d: number | string }>({ y: "", m: "", d: "" });
-  // const openDobPicker = () => {
-  //   const { y, m, d } = parseYMD(patientInfo.birthDateString);
-  //   setDobTemp({ y: y || "", m: m || "", d: d || "" });
-  //   setDobPickerOpen(true);
-  // };
-  // const closeDobPicker = () => setDobPickerOpen(false);
-  // const confirmDobPicker = () => {
-  //   const { y, m, d } = dobTemp;
-  //   const newStr = y && m && d
-  //     ? `${y}-${pad2(m)}-${pad2(d)}`
-  //     : y && m
-  //       ? `${y}-${pad2(m)}-01`
-  //       : y
-  //         ? `${y}-01-01`
-  //         : "";
-  //   setPatientInfo(prev => ({ ...prev, birthDateString: newStr }));
-  //   setDobPickerOpen(false);
-  // };
 
   // State cho picker Tỉnh/Xã
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
@@ -561,8 +539,7 @@ useEffect(() => {
       onConnect: (connected) => {if(connected) {setIsConnectPort(true)} else {setIsConnectPort(false)}},
       onData: (data) => {
         if(data !== null) {
-          console.log("QR Data:", data);
-          
+          console.log("QR Data:", data);          
           // Set giá trị cho datePickerHook nếu có birthDate
           if (data.birthDate) {
             datePickerHookRef.current.setValue(data.birthDate);
@@ -579,7 +556,6 @@ useEffect(() => {
             insuranceNumber: data.insuranceNumber || "",
             chiefComplaint: data.chiefComplaint || ""        
           })
-          setCurrentStep("form")
         }
       }
     });
@@ -665,13 +641,12 @@ useEffect(() => {
     
     await withLoading(
       async () => {
-        console.log(patientInfo);
         const respone = await dangKyKhamBenh({
             id: patientInfo.id || "",
             fullname: patientInfo.fullname,
             idNumber: patientInfo.idNumber,
             insuranceNumber: patientInfo.insuranceNumber,
-            birthDate: patientInfo.birthDateString ? new Date(patientInfo.birthDateString) : undefined, 
+            birthDate: patientInfo.birthDateString ? parseDDMMYYYY(patientInfo.birthDateString) : undefined, 
             gender: patientInfo.gender as "Nam" | "Nữ",
             phone: patientInfo.phone,
             address: patientInfo.address,
@@ -702,16 +677,6 @@ useEffect(() => {
       "Vui lòng chờ trong giây lát..."
     );
   }
-
-  // const getTransformOffset = () => {
-  //   if (!selectedExamType) return 0
-  //   const selectedIndex = examTypes.findIndex((type) => type.id === selectedExamType)
-  //   // Calculate offset to move selected box to center
-  //   // Left box (index 0): move right, Right box (index 2): move left, Center box (index 1): no movement
-  //   if (selectedIndex === 0) return 120 // Move right by one column width
-  //   if (selectedIndex === 2) return -120 // Move left by one column width
-  //   return 0 // Center box stays in place
-  // }
 
   return (
     <Box
@@ -859,7 +824,7 @@ useEffect(() => {
                   <Grid size={4}>
                     <DebouncedTextField
                       fullWidth
-                      label="Số CMND/CCCD" 
+                      label="Số CCCD" 
                       value={patientInfo.idNumber}
                       onFocus={() => setFocusedField("idNumber")}
                       onChange={(e) => setPatientInfo({ ...patientInfo, idNumber: e.target.value })}
@@ -906,7 +871,7 @@ useEffect(() => {
                   <Grid size={4}>
                     <DebouncedTextField
                       fullWidth
-                      label="Mã số thẻ BHYT"
+                      label="Mã thẻ BHYT"
                       value={patientInfo.insuranceNumber}
                       onFocus={() => setFocusedField("insuranceNumber")}
                       onChange={(e) => setPatientInfo({ ...patientInfo, insuranceNumber: e.target.value })}
@@ -1133,7 +1098,7 @@ useEffect(() => {
                   <Grid size={12}>
                     <DebouncedTextField
                       fullWidth
-                      label="Lý do khám bệnh (nếu có)"
+                      label="Lý do khám bệnh"
                       value={patientInfo.chiefComplaint}
                       onFocus={() => setFocusedField("chiefComplaint")}
                       onChange={(e) => setPatientInfo({ ...patientInfo, chiefComplaint: e.target.value })}
@@ -1175,7 +1140,22 @@ useEffect(() => {
                   </Grid>
                 </Grid>
 
-                <Box sx={{ display: "flex", justifyContent: "center", pt: 4, gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", pt: 4, gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                      variant="outlined"
+                      size="large"
+                      disabled={isCheckingBHYT}
+                      sx={{
+                        height: 64,
+                        fontSize: "1.1rem",
+                        fontWeight: 600,
+                        px: 4,
+                        visibility: selectedExamType === 'bhyt' ? "visible" : "hidden"
+                      }}
+                      onClick={handleCheckBHYT}
+                    >
+                      {isCheckingBHYT ? 'Đang kiểm tra...' : 'Kiểm tra thẻ BHYT'}
+                    </Button>
                   <Button
                     variant="contained"
                     size="large"
@@ -1190,24 +1170,7 @@ useEffect(() => {
                   >
                     Hoàn tất đăng ký
                   </Button>
-                  {selectedExamType === 'bhyt' && (
-                    <Button
-                      variant="outlined"
-                      size="large"
-                      disabled={isCheckingBHYT}
-                      sx={{
-                        height: 64,
-                        fontSize: "1.1rem",
-                        fontWeight: 600,
-                        px: 4,
-                      }}
-                      onClick={handleCheckBHYT}
-                    >
-                      {isCheckingBHYT ? 'Đang kiểm tra...' : 'Kiểm tra BHXH'}
-                    </Button>
-                  )}
-                  {!isConnectPort && (
-                    <Button
+                  <Button
                       variant="outlined"
                       size="large"
                       sx={{
@@ -1215,20 +1178,20 @@ useEffect(() => {
                         fontSize: "1.25rem",
                         px: 6,
                         ml: 3,
-                  }}
+                        visibility: isConnectPort ? "hidden" : "visible"
+                      }}
                       onClick={() => scannerRef.current?.autoConnect()}
                     >
                       Kết nối thiết bị quét QR
                     </Button>
-                  )}
                 </Box>
               </CardContent>
             </Card>
           )}
           {currentStep === "success" && (
             <Card sx={{ maxWidth: 900, mx: "auto", textAlign: "center" }}>
-              <CardContent sx={{ p: 4 }}>
-                <Box
+              <CardContent sx={{ p: 4}}>
+                {/* <Box
                   sx={{
                     width: 96,
                     height: 96,
@@ -1255,7 +1218,7 @@ useEffect(() => {
                   >
                     <CheckCircle sx={{ fontSize: 24, color: "white" }} />
                   </Box>
-                </Box>
+                </Box> */}
 
                 <Typography variant="h3" component="h2" sx={{ fontWeight: "bold", color: "secondary.main", mb: 2 }}>
                   Đăng ký thành công!
@@ -1273,7 +1236,7 @@ useEffect(() => {
                 >
                   <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 2 }}>
                     <AssignmentLate sx={{ fontSize: 32, mr: 1 }} />
-                    <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+                    <Typography variant="h4" sx={{ fontWeight: "bold", fontFamily: "sans-serif" }}>
                       SỐ THỨ TỰ CỦA BẠN
                     </Typography>
                   </Box>
@@ -1315,7 +1278,7 @@ useEffect(() => {
                         <strong>Giới tính:</strong> {patientInfo.gender}
                       </Typography>
                       <Typography variant="body1" sx={{ mb: 1 }}>
-                        <strong>Số CMND/CCCD:</strong> {patientInfo.idNumber}
+                        <strong>Số CCCD:</strong> {patientInfo.idNumber}
                       </Typography>
                       {selectedExamType === "bhyt" && (
                         <Typography variant="body1" sx={{ mb: 1 }}>
@@ -1364,12 +1327,12 @@ useEffect(() => {
                     }}
                     onClick={resetKiosk}
                   >
-                    Đăng ký mới
+                    Thoát
                   </Button>
                 </Box>
 
                 <Typography variant="body1" sx={{ mt: 3, color: "text.secondary", fontStyle: "italic" }}>
-                  Vui lòng giữ phiếu đăng ký và đến quầy lễ tân để hoàn tất thủ tục khám bệnh
+                  Vui lòng giữ phiếu đăng ký và đợi đến lượt để hoàn tất thủ tục khám bệnh
                 </Typography>
               </CardContent>
             </Card>
@@ -1473,90 +1436,6 @@ useEffect(() => {
           <Button variant="contained" size="large" onClick={confirmLocationPicker} disabled={!locationTemp.province || !locationTemp.commune}>Xác nhận</Button>
         </DialogActions>
       </Dialog>
-      {/* <Dialog
-        open={dobPickerOpen}
-        onClose={closeDobPicker}
-        fullScreen
-        PaperProps={{
-          sx: { p: 2,
-            width: "800px",
-            height: "600px"
-           }
-        }}
-      >
-        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>Chọn ngày sinh</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={4}>
-              <Typography sx={{ mb: 1, fontWeight: 600 }}>Ngày</Typography>
-              <Box sx={{ maxHeight: '40vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
-                {days.map((d) => (
-                  <Box
-                    key={d}
-                    onClick={() => setDobTemp(prev => ({ ...prev, d }))}
-                    sx={{
-                      p: 2,
-                      fontSize: '1.25rem',
-                      cursor: 'pointer',
-                      bgcolor: dobTemp.d === d ? 'primary.light' : 'transparent',
-                      color: dobTemp.d === d ? 'primary.contrastText' : 'inherit',
-                      '&:hover': { bgcolor: 'primary.light', color: 'primary.contrastText' }
-                    }}
-                  >
-                    {d}
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-            <Grid size={4}>
-              <Typography sx={{ mb: 1, fontWeight: 600 }}>Tháng</Typography>
-              <Box sx={{ maxHeight: '40vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
-                {months.map((m) => (
-                  <Box
-                    key={m}
-                    onClick={() => setDobTemp(prev => ({ ...prev, m }))}
-                    sx={{
-                      p: 2,
-                      fontSize: '1.25rem',
-                      cursor: 'pointer',
-                      bgcolor: dobTemp.m === m ? 'primary.light' : 'transparent',
-                      color: dobTemp.m === m ? 'primary.contrastText' : 'inherit',
-                      '&:hover': { bgcolor: 'primary.light', color: 'primary.contrastText' }
-                    }}
-                  >
-                    {m}
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-            <Grid size={4}>
-              <Typography sx={{ mb: 1, fontWeight: 600 }}>Năm</Typography>
-              <Box sx={{ maxHeight: '40vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
-                {years.map((y) => (
-                  <Box
-                    key={y}
-                    onClick={() => setDobTemp(prev => ({ ...prev, y }))}
-                    sx={{
-                      p: 2,
-                      fontSize: '1.25rem',
-                      cursor: 'pointer',
-                      bgcolor: dobTemp.y === y ? 'primary.light' : 'transparent',
-                      color: dobTemp.y === y ? 'primary.contrastText' : 'inherit',
-                      '&:hover': { bgcolor: 'primary.light', color: 'primary.contrastText' }
-                    }}
-                  >
-                    {y}
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between' }}>
-          <Button variant="outlined" size="large" onClick={closeDobPicker}>Hủy</Button>
-          <Button variant="contained" size="large" onClick={confirmDobPicker}>Xác nhận</Button>
-        </DialogActions>
-      </Dialog> */}
        <Dialog
           open={errorDialog.open}
           onClose={closeErrorDialog}
@@ -1644,6 +1523,7 @@ useEffect(() => {
         onClose={handleKeyboardClose}
         onTextChange={handleKeyboardTextChange}
         currentText={keyboardText}
+        keyboardMode={keyboardMode}
       />
     </Box>
   )

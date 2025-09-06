@@ -28,7 +28,7 @@ export interface TokenApiBHXH {
 export interface BV_QlyCapThe{
   Ma: string;
   Hoten: string;
-  Birthday: string;
+  Birthday: Date;
   Gioitinh: string;
   SoCMND: string;
   SoBHYT: string;
