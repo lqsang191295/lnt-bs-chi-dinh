@@ -1,6 +1,6 @@
 "use client"
 
-import type { JSX, ReactElement } from "react"
+import type { JSX } from "react"
 import {fetchCurrentQueueNumbers, getDM_QuayDangKy} from "@/actions/act_dangkykhambenh"
 import HeaderBVLNT from "@/components/HeaderBVLNT"
 import { useState, useEffect } from "react"
