@@ -47,6 +47,7 @@ const formatTime = useCallback((date: Date) => {
         borderRadius: 3,
         background: "rgba(255, 255, 255, 0.95)",
         backdropFilter: "blur(10px)",
+        flex: 1
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -57,14 +58,26 @@ const formatTime = useCallback((date: Date) => {
               variant="h4"
               sx={{
                 fontWeight: "bold",
-                color: "#1976D2",
+                color: "#354b9c",
                 mb: 0.5,
               }}
             >
               BỆNH VIỆN ĐA KHOA <Typography component="span" variant="h4" sx={{
                 fontWeight: "bold",
-                color: "#d21919ff",
+                color: "#ed3237",
               }}>LÊ NGỌC TÙNG</Typography>
+            </Typography>
+            <Typography
+              fontSize={12.5}
+              sx={{
+                fontWeight: "bold",
+                color: "#354b9c",
+                mb: 0.5,
+              }}
+            >
+              500 CMT8, KP.3, Phường 3, Thành phố Tây Ninh, Tỉnh Tây Ninh. 
+              Tel: 066.3 797 999 - Fax: 066.3 787 999 <br/>
+              Website: www.benhvienlengoctung.com
             </Typography>
           </Box>
         </Box>
@@ -74,7 +87,7 @@ const formatTime = useCallback((date: Date) => {
             variant="h4"
             sx={{
               fontWeight: "bold",
-              color: "#1976D2",
+              color: "#354b9c",
               fontFamily: "monospace",
             }}
           >

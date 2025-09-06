@@ -7,9 +7,25 @@ import {
   BV_QlyCapThe,
   APIKey
 } from "@/model/dangkykhambenh";
+import { IDMQuayDangKy } from "@/model/tsothutuhientai";
 import {ObBHXH} from "@/model/baohiemxahoimodel";
 
+// lấy danh sách quầy đăng ký
+export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
+  try {
+    const response = await post(`/his/call`, {
+      funcName: "dbo.sp_get_HT_DMQuayDangKy"
+    });
 
+    if (response.status === "error") {
+      return [];
+    }
+    return response.message || "";
+  } catch (error) {
+    console.error("Lỗi tìm kiếm bệnh nhân:", error);
+    return [];
+  }
+};
 // lấy danh sách bệnh nhân hiện tại ở các quầy
 export const fetchCurrentQueueNumbers = async (): Promise<IResponse<ICurrentQueueNumber[]>> => {
   try {
@@ -65,7 +81,6 @@ export const CheckBHXHByPatientInfo = async (hoten: string, cccd: string, ngaysi
     })
     if (responeAPIKey.maKetQua === "200"){
       const apiUrl = `https://egw.baohiemxahoi.gov.vn/api/egw/KQNhanLichSuKCB2024?token=${responeAPIKey.APIKey.access_token}&id_token=${responeAPIKey.APIKey.id_token}&username=${responeAPIKey.APIKey.username}&password=9FBEE874F62B8D7B486EFE31CC9E178B`;
-      console.log("url request", apiUrl);
       const response = await postExternal(apiUrl, {
         maThe: cccd,
         hoTen: hoten,
@@ -129,6 +144,7 @@ export const searchByBHYTCode = async (params: string): Promise<PatientInfo[]> =
 // Đăng ký khám bệnh
 export const dangKyKhamBenh = async (dangKy: PatientInfo): Promise<IResponse<IQueueNumber[]>> => {
   try {
+    console.log("dk",dangKy )
     const response = await post(`/his/call`, {
       userId: "",
       option: "",
