@@ -46,10 +46,11 @@ export interface IQueueNumber {
 }
 
 export interface ICurrentQueueNumber {
-  MaQuay: string;
+  MaQuay?: string | null;
   Hoten: string; 
   NamSinh: number; 
   STT: number;
+  TrangThai: number
 }
 
 export interface IDangKyKhamBenh {

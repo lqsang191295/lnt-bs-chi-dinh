@@ -27,13 +27,16 @@ export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
   }
 };
 // lấy danh sách bệnh nhân hiện tại ở các quầy
-export const fetchCurrentQueueNumbers = async (): Promise<IResponse<ICurrentQueueNumber[]>> => {
+export const fetchCurrentQueueNumbers = async (all: boolean, maQuay: string | null): Promise<IResponse<ICurrentQueueNumber[]>> => {
   try {
     const response = await post(`/his/call`, {
       userId: "",
       option: "",
       funcName: "dbo.sp_get_danhsachdangkyhientai_trangthai",
-      paraData: [],
+      paraData: [
+        { paraName: "all", paraValue: all },
+        { paraName: "maQuay", paraValue: maQuay },
+      ],
     });
     if (response.status === "error") {
       return {
@@ -110,7 +113,6 @@ export const searchPatientInfoByType = async (params: string, type: number): Pro
         { paraName: "type", paraValue: type || "" },
       ],
     });
-
     if (response.status === "error") {
       return [];
     }
@@ -144,7 +146,6 @@ export const searchByBHYTCode = async (params: string): Promise<PatientInfo[]> =
 // Đăng ký khám bệnh
 export const dangKyKhamBenh = async (dangKy: PatientInfo): Promise<IResponse<IQueueNumber[]>> => {
   try {
-    console.log("dk",dangKy )
     const response = await post(`/his/call`, {
       userId: "",
       option: "",

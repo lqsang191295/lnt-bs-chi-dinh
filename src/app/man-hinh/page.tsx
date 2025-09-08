@@ -1,6 +1,5 @@
 "use client"
 
-import type { JSX } from "react"
 import {fetchCurrentQueueNumbers, getDM_QuayDangKy} from "@/actions/act_dangkykhambenh"
 import HeaderBVLNT from "@/components/HeaderBVLNT"
 import { useState, useEffect } from "react"
@@ -11,7 +10,7 @@ import {
   Paper,
   Chip,
 } from "@mui/material"
-import { LocalHospital, HealthAndSafety, MedicalServices } from "@mui/icons-material"
+import { Person } from "@mui/icons-material"
 
 interface QueueData {
   id: string
@@ -24,11 +23,6 @@ interface QueueData {
 }
 
 export default function QueueDisplayPage() {
-  const iconMap: Record<string, JSX.Element> = {
-  LocalHospital: <LocalHospital sx={{ fontSize: 18, color: "#2196F3" }} />,
-  MedicalServices: <MedicalServices sx={{ fontSize: 18, color: "#4CAF50" }} />,
-  HealthAndSafety: <HealthAndSafety sx={{ fontSize: 18, color: "#FF9800" }} />,
-};
   const [queueData, setQueueData] = useState<QueueData[]>([])
   useEffect(() => {
     const DM_Quay = async () => {
@@ -53,11 +47,11 @@ export default function QueueDisplayPage() {
     };
     DM_Quay();
   }, [])
-  // Simulate queue number updates
+
   useEffect(() => {
     const loadQueueNumbers = async () => {
       try {
-        const respone = await fetchCurrentQueueNumbers();
+        const respone = await fetchCurrentQueueNumbers(false, null);
         const data = respone?.data || [];
 
         // Build a lookup for fetched items
@@ -137,7 +131,7 @@ export default function QueueDisplayPage() {
             sx={{
               display: "grid",
               gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-              gap: 2,
+              gap: 0.5,
               height: "100%",
             }}
           >            
@@ -146,78 +140,42 @@ export default function QueueDisplayPage() {
                 key={queue.id}
                 elevation={3}
                 sx={{
-                  p: 2,
-                  borderRadius: 3,
+                  pr: 1,
+                  pl: 1,
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "space-between",
                   gap: 3,
-                  background: "rgba(255,255,255,0.95)",
                 }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 3, minWidth: 0 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
                   <Chip
-                    icon={iconMap[queue.icon]}
                     label={queue.title}
                     sx={{
                       "& .MuiChip-icon": { color: "inherit !important" },
-                      background: `linear-gradient(135deg, ${queue.color}20 0%, ${queue.color}30 100%)`,
+                      background: `transparent`,
                       color: queue.color,
                       fontWeight: "bold",
-                      fontSize: "clamp(0.8rem, 1.4vw, 1rem)",
-                      height: { xs: 32, sm: 36, md: 40 },
-                      border: `2px solid ${queue.color}40`,
+                      fontSize: "clamp(1rem, 1.4vw, 1rem)",
                     }}
                   />
-
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography noWrap variant="body1" sx={{ fontWeight: "bold", color: "#333", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{queue.patientName}</Typography>
-                    {/* <Typography variant="body2" sx={{ color: "#666", fontWeight: "medium" }}>{queue.birthYear}</Typography> */}
+                  {queue.patientName && (
+                    <Box sx={{ minWidth: 0 }}>
+                    <Typography noWrap variant="body1" sx={{ fontWeight: "bold", color: "#333", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}><Person color="primary" sx={{pb: "5px"}} />{queue.patientName}</Typography>
+                    <Typography variant="body2" sx={{ color: "#666", fontStyle: "italic" }}>Năm sinh: {queue.birthYear}</Typography>
                   </Box>
+                  )}
                 </Box>
 
                 <Box sx={{ flex: "0 0 auto", ml: "auto" }}>
-                  <Paper elevation={2} sx={{ p: 1.5, borderRadius: 2, minWidth: 80, textAlign: "center", background: `linear-gradient(135deg, ${queue.color}15 0%, ${queue.color}25 100%)`, border: `3px solid ${queue.color}` }}>
+                  <Paper elevation={2} sx={{ p: 1.5, borderRadius: 2, minWidth: 80, textAlign: "center", background: `linear-gradient(135deg, ${queue.color}15 0%, ${queue.color}25 100%)`, }}>
                     <Typography variant="h5" sx={{ fontWeight: "bold", color: queue.color, fontFamily: "monospace", lineHeight: 1 }}>{queue.currentNumber.toString().padStart(3, "0")}</Typography>
                   </Paper>
                 </Box>
               </Paper>
             ))}
           </Box>
-        </Box>
-
-        {/* footer 10% */}
-        <Box sx={{ flex: "0 0 10vh", display: "flex", alignItems: "center" }}>
-          <Paper
-            elevation={2}
-            sx={{
-              width: "100%",
-              p: 2,
-              borderRadius: 3,
-              background: "rgba(255, 255, 255, 0.9)",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
-              <Box sx={{ textAlign: "left", flex: "1 1 33%" }}>
-                <Typography variant="h6" sx={{ color: "#1976D2", fontWeight: "bold", fontSize: "clamp(0.9rem, 1.8vw, 1.1rem)" }}>
-                  Tổng đài: <Box component="span" sx={{ fontWeight: 900 }}>02763 797999</Box>
-                </Typography>
-              </Box>
-
-              <Box sx={{ textAlign: "center", flex: "1 1 33%" }}>
-                <Typography variant="h6" sx={{ color: "#1976D2", fontWeight: "bold", fontSize: "clamp(0.9rem, 1.8vw, 1.1rem)" }}>
-                  Hotline: <Box component="span" sx={{ fontWeight: 900 }}>1900 561 510</Box>
-                </Typography>
-              </Box>
-
-              <Box sx={{ textAlign: "right", flex: "1 1 33%" }}>
-                <Typography variant="h6" sx={{ color: "#1976D2", fontWeight: "bold", fontSize: "clamp(0.9rem, 1.8vw, 1.1rem)" }}>
-                  Cấp cứu: <Box component="span" sx={{ fontWeight: 900 }}>0888 79 52 59</Box>
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
         </Box>
       </Container>
     </Box>
