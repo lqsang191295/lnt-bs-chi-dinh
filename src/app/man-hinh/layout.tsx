@@ -1,26 +1,20 @@
-import type React from "react"
-import type { Metadata } from "next"
-import  {ThemeRegistry}  from "@/components/ThemeRegistry"
-import "./globals.css"
-
-export const metadata: Metadata = {
-  title: "Màn hình chờ đăng ký khám bệnh",
-  description: "Màn hình hiển thị số thứ tự bệnh viện",
-  generator: "v0.app",
-}
+"use client";
+import HeadMetadata from "@/components/HeadMetadata";
+import { Box } from "@mui/material";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
-        <ThemeRegistry>
-          {children}
-        </ThemeRegistry>
-      </body>
-    </html>
-  )
+    <>
+      <HeadMetadata title="Màn hình chờ" />
+      <Box className="flex w-screen h-screen">
+        <Box className="bg-blue-100 h-full w-full">{children}</Box>
+      </Box>
+      <Toaster />
+    </>
+  );
 }

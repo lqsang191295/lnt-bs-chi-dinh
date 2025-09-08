@@ -1,30 +1,20 @@
-import type { Metadata } from "next"
-import { DM_Sans } from "next/font/google"
-import "./globals.css"
-import RootLayoutClient from "./RootLayoutClient"
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-dm-sans",
-})
-
-export const metadata: Metadata = {
-  title: "Đăng ký khám bệnh",
-  description: "Hệ thống đăng ký thông tin bệnh nhân",
-  generator: "v0.app",
-}
+"use client";
+import HeadMetadata from "@/components/HeadMetadata";
+import { Box } from "@mui/material";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en" className={dmSans.variable}>
-      <body>
-        <RootLayoutClient>{children}</RootLayoutClient>
-      </body>
-    </html>
-  )
+    <>
+      <HeadMetadata title="Đăng ký khám" />
+      <Box className="flex w-screen h-screen">
+        <Box className="bg-blue-100 h-full w-full">{children}</Box>
+      </Box>
+      <Toaster />
+    </>
+  );
 }
