@@ -486,7 +486,18 @@ const formatDateForInput = useCallback((date: Date): string => {
     const day = String(date.getDate()).padStart(2, "0");
     return `${day}/${month}/${year}`;
   }, []);
+  useEffect(() => {
+    const handler = () => {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+      document.removeEventListener("click", handler);
+    };
 
+    document.addEventListener("click", handler);
+
+    return () => document.removeEventListener("click", handler);
+  }, []);
 // Đồng bộ hóa giữa datePickerHook và patientInfo.birthDateString
 useEffect(() => {
   if (datePickerHook.value) {
