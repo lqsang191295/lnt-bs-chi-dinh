@@ -47,7 +47,18 @@ export default function QueueDisplayPage() {
     };
     DM_Quay();
   }, [])
+  useEffect(() => {
+    const handler = () => {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+      document.removeEventListener("click", handler);
+    };
 
+    document.addEventListener("click", handler);
+
+    return () => document.removeEventListener("click", handler);
+  }, []);
   useEffect(() => {
     const loadQueueNumbers = async () => {
       try {

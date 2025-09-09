@@ -165,7 +165,6 @@ export const dangKyKhamBenh = async (dangKy: PatientInfo): Promise<IResponse<IQu
         { paraName: "anhBN", paraValue: dangKy.anh || null },
       ],
     });
-    console.log("Response đăng ký khám bệnh:", response);
     if (response.message === null || response.message === undefined) {
       return {
         status: "error",

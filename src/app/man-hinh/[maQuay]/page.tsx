@@ -278,7 +278,18 @@ export default function QueueDisplay() {
   const params = useParams();
   const maQuays = params?.maQuay || "";
   const maQuay = Array.isArray(maQuays) ? maQuays[0] : maQuays;
+  useEffect(() => {
+    const handler = () => {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+      document.removeEventListener("click", handler);
+    };
 
+    document.addEventListener("click", handler);
+
+    return () => document.removeEventListener("click", handler);
+  }, []);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
