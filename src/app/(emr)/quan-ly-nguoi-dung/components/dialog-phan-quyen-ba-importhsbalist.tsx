@@ -85,7 +85,7 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
         formatDate(toDate)    // Sử dụng toDate từ component chính
       );
       // Set trạng thái mặc định là phân quyền (ctrangthai = 1)
-      const hsbaWithPermission = (result || []).map(item => ({
+      const hsbaWithPermission = (result || []).map((item: IPhanQuyenHoSoBenhAn) => ({
         ...item,
         ctrangthai: 1
       }));

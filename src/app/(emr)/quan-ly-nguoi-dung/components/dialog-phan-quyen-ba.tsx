@@ -545,7 +545,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                 type="file"
                 inputRef={fileInputRef}
                 onChange={handleFileUpload}
-                accept=".xlsx,.xls"
+                inputProps={{ accept: ".xlsx,.xls" }}
                 sx={{ display: "none" }}
               />
             </Box>
