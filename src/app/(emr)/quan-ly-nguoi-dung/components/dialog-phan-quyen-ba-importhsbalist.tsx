@@ -53,14 +53,52 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
   const [isLoadingData, setIsLoadingData] = useState(false);
 
   // Fetch HSBA từ danh sách số vào viện
+  const fetchHSBAFromSoVaoVien = async () => {
+    if (!selectedUser || importedSoVaoVienList.length === 0) return;
+
+    setIsLoadingData(true);
+    try {
+      // Chuyển mảng số vào viện thành chuỗi: "123,124,125,126"
+      const soVaoVienString = importedSoVaoVienList.join(',');
+      //console.log("Fetching HSBA for SoVaoVien:", soVaoVienString);
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+      
+      // Sử dụng popt từ component chính
+      const searchPopt = popt;
+
+      const result = await getphanquyenbaDSSovaovien(
+        loginedUser.ctaikhoan,
+        searchPopt,
+        soVaoVienString,
+        formatDate(fromDate), // Sử dụng fromDate từ component chính
+        formatDate(toDate)    // Sử dụng toDate từ component chính
+      );
+      // Set trạng thái mặc định là phân quyền (ctrangthai = 1)
+      const hsbaWithPermission = (result || []).map((item: IPhanQuyenHoSoBenhAn) => ({
+        ...item,
+        ctrangthai: 1
+      }));
+      
+      setDsHSBAImported(hsbaWithPermission);
+    } catch (error) {
+      console.error("Error fetching HSBA from SoVaoVien:", error);
+      ToastError("Lỗi khi tải danh sách HSBA từ số vào viện");
+      setDsHSBAImported([]);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
   React.useEffect(() => {
     if (open && importedSoVaoVienList.length > 0) {
       fetchHSBAFromSoVaoVien();
     }
-  }, [open, importedSoVaoVienList]);
-
-  const fetchHSBAFromSoVaoVien = async () => {
-    if (!selectedUser || importedSoVaoVienList.length === 0) return;
+  }, [open, importedSoVaoVienList, fetchHSBAFromSoVaoVien]);
 
     setIsLoadingData(true);
     try {
