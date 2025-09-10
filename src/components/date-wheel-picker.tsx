@@ -2,10 +2,78 @@
 
 import type React from "react"
 import { useEffect, useRef, useState, useCallback } from "react"
-import { cn } from "@/utils/twMerge"
-import { Calendar, X } from "lucide-react"
+import { Box, Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton, Typography } from "@mui/material"
+import { CalendarToday as CalendarIcon, Close as CloseIcon } from "@mui/icons-material"
+import { styled } from "@mui/material/styles"
 import { MIN_YEAR, MAX_YEAR, START_OF_YEAR } from "@/utils/dateUtils"
-import { useClickOutside } from "@/utils/useClickOutside"
+
+// Styled components
+const DateFieldContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+  padding: theme.spacing(1, 1.5),
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: theme.shape.borderRadius,
+  cursor: 'pointer',
+  transition: 'border-color 0.2s',
+  '&:hover': {
+    borderColor: theme.palette.primary.main,
+    opacity: 0.8
+  }
+}))
+
+const WheelContainer = styled(Box)({
+  position: 'relative'
+})
+
+const SelectionHighlight = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  backgroundColor: theme.palette.primary.main,
+  opacity: 0.1,
+  border: `1px solid ${theme.palette.primary.main}`,
+  borderLeft: 'none',
+  borderRight: 'none',
+  pointerEvents: 'none',
+  zIndex: 10
+}))
+
+const GradientOverlay = styled(Box)({
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  height: 40,
+  pointerEvents: 'none',
+  zIndex: 20
+})
+
+const ScrollContainer = styled(Box)({
+  overflow: 'hidden',
+  userSelect: 'none',
+  cursor: 'grab',
+  '&:active': {
+    cursor: 'grabbing'
+  }
+})
+
+const WheelItem = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'isSelected'
+})<{ isSelected: boolean }>(({ theme, isSelected }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.2s',
+  textAlign: 'center',
+  fontWeight: 500,
+  color: isSelected ? theme.palette.primary.main : theme.palette.text.secondary,
+  fontSize: isSelected ? '1.125rem' : '1rem',
+  transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+  '&:hover': {
+    color: theme.palette.text.primary
+  }
+}))
 
 interface DateWheelPickerProps {
   value: Date
@@ -222,49 +290,52 @@ const Wheel = ({ items, selectedIndex, onSelectionChange, className, itemHeight 
   }, [])
 
   return (
-    <div className={cn("relative", className)}>
-      <div
-        className="absolute left-0 right-0 bg-primary/10 border-y border-primary/20 pointer-events-none z-10"
-        style={{
+    <WheelContainer className={className}>
+      <SelectionHighlight
+        sx={{
           top: `${itemHeight}px`,
           height: `${itemHeight}px`,
         }}
       />
 
-      <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-background to-transparent pointer-events-none z-20" />
-      <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none z-20" />
+      <GradientOverlay 
+        sx={{ 
+          top: 0,
+          background: 'linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%)'
+        }} 
+      />
+      <GradientOverlay 
+        sx={{ 
+          bottom: 0,
+          background: 'linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%)'
+        }} 
+      />
 
-      <div
+      <ScrollContainer
         ref={wheelRef}
-        className="overflow-hidden select-none cursor-grab active:cursor-grabbing"
-        style={{ height: `${itemHeight * 3}px` }}
+        sx={{ height: `${itemHeight * 3}px` }}
         onScroll={handleScroll}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div style={{ height: `${itemHeight}px` }} />
+        <Box sx={{ height: `${itemHeight}px` }} />
 
         {items.map((item, index) => (
-          <div
+          <WheelItem
             key={index}
-            className={cn(
-              "flex items-center justify-center transition-all duration-200 text-center font-medium",
-              index === selectedIndex
-                ? "text-primary text-lg scale-110"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-            style={{ height: `${itemHeight}px` }}
+            isSelected={index === selectedIndex}
+            sx={{ height: `${itemHeight}px` }}
             onClick={() => onSelectionChange(index)}
           >
             {item}
-          </div>
+          </WheelItem>
         ))}
 
-        <div style={{ height: `${itemHeight}px` }} />
-      </div>
-    </div>
+        <Box sx={{ height: `${itemHeight}px` }} />
+      </ScrollContainer>
+    </WheelContainer>
   )
 }
 
@@ -284,13 +355,6 @@ export const DateWheelPickerPopup = ({
   maxYear?: number
 }) => {
   const [tempValue, setTempValue] = useState(value)
-  
-  // Sử dụng click outside để đóng popup
-  const popupRef = useClickOutside<HTMLDivElement>(() => {
-    if (isOpen) {
-      onClose()
-    }
-  }, isOpen)
 
   useEffect(() => {
     if (isOpen) {
@@ -361,56 +425,56 @@ export const DateWheelPickerPopup = ({
   const monthIndex = currentMonth
   const yearIndex = years.findIndex((year) => year === currentYear)
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div ref={popupRef} className="bg-background rounded-lg border shadow-lg w-full max-w-lg">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="text-lg font-semibold">Chọn ngày</h3>
-          <button onClick={handleCancel} className="p-1 hover:bg-muted rounded-sm transition-colors">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+    <Dialog
+      open={isOpen}
+      onClose={handleCancel}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{
+        paper: {
+          sx: { borderRadius: 2 },
+        },
+      }}
+    >
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="body1" sx={{fontWeight:"bold"}}>Chọn ngày</Typography>
+        <IconButton onClick={handleCancel} size="small">
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
 
-        {/* Wheel Picker */}
-        <div className="p-4">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <div className="text-xs font-medium text-muted-foreground mb-2 text-center">Ngày</div>
-              <Wheel items={availableDays} selectedIndex={Math.max(0, dayIndex)} onSelectionChange={handleDayChange} />
-            </div>
+      <DialogContent>
+        <Box sx={{ display: 'flex', gap: 2, py: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: 'text.secondary', fontWeight:"bold" }}>
+              Ngày
+            </Typography>
+            <Wheel items={availableDays} selectedIndex={Math.max(0, dayIndex)} onSelectionChange={handleDayChange} />
+          </Box>
 
-            <div className="flex-1">
-              <div className="text-xs font-medium text-muted-foreground mb-2 text-center">Tháng</div>
-              <Wheel items={months} selectedIndex={monthIndex} onSelectionChange={handleMonthChange} />
-            </div>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: 'text.secondary', fontWeight:"bold" }}>
+              Tháng
+            </Typography>
+            <Wheel items={months} selectedIndex={monthIndex} onSelectionChange={handleMonthChange} />
+          </Box>
 
-            <div className="flex-1">
-              <div className="text-xs font-medium text-muted-foreground mb-2 text-center">Năm</div>
-              <Wheel items={years} selectedIndex={Math.max(0, yearIndex)} onSelectionChange={handleYearChange} />
-            </div>
-          </div>
-        </div>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: 'text.secondary', fontWeight:"bold" }}>
+              Năm
+            </Typography>
+            <Wheel items={years} selectedIndex={Math.max(0, yearIndex)} onSelectionChange={handleYearChange} />
+          </Box>
+        </Box>
+      </DialogContent>
 
-        {/* Footer */}
-        <div className="flex gap-2 p-4 border-t">
-          <button
-            onClick={handleCancel}
-            className="flex-1 px-4 py-2 border border-input rounded-md hover:bg-muted transition-colors"
-          >
-            Hủy
-          </button>
-          <button
-            onClick={handleConfirm}
-            className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Xác nhận
-          </button>
-        </div>
-      </div>
-    </div>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={handleConfirm} variant="contained" fullWidth sx={{pt:"20px", pb:"20px", fontSize:"1.2rem"}}>
+          Xác nhận
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }
 
@@ -439,6 +503,7 @@ export const useDateWheelPicker = (initialValue: Date = START_OF_YEAR) => {
   }
 }
 
+// Giữ nguyên tên và interface để không cần thay đổi nơi import
 export const DateWheelPicker = ({
   value,
   onChange,
@@ -458,15 +523,13 @@ export const DateWheelPicker = ({
   }
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Text Field */}
-      <div
-        className="flex items-center gap-2 px-3 py-2 border border-input bg-background rounded-md cursor-pointer hover:border-primary/50 transition-colors"
-        onClick={() => setIsOpen(true)}
-      >
-        <Calendar className="h-4 w-4 text-muted-foreground" />
-        <span className="flex-1 text-sm">{value ? formatDate(value) : placeholder}</span>
-      </div>
+    <Box className={className} sx={{ position: 'relative' }}>
+      <DateFieldContainer onClick={() => setIsOpen(true)}>
+        <CalendarIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+        <Typography variant="body2" sx={{ flex: 1 }}>
+          {value ? formatDate(value) : placeholder}
+        </Typography>
+      </DateFieldContainer>
 
       <DateWheelPickerPopup
         isOpen={isOpen}
@@ -476,6 +539,6 @@ export const DateWheelPicker = ({
         minYear={minYear}
         maxYear={maxYear}
       />
-    </div>
+    </Box>
   )
 }

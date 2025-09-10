@@ -515,23 +515,6 @@ useEffect(() => {
   }
 }, [datePickerHook.value, formatDateForInput]);
 
-  // State cho picker Tỉnh/Xã
-  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
-  const [locationTemp, setLocationTemp] = useState<{ province: string; commune: string }>({ province: "", commune: "" });
-  const [selectedLocation, setSelectedLocation] = useState<{ province: string; commune: string }>({ province: "", commune: "" });
-  // Dữ liệu sẽ được fill sau
-  const provinces: string[] = [];
-  const communesByProvince: Record<string, string[]> = {};
-  const openLocationPicker = () => {
-    setLocationTemp(selectedLocation);
-    setLocationPickerOpen(true);
-  };
-  const closeLocationPicker = () => setLocationPickerOpen(false);
-  const confirmLocationPicker = () => {
-    setSelectedLocation(locationTemp);
-    setLocationPickerOpen(false);
-  };
-
 useEffect(() => {
   const initalCamera = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -691,12 +674,12 @@ useEffect(() => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #E3F2FD 0%, #E8F5E8 100%)",
+        height: "100vh",
+        background: "white",
       }}
     >
-      <Container maxWidth="xl" sx={{position: "relative"}}>
-        <HeaderBVLNT />
+      <Container maxWidth="xl" sx={{position: "relative", height: "90%",}}>
+        {currentStep === "form" && (<HeaderBVLNT />)}
           {/* Exam Type Selection */}
           {currentStep === "form" && (
           <Box>
@@ -710,15 +693,13 @@ useEffect(() => {
                     size={4}
                     key={type.id}
                     sx={{
-                      // transform: isSelected ? `translateX(${getTransformOffset()}%)` : "translateX(0)",
                       transition: "all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
                       opacity: isHidden ? 0.5 : 1,
-                      // visibility: isHidden ? "hidden" : "visible",
                       minWidth: 250,
                     }}
                   >
-                    {/* <Fade in={!isHidden} timeout={isSelected ? 0 : 500 + index * 150}> */}
                       <Card
+                      elevation={3}
                         sx={{
                           cursor: "pointer",
                           transition: "all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
@@ -771,7 +752,6 @@ useEffect(() => {
                           </Typography>
                         </CardContent>
                       </Card>
-                    {/* </Fade> */}
                   </Grid>
                 )
               })}
@@ -781,7 +761,7 @@ useEffect(() => {
         )}
 
         {currentStep === "form" && (
-            <Card sx={{ maxWidth: 1920, mx: "auto" }}>
+            <Card elevation={3} sx={{ maxWidth: 1920, mx: "auto" }}>
               <CardContent sx={{ p: 2 }}>                        
                 <Grid container spacing={3}>
                 <Grid size={4}>
@@ -971,7 +951,6 @@ useEffect(() => {
                       />
                   </Grid>
                   <Grid size={2}>
-                  {/* <DateWheelPicker value={selectedDate} onChange={setSelectedDate} /> */}
                   <DebouncedTextField
                       fullWidth
                       label="Ngày sinh"
@@ -1000,46 +979,31 @@ useEffect(() => {
                         onChange={datePickerHook.setValue}
                       />
                   </Grid>
-                  <Grid size={2} mt={-1}>
-                    <FormControl
-                    fullWidth
-                      component="fieldset"
-                      sx={{
-                        border: "1px solid #ccc",
-                        borderRadius: 2,
-                      }}
+                  <Grid size={2}>
+                    <RadioGroup
+                      row
+                      value={patientInfo.gender || "Nam"}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, gender: e.target.value })}
                     >
-                      <FormLabel
-                        component="legend"
-                        sx={{ fontSize: "0.9rem", fontWeight: 600 }}
-                      >
-                        Giới tính
-                      </FormLabel>
-                      <RadioGroup
-                        row
-                        value={patientInfo.gender || "Nam"}
-                        onChange={(e) => setPatientInfo({ ...patientInfo, gender: e.target.value })}
-                      >
-                        <FormControlLabel
-                          label={
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                               Nam
-                            </Box>
-                          }
-                          value="Nam"
-                          control={<Radio sx={{ color: "#9333ea", pl:2 }} />}
-                        />
-                        <FormControlLabel
-                          value="Nữ"
-                          control={<Radio sx={{ color: "#9333ea" }} />}
-                          label={
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                               Nữ
-                            </Box>
-                          }
-                        />
-                      </RadioGroup>
-                    </FormControl>
+                      <FormControlLabel
+                        label={
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              Nam
+                          </Box>
+                        }
+                        value="Nam"
+                        control={<Radio sx={{ color: "#9333ea"}} />}
+                      />
+                      <FormControlLabel
+                        value="Nữ"
+                        control={<Radio sx={{ color: "#9333ea" }} />}
+                        label={
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              Nữ
+                          </Box>
+                        }
+                      />
+                    </RadioGroup>
                   </Grid>
                   <Grid size={12}>
                     <DebouncedTextField
@@ -1074,27 +1038,6 @@ useEffect(() => {
                                 >
                                   <Keyboard />
                                 </IconButton>
-                              </InputAdornment>
-                            ),
-                            sx: { height: 56, fontSize: "1.1rem" },
-                          },
-                          inputLabel: {
-                            sx: { fontSize: "1.1rem", fontWeight: 600 },
-                          },
-                        }}
-                      />
-                  </Grid>
-                  <Grid size={4} hidden>
-                  <DebouncedTextField
-                      fullWidth
-                      label="Tỉnh, xã"
-                      onClick={openLocationPicker}
-                      // onChange={(e) => setPatientInfo({ ...patientInfo, birthDateString: e.target.value })}
-                        slotProps={{
-                          input: {
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <CalendarToday sx={{ color: "#9333ea" }} />
                               </InputAdornment>
                             ),
                             sx: { height: 56, fontSize: "1.1rem" },
@@ -1198,37 +1141,8 @@ useEffect(() => {
             </Card>
           )}
           {currentStep === "success" && (
-            <Card sx={{ maxWidth: 900, mx: "auto", textAlign: "center" }}>
+            <Card elevation={3} sx={{ maxWidth: 1200, mx: "auto", textAlign: "center" }}>
               <CardContent sx={{ p: 4}}>
-                {/* <Box
-                  sx={{
-                    width: 96,
-                    height: 96,
-                    mx: "auto",
-                    mb: 3,
-                    bgcolor: "secondary.light",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: 0.6,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      bgcolor: "secondary.main",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <CheckCircle sx={{ fontSize: 24, color: "white" }} />
-                  </Box>
-                </Box> */}
-
                 <Typography variant="h3" component="h2" sx={{ fontWeight: "bold", color: "secondary.main", mb: 2 }}>
                   Đăng ký thành công!
                 </Typography>
@@ -1376,73 +1290,6 @@ useEffect(() => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPatientSelectOpen(false)} variant="outlined">Đóng</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={locationPickerOpen}
-        onClose={closeLocationPicker}
-        fullScreen
-        PaperProps={{
-          sx: { p: 2,
-            width: "800px",
-            height: "600px"
-           }
-        }}
-      >
-        <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>Chọn Tỉnh / Xã</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={6}>
-              <Typography sx={{ mb: 1, fontWeight: 600 }}>Tỉnh</Typography>
-              <Box sx={{ maxHeight: '60vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
-                {(provinces.length ? provinces : ["(Chưa có dữ liệu)"]).map((p) => (
-                  <Box
-                    key={p}
-                    onClick={() => setLocationTemp(prev => ({ ...prev, province: p, commune: "" }))}
-                    sx={{
-                      p: 2,
-                      fontSize: '1.25rem',
-                      cursor: provinces.length ? 'pointer' : 'default',
-                      bgcolor: locationTemp.province === p ? 'primary.light' : 'transparent',
-                      color: locationTemp.province === p ? 'primary.contrastText' : 'inherit',
-                      '&:hover': { bgcolor: provinces.length ? 'primary.light' : 'transparent', color: provinces.length ? 'primary.contrastText' : 'inherit' }
-                    }}
-                  >
-                    {p}
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-            <Grid size={6}>
-              <Typography sx={{ mb: 1, fontWeight: 600 }}>Xã</Typography>
-              <Box sx={{ maxHeight: '60vh', overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 2 }}>
-                {(
-                  (locationTemp.province && communesByProvince[locationTemp.province])
-                    ? communesByProvince[locationTemp.province]
-                    : ["(Chưa có dữ liệu)"]
-                ).map((c) => (
-                  <Box
-                    key={c}
-                    onClick={() => provinces.length ? setLocationTemp(prev => ({ ...prev, commune: c })) : null}
-                    sx={{
-                      p: 2,
-                      fontSize: '1.25rem',
-                      cursor: (locationTemp.province && communesByProvince[locationTemp.province]) ? 'pointer' : 'default',
-                      bgcolor: locationTemp.commune === c ? 'primary.light' : 'transparent',
-                      color: locationTemp.commune === c ? 'primary.contrastText' : 'inherit',
-                      '&:hover': { bgcolor: (locationTemp.province && communesByProvince[locationTemp.province]) ? 'primary.light' : 'transparent', color: (locationTemp.province && communesByProvince[locationTemp.province]) ? 'primary.contrastText' : 'inherit' }
-                    }}
-                  >
-                    {c}
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between' }}>
-          <Button variant="outlined" size="large" onClick={closeLocationPicker}>Hủy</Button>
-          <Button variant="contained" size="large" onClick={confirmLocationPicker} disabled={!locationTemp.province || !locationTemp.commune}>Xác nhận</Button>
         </DialogActions>
       </Dialog>
        <Dialog
