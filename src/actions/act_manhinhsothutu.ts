@@ -3,6 +3,7 @@ import { IThuTuHienTai, IDMQuayDangKy } from "@/model/tsothutuhientai";
 export const getCurrentSTTQuay = async (): Promise<IThuTuHienTai[]> => {
   try {
     const response = await post(`/his/call`, {
+      optionId: "3",
       funcName: "dbo.sp_get_current_sothutu_byquay"
     });
 
@@ -19,6 +20,7 @@ export const getCurrentSTTQuay = async (): Promise<IThuTuHienTai[]> => {
 export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
   try {
     const response = await post(`/his/call`, {
+      optionId: "3",
       funcName: "dbo.sp_get_HT_DMQuayDangKy"
     });
 

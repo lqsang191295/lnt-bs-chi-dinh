@@ -64,7 +64,6 @@ export default function QueueDisplayPage() {
       try {
         const respone = await fetchCurrentQueueNumbers(false, null);
         const data = respone?.data || [];
-
         // Build a lookup for fetched items
         type FetchedItem = { MaQuay?: string; STT?: number; Hoten?: string; NamSinh?: number };
         const fetchedMap = new Map<string, FetchedItem>();
