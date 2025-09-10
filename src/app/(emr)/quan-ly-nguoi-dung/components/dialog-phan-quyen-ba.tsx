@@ -28,12 +28,12 @@ import {
 import { DatePicker } from "@mui/x-date-pickers";
 import React, { useState, useRef } from "react";
 import * as XLSX from 'xlsx';
+import DialogPhanQuyenBaImportedHSBAList from "./dialog-phan-quyen-ba-importhsbalist";
 
 interface DialogPhanQuyenBaProps {
   selectedUser: IUserItem | null;
   khoaList: { value: string; label: string }[];
 }
-
 const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
   selectedUser,
   khoaList,
@@ -42,11 +42,15 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
   const [selectedKhoaBA, setSelectedKhoaBA] = useState("all");
   const [fromDate, setFromDate] = useState<Date>(new Date());
   const [toDate, setToDate] = useState<Date>(new Date());
-  const [popt, setPopt] = useState("3");
+  const [popt, setPopt] = useState("1");
   const [dsHSBA, setDsHSBA] = useState<IPhanQuyenHoSoBenhAn[]>([]);
   const [showGrantedOnly, setShowGrantedOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // States cho dialog import
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importedSoVaoVienList, setImportedSoVaoVienList] = useState<string[]>([]);
 
   const fetchHSBA = async () => {
     if (!selectedUser) return;
@@ -60,7 +64,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
       return `${year}-${month}-${day}`;
     };
 
-    // Tăng popt lên 2 nếu chỉ hiển thị HSBA đã phân quyền
+    // Tăng popt lên 1 nếu chỉ hiển thị HSBA đã phân quyền
     const searchPopt = showGrantedOnly ? (parseInt(popt) + 2).toString() : popt;
 
     try {
@@ -155,34 +159,52 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       
-      // Chuyển đổi sang JSON
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      // Chuyển đổi sang JSON với header mapping
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+        header: 1,
+        defval: ''
+      });
       
+      if (jsonData.length < 2) {
+        ToastError("File Excel phải có ít nhất 2 hàng (header + data)");
+        return;
+      }
+
+      // Kiểm tra header - tìm cột "Số vào viện"
+      const headers = jsonData[0] as string[];
+      const soVaoVienColIndex = headers.findIndex(h => 
+        h && h.toLowerCase().includes('số vào viện')
+      );
+      
+      if (soVaoVienColIndex === -1) {
+        ToastError("File Excel phải có cột 'Số vào viện'");
+        return;
+      }
+
       // Bỏ qua hàng tiêu đề (hàng đầu tiên)
-      const dataRows = jsonData.slice(1) as any[][];
+      const dataRows = jsonData.slice(1) as string[][];
       
       if (dataRows.length === 0) {
         ToastError("File Excel không có dữ liệu");
         return;
       }
 
-      // Lấy danh sách số vào viện từ cột đầu tiên
+      // Lấy danh sách số vào viện từ cột tương ứng
       const soVaoVienList = dataRows
-        .map(row => row[0])
-        .filter(soVaoVien => soVaoVien && soVaoVien.toString().trim() !== '');
+        .map(row => row[soVaoVienColIndex])
+        .filter(soVaoVien => soVaoVien && soVaoVien.toString().trim() !== '')
+        .map(soVaoVien => soVaoVien.toString().trim());
 
       if (soVaoVienList.length === 0) {
-        ToastError("Không tìm thấy số vào viện trong file Excel");
+        ToastError("Không tìm thấy số vào viện hợp lệ trong file Excel");
         return;
       }
 
-      // Phân quyền hàng loạt
-      await handleBulkPermission(soVaoVienList);
+      // Lưu danh sách số vào viện và hiển thị dialog
+      setImportedSoVaoVienList(soVaoVienList);
+      setShowImportDialog(true);
       
-      ToastSuccess(`Đã phân quyền thành công cho ${soVaoVienList.length} HSBA`);
-      
-      // Tải lại dữ liệu
-      await fetchHSBA();
+      ToastSuccess(`Đã đọc thành công ${soVaoVienList.length} số vào viện từ file Excel`);
       
     } catch (error) {
       console.error("Error importing Excel:", error);
@@ -196,32 +218,71 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
     }
   };
 
-  const handleBulkPermission = async (soVaoVienList: string[]) => {
-    if (!selectedUser) return;
+  const handleExportExcel = () => {
+    if (dsHSBA.length === 0) {
+      ToastError("Không có dữ liệu để export");
+      return;
+    }
 
     try {
-      for (const soVaoVien of soVaoVienList) {
-        // Tìm HSBA theo số vào viện trong danh sách hiện tại
-        const hsba = dsHSBA.find(item => item.SoVaoVien === soVaoVien.toString());
-        
-        if (hsba) {
-          // Nếu tìm thấy trong danh sách hiện tại, phân quyền
-          await luuphanquyenba(
-            loginedUser.ctaikhoan,
-            "1",
-            selectedUser.ctaikhoan,
-            hsba.ID,
-            "1"
-          );
-        } else {
-          // Nếu không tìm thấy, có thể cần gọi API khác để tìm HSBA theo số vào viện
-          console.warn(`Không tìm thấy HSBA với số vào viện: ${soVaoVien}`);
-        }
-      }
+      // Chuẩn bị dữ liệu cho Excel
+      const exportData = dsHSBA.map(item => ({
+        'Mã BA': item.ID,
+        'Số vào viện': item.SoVaoVien,
+        'Họ tên': item.Hoten,
+        'Ngày sinh': item.Ngaysinh,
+        'Giới tính': item.Gioitinh,
+        'Địa chỉ': item.Diachi,
+        'Ngày vào': item.NgayVao,
+        'Ngày ra': item.NgayRa,
+        'Khoa điều trị': item.KhoaDieuTri,
+        'Đã phân quyền': item.ctrangthai === 1 ? 'Có' : 'Không'
+      }));
+
+      // Tạo workbook
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "HSBA");
+
+      // Auto-size columns
+      const colWidths = [
+        { wch: 10 }, // Mã BA
+        { wch: 15 }, // Số vào viện
+        { wch: 25 }, // Họ tên
+        { wch: 12 }, // Ngày sinh
+        { wch: 10 }, // Giới tính
+        { wch: 30 }, // Địa chỉ
+        { wch: 12 }, // Ngày vào
+        { wch: 12 }, // Ngày ra
+        { wch: 20 }, // Khoa điều trị
+        { wch: 15 }  // Đã phân quyền
+      ];
+      ws['!cols'] = colWidths;
+
+      // Tạo tên file với timestamp
+      const now = new Date();
+      const timestamp = now.getFullYear().toString() +
+        (now.getMonth() + 1).toString().padStart(2, '0') +
+        now.getDate().toString().padStart(2, '0') +
+        now.getHours().toString().padStart(2, '0') +
+        now.getMinutes().toString().padStart(2, '0') +
+        now.getSeconds().toString().padStart(2, '0');
+      
+      const fileName = `hsba_${timestamp}.xlsx`;
+
+      // Download file
+      XLSX.writeFile(wb, fileName);
+      
+      ToastSuccess(`Đã export thành công file ${fileName}`);
     } catch (error) {
-      console.error("Error in bulk permission:", error);
-      throw error;
+      console.error("Error exporting Excel:", error);
+      ToastError("Lỗi khi export Excel");
     }
+  };
+
+  const handleImportSuccess = () => {
+    // Reload data sau khi import thành công
+    fetchHSBA();
   };
 
   // Chọn/bỏ chọn tất cả
@@ -239,468 +300,495 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
   const isIndeterminate = dsHSBA.some(item => item.ctrangthai === 1) && !isAllSelected;
 
   return (
-    <Box
-      sx={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        border: "1px solid #ccc",
-        borderRadius: 2,
-        bgcolor: "#fff",
-        overflow: "hidden",
-      }}>
-      {/* Filter Controls */}
+    <>
       <Box
         sx={{
-          p: 2,
-          flexShrink: 0,
-          borderBottom: "1px solid #eee",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          border: "1px solid #ccc",
+          borderRadius: 2,
+          bgcolor: "#fff",
+          overflow: "hidden",
         }}>
+        {/* Filter Controls */}
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            flexWrap: "wrap",
-            mb: 2,
+            p: 2,
+            flexShrink: 0,
+            borderBottom: "1px solid #eee",
           }}>
-          {/* Select Khoa */}
-          <Select
-            size="small"
-            value={selectedKhoaBA}
-            onChange={(e) => setSelectedKhoaBA(e.target.value)}
-            displayEmpty
+          <Box
             sx={{
-              width: 280,
-              minWidth: 280,
-              maxWidth: 280,
-              height: 40,
-              flexShrink: 0,
-              "& .MuiSelect-select": {
-                fontSize: "0.875rem",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              },
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              flexWrap: "wrap",
+              mb: 2,
             }}>
-            {khoaList.map((item) => (
-              <MenuItem key={item.value} value={item.value}>
-                {item.label}
-              </MenuItem>
-            ))}
-          </Select>
-
-          {/* Radio Group */}
-          <FormControl sx={{ flexShrink: 0 }}>
-            <RadioGroup
-              row
-              name="popt-radio-group"
-              value={popt}
-              onChange={(e) => setPopt(e.target.value)}
+            {/* Select Khoa */}
+            <Select
+              size="small"
+              value={selectedKhoaBA}
+              onChange={(e) => setSelectedKhoaBA(e.target.value)}
+              displayEmpty
               sx={{
-                gap: 1,
-                "& .MuiFormControlLabel-root": {
-                  margin: 0,
-                  marginRight: 1,
+                width: 280,
+                minWidth: 280,
+                maxWidth: 280,
+                height: 40,
+                flexShrink: 0,
+                "& .MuiSelect-select": {
+                  fontSize: "0.875rem",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 },
               }}>
-              <FormControlLabel
-                value="1"
-                control={
-                  <Radio
-                    sx={{
-                      color: "#1976d2",
-                      "&.Mui-checked": { color: "#1976d2" },
-                      padding: 0.5,
-                    }}
-                    size="small"
-                  />
-                }
-                label={
-                  <Typography sx={{ fontSize: "0.8rem", marginLeft: 0.5 }}>
-                    Ngày vào
-                  </Typography>
-                }
-              />
-              <FormControlLabel
-                value="2"
-                control={
-                  <Radio
-                    sx={{
-                      color: "#1976d2",
-                      "&.Mui-checked": { color: "#1976d2" },
-                      padding: 0.5,
-                    }}
-                    size="small"
-                  />
-                }
-                label={
-                  <Typography sx={{ fontSize: "0.8rem", marginLeft: 0.5 }}>
-                    Ngày ra
-                  </Typography>
-                }
-              />
-            </RadioGroup>
-          </FormControl>
+              {khoaList.map((item) => (
+                <MenuItem key={item.value} value={item.value}>
+                  {item.label}
+                </MenuItem>
+              ))}
+            </Select>
 
-          {/* Date Pickers */}
-          <DatePicker
-            label="Từ ngày"
-            value={fromDate}
-            onChange={(value) => {
-              if (value !== null) setFromDate(value as Date);
-            }}
-            format="dd/MM/yyyy"
-            slotProps={{
-              textField: {
-                size: "small",
-                sx: {
-                  width: 150,
-                  flexShrink: 0,
-                  "& .MuiInputBase-root": {
-                    fontSize: "0.8rem",
-                    height: 40,
-                  },
-                  "& .MuiInputLabel-root": {
-                    fontSize: "0.8rem",
-                  },
-                  "& .MuiInputBase-input": {
-                    padding: "8px 14px",
-                    width: "auto",
-                  },
-                },
-              },
-              openPickerButton: {
-                size: "small",
-              },
-            }}
-          />
-
-          <DatePicker
-            label="Đến ngày"
-            value={toDate}
-            onChange={(value) => {
-              if (value !== null) setToDate(value as Date);
-            }}
-            format="dd/MM/yyyy"
-            slotProps={{
-              textField: {
-                size: "small",
-                sx: {
-                  width: 150,
-                  flexShrink: 0,
-                  "& .MuiInputBase-root": {
-                    fontSize: "0.8rem",
-                    height: 40,
-                  },
-                  "& .MuiInputLabel-root": {
-                    fontSize: "0.8rem",
-                  },
-                  "& .MuiInputBase-input": {
-                    padding: "8px 14px",
-                    width: "auto",
-                  },
-                },
-              },
-              openPickerButton: {
-                size: "small",
-              },
-            }}
-          />
-
-          <Button
-            variant="contained"
-            startIcon={<MuiIcons.Search />}
-            onClick={fetchHSBA}
-            size="small"
-            disabled={isLoading}
-            sx={{
-              height: 40,
-              fontSize: "0.8rem",
-              px: 2,
-              flexShrink: 0,
-              minWidth: "auto",
-            }}>
-            {isLoading ? "Đang tìm..." : "Tìm kiếm"}
-          </Button>
-        </Box>
-
-        {/* Checkbox và Import Excel */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            justifyContent: "space-between",
-          }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={showGrantedOnly}
-                onChange={(e) => handleShowGrantedOnlyChange(e.target.checked)}
-                size="small"
+            {/* Radio Group */}
+            <FormControl sx={{ flexShrink: 0 }}>
+              <RadioGroup
+                row
+                name="popt-radio-group"
+                value={popt}
+                onChange={(e) => setPopt(e.target.value)}
                 sx={{
-                  color: "#1976d2",
-                  "&.Mui-checked": { color: "#1976d2" },
-                }}
-              />
-            }
-            label={
-              <Typography sx={{ fontSize: "0.875rem", color: "#1976d2" }}>
-                Chỉ hiển thị HSBA đã phân quyền
-              </Typography>
-            }
-          />
+                  gap: 1,
+                  "& .MuiFormControlLabel-root": {
+                    margin: 0,
+                    marginRight: 1,
+                  },
+                }}>
+                <FormControlLabel
+                  value="1"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                        padding: 0.5,
+                      }}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography sx={{ fontSize: "0.8rem", marginLeft: 0.5 }}>
+                      Ngày vào
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  value="2"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                        padding: 0.5,
+                      }}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Typography sx={{ fontSize: "0.8rem", marginLeft: 0.5 }}>
+                      Ngày ra
+                    </Typography>
+                  }
+                />
+              </RadioGroup>
+            </FormControl>
 
-          <Box sx={{ display: "flex", gap: 1 }}>
+            {/* Date Pickers */}
+            <DatePicker
+              label="Từ ngày"
+              value={fromDate}
+              onChange={(value) => {
+                if (value !== null) setFromDate(value as Date);
+              }}
+              format="dd/MM/yyyy"
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: {
+                    width: 155,
+                    flexShrink: 0,
+                    "& .MuiInputBase-root": {
+                      fontSize: "0.8rem",
+                      height: 40,
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontSize: "0.8rem",
+                    },
+                    "& .MuiInputBase-input": {
+                      padding: "8px 14px",
+                      width: "auto",
+                    },
+                  },
+                },
+                openPickerButton: {
+                  size: "small",
+                },
+              }}
+            />
+
+            <DatePicker
+              label="Đến ngày"
+              value={toDate}
+              onChange={(value) => {
+                if (value !== null) setToDate(value as Date);
+              }}
+              format="dd/MM/yyyy"
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: {
+                    width: 155,
+                    flexShrink: 0,
+                    "& .MuiInputBase-root": {
+                      fontSize: "0.8rem",
+                      height: 40,
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontSize: "0.8rem",
+                    },
+                    "& .MuiInputBase-input": {
+                      padding: "8px 14px",
+                      width: "auto",
+                    },
+                  },
+                },
+                openPickerButton: {
+                  size: "small",
+                },
+              }}
+            />
+
             <Button
-              variant="outlined"
-              startIcon={<MuiIcons.FileUpload />}
-              onClick={handleImportExcel}
+              variant="contained"
+              startIcon={<MuiIcons.Search />}
+              onClick={fetchHSBA}
               size="small"
-              disabled={isLoading || !selectedUser}
+              disabled={isLoading}
               sx={{
+                height: 40,
                 fontSize: "0.8rem",
                 px: 2,
+                flexShrink: 0,
+                minWidth: "auto",
               }}>
-              Import Excel
+              {isLoading ? "Đang tìm..." : "Tìm kiếm"}
             </Button>
-            
-            <Input
-              type="file"
-              inputRef={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".xlsx,.xls"
-              sx={{ display: "none" }}
-            />
           </Box>
+
+          {/* Checkbox và Import/Export Excel */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              justifyContent: "space-between",
+            }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={showGrantedOnly}
+                  onChange={(e) => handleShowGrantedOnlyChange(e.target.checked)}
+                  size="small"
+                  sx={{
+                    color: "#1976d2",
+                    "&.Mui-checked": { color: "#1976d2" },
+                  }}
+                />
+              }
+              label={
+                <Typography sx={{ fontSize: "0.875rem", color: "#1976d2" }}>
+                  Tất cả HSBA đã phân quyền
+                </Typography>
+              }
+            />
+
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button
+                variant="outlined"
+                startIcon={<MuiIcons.FileUpload />}
+                onClick={handleImportExcel}
+                size="small"
+                disabled={isLoading || !selectedUser}
+                sx={{
+                  fontSize: "0.8rem",
+                  px: 2,
+                }}>
+                Import Excel
+              </Button>
+
+              <Button
+                variant="outlined"
+                startIcon={<MuiIcons.FileDownload />}
+                onClick={handleExportExcel}
+                size="small"
+                disabled={isLoading || dsHSBA.length === 0}
+                sx={{
+                  fontSize: "0.8rem",
+                  px: 2,
+                }}>
+                Export Excel
+              </Button>
+              
+              <Input
+                type="file"
+                inputRef={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".xlsx,.xls"
+                sx={{ display: "none" }}
+              />
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Table */}
+        <Box sx={{ flex: 1, overflow: "hidden" }}>
+          <TableContainer sx={{ height: "100%" }}>
+            <Table size="small" sx={{ border: "1px solid #eee" }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell
+                    width={40}
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                    }}>
+                    <Checkbox
+                      checked={isAllSelected}
+                      indeterminate={isIndeterminate}
+                      onChange={handleSelectAll}
+                      size="small"
+                      disabled={dsHSBA.length === 0}
+                    />
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 80,
+                    }}>
+                    Mã BA
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 100,
+                    }}>
+                    Số vào viện
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 150,
+                    }}>
+                    Họ tên
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 100,
+                    }}>
+                    Ngày sinh
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 80,
+                    }}>
+                    Giới tính
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 200,
+                    }}>
+                    Địa chỉ
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 120,
+                    }}>
+                    Ngày vào
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 150,
+                    }}>
+                    Ngày ra
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 150,
+                    }}>
+                    Khoa điều trị
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Array.isArray(dsHSBA) && dsHSBA.length > 0 ? (
+                  dsHSBA.map((item) => (
+                    <TableRow key={item.ID} sx={{ cursor: "pointer" }}>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        <Checkbox
+                          checked={item.ctrangthai === 1}
+                          onChange={() => handleCheckHSBA(item.ID)}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.ID}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.SoVaoVien}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.Hoten}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.Ngaysinh}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.Gioitinh}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          maxWidth: 200,
+                        }}
+                        title={item.Diachi}>
+                        {item.Diachi}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.NgayVao}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.NgayRa}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.KhoaDieuTri}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={10}
+                      align="center"
+                      sx={{ whiteSpace: "nowrap" }}>
+                      {isLoading ? "Đang tải dữ liệu..." : "Không có dữ liệu"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+
+        {/* Footer */}
+        <Box
+          sx={{
+            p: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexShrink: 0,
+            borderTop: "1px solid #eee",
+          }}>
+          <Typography variant="body2" color="textSecondary">
+            {dsHSBA.length > 0 && (
+              <>
+                Đã chọn: {dsHSBA.filter(item => item.ctrangthai === 1).length} / {dsHSBA.length}
+              </>
+            )}
+          </Typography>
+          
+          <Button 
+            variant="contained" 
+            onClick={handleLuuPhanQuyenBA}
+            disabled={isLoading || dsHSBA.length === 0}
+            startIcon={isLoading ? <MuiIcons.Refresh className="animate-spin" /> : <MuiIcons.Save />}
+          >
+            {isLoading ? "Đang lưu..." : "LƯU"}
+          </Button>
         </Box>
       </Box>
 
-      {/* Table */}
-      <Box sx={{ flex: 1, overflow: "hidden" }}>
-        <TableContainer sx={{ height: "100%" }}>
-          <Table size="small" sx={{ border: "1px solid #eee" }}>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  width={40}
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                  }}>
-                  <Checkbox
-                    checked={isAllSelected}
-                    indeterminate={isIndeterminate}
-                    onChange={handleSelectAll}
-                    size="small"
-                    disabled={dsHSBA.length === 0}
-                  />
-                </TableCell>
-                <TableCell
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                    minWidth: 80,
-                  }}>
-                  Mã BA
-                </TableCell>
-                <TableCell
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                    minWidth: 100,
-                  }}>
-                  Số vào viện
-                </TableCell>
-                <TableCell
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                    minWidth: 150,
-                  }}>
-                  Họ tên
-                </TableCell>
-                <TableCell
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                    minWidth: 100,
-                  }}>
-                  Ngày sinh
-                </TableCell>
-                <TableCell
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                    minWidth: 80,
-                  }}>
-                  Giới tính
-                </TableCell>
-                <TableCell
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                    minWidth: 200,
-                  }}>
-                  Địa chỉ
-                </TableCell>
-                <TableCell
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                    minWidth: 120,
-                  }}>
-                  Ngày vào
-                </TableCell>
-                <TableCell
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                    minWidth: 150,
-                  }}>
-                  Ngày ra
-                </TableCell>
-                <TableCell
-                  sx={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    fontWeight: "bold",
-                    zIndex: 1,
-                    whiteSpace: "nowrap",
-                    minWidth: 150,
-                  }}>
-                  Khoa điều trị
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Array.isArray(dsHSBA) && dsHSBA.length > 0 ? (
-                dsHSBA.map((item) => (
-                  <TableRow key={item.ID} sx={{ cursor: "pointer" }}>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      <Checkbox
-                        checked={item.ctrangthai === 1}
-                        onChange={() => handleCheckHSBA(item.ID)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      {item.ID}
-                    </TableCell>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      {item.SoVaoVien}
-                    </TableCell>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      {item.Hoten}
-                    </TableCell>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      {item.Ngaysinh}
-                    </TableCell>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      {item.Gioitinh}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        maxWidth: 200,
-                      }}
-                      title={item.Diachi}>
-                      {item.Diachi}
-                    </TableCell>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      {item.NgayVao}
-                    </TableCell>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      {item.NgayRa}
-                    </TableCell>
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
-                      {item.KhoaDieuTri}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={10}
-                    align="center"
-                    sx={{ whiteSpace: "nowrap" }}>
-                    {isLoading ? "Đang tải dữ liệu..." : "Không có dữ liệu"}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-
-      {/* Footer */}
-      <Box
-        sx={{
-          p: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexShrink: 0,
-          borderTop: "1px solid #eee",
-        }}>
-        <Typography variant="body2" color="textSecondary">
-          {dsHSBA.length > 0 && (
-            <>
-              Đã chọn: {dsHSBA.filter(item => item.ctrangthai === 1).length} / {dsHSBA.length}
-            </>
-          )}
-        </Typography>
-        
-        <Button 
-          variant="contained" 
-          onClick={handleLuuPhanQuyenBA}
-          disabled={isLoading || dsHSBA.length === 0}
-          startIcon={isLoading ? <MuiIcons.Refresh className="animate-spin" /> : <MuiIcons.Save />}
-        >
-          {isLoading ? "Đang lưu..." : "LƯU"}
-        </Button>
-      </Box>
-    </Box>
+      {/* Dialog hiển thị HSBA từ Excel */}
+      <DialogPhanQuyenBaImportedHSBAList
+        open={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        importedSoVaoVienList={importedSoVaoVienList}
+        selectedUser={selectedUser}
+        onSuccess={handleImportSuccess}
+        popt={popt}
+        fromDate={fromDate}
+        toDate={toDate}
+      />
+    </>
   );
 };
 

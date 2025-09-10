@@ -34,7 +34,6 @@ export const getHosobenhan = async (
     return [];
   }
 };
-
 export const getChiTietHSBA = async (
   pUser: string,
   pOpt: string,

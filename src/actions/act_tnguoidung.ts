@@ -331,7 +331,7 @@ export const getphanquyenba = async (
         { paraName: "DenNgay", paraValue: DenNgay },
       ],
     });
-    console.log("getphanquyenba response:", response);
+    //console.log("getphanquyenba response:", response);
     if (response.status === "error") {
       return [];
     }
@@ -342,6 +342,38 @@ export const getphanquyenba = async (
   }
 };
 
+export const getphanquyenbaDSSovaovien = async (
+  pUser: string,
+  pOpt: string,
+  DSSovaovien: string,
+  TuNgay: string,
+  DenNgay: string
+) => {
+  try {
+    //console.log("Fetching HoSoBenhAn...");
+    // Gọi API để lấy danh sách hồ sơ bệnh án
+    const response = await post(`/api/callService`, {
+      userId: "",
+      option: "",
+      funcName: "dbo.emr_pget_tphanquyenba_DSSovaovien",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "DSSovaovien", paraValue: DSSovaovien },
+        { paraName: "TuNgay", paraValue: TuNgay },
+        { paraName: "DenNgay", paraValue: DenNgay },
+      ],
+    });
+
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
 export const luuphanquyenba = async (
   pUser: string,
   pOpt: string,
