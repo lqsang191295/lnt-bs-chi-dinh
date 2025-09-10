@@ -16,9 +16,7 @@ export function useQueue(maQuay: string) {
   });
 
   // lấy current patient
-  const current =
-    data.find((x) => x.MaQuay === maQuay && x.TrangThai === 1) || null;
-
+  const current = data.find((x) => x.MaQuay === maQuay && x.TrangThai === 1) || null;
   // danh sách còn lại
   const queueList = current
     ? data.filter((x) => x.STT !== current.STT)
