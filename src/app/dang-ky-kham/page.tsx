@@ -321,6 +321,9 @@ export default function MedicalKioskPage() {
   }
   const handleSelectPatient = (p: BV_QlyCapThe) => {
     const newBirthDate = new Date(p.Birthday);
+    if (newBirthDate) {
+      datePickerHookRef.current.setValue(newBirthDate);
+    }
     setPatientInfo({
       id: p.Ma,
       fullname: p.Hoten,
@@ -434,7 +437,11 @@ export default function MedicalKioskPage() {
         </html>
       `)
       printWindow.document.close()
+      printWindow.onafterprint = () => {
+        printWindow.close(); // tự đóng tab in
+      };
     }}
+    
       const closeErrorDialog = () => {
       setErrorDialog({
         open: false,
@@ -464,7 +471,7 @@ export default function MedicalKioskPage() {
     birthDateString: "",
     idNumber: "",
     insuranceNumber: "",
-    gender: "",
+    gender: "Nam",
     chiefComplaint: "",
     queueNumber: "",
     registrationTime: ""
@@ -592,14 +599,15 @@ useEffect(() => {
       fullname: "",
       phone: "",
       address: "",
-      birthDate: undefined,
+      birthDate: CURRENT_DATE,
       idNumber: "",
       insuranceNumber: "",
       queueNumber: "",
       registrationTime: "",
-      gender: "",
+      gender: "Nam",
       chiefComplaint: "",
     })
+    datePickerHookRef.current.setValue(CURRENT_DATE);
   }
   const handleExamTypeSelect = (type: ExamType) => {
     setSelectedExamType(type)
@@ -1275,9 +1283,9 @@ useEffect(() => {
           <List>
             {patientCandidates.map((p, idx) => (
               <>
-                <ListItemButton key={idx} onClick={() => handleSelectPatient(p)}>
+                <ListItemButton key={p.Ma} onClick={() => handleSelectPatient(p)}>
                   <ListItemText
-                    primary={p.Hoten}
+                    primary= {p.Hoten}
                     secondary={`${p.Birthday ? `Ngày sinh: ${p.Birthday} • ` : ""}${p.Dienthoai ? `SDT: ${p.Dienthoai} • ` : ""}${p.SoCMND ? `CCCD: ${p.SoCMND} • ` : ""}${p.SoBHYT ? `BHYT: ${p.SoBHYT} • ` : ""}${p.Diachi ? `Đ/c: ${p.Diachi}` : ""}`}
                   />
                 </ListItemButton>
