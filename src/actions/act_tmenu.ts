@@ -5,7 +5,7 @@ export const getMenuItems = async (userData: IUserItem) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tmenu",
       paraData: [
         { paraName: "puser", paraValue: userData.ctaikhoan },

@@ -5,7 +5,7 @@ export const gettDMKhoaPhongs = async (): Promise<IDmKhoaPhong[]> => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tdmkhoaphong",
       paraData: [
         { paraName: "puser", paraValue: "0" },

@@ -6,7 +6,7 @@ export const getloailuutru = async () => {
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tloailuutru",
       paraData: [
         { paraName: "puser", paraValue: "0" },

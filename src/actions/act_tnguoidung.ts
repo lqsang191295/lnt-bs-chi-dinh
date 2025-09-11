@@ -19,7 +19,7 @@ export const instnguoidung = async (
     // console.log("user", user);
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pins_tnguoidung",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -70,7 +70,7 @@ export const instnguoidungdoimatkhau = async (
     // console.log("newhash:", (await sha256(user.newPassword)).toString());
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pins_tnguoidung_doimatkhau",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -101,7 +101,7 @@ export const gettnguoidung = async (pUser: string, pOpt: string) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tnguoidung",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -129,7 +129,7 @@ export const gettnhatkynguoidung = async (
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tnhatkynguoidung",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -152,7 +152,7 @@ export const gettnhomnguoidung = async (pUser: string, pOpt: string) => {
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tnhomnguoidung",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -199,7 +199,7 @@ export const getphanquyenbakhoa = async (
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tphanquyenbakhoa",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -226,7 +226,7 @@ export const luuphanquyenbakhoa = async (
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pins_tphanquyenbakhoa",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -255,7 +255,7 @@ export const getphanquyenmenu = async (
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tphanquyenmenu",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -282,7 +282,7 @@ export const luuphanquyenmenu = async (
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pins_tphanquyenmenu",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -312,15 +312,15 @@ export const getphanquyenba = async (
   DenNgay: string
 ) => {
   try {
-    console.log("puser:", pUser);
-    console.log("popt:", pOpt);
-    console.log("ctaikhoan:", ctaikhoan);
-    console.log("KhoaDieuTri:", KhoaDieuTri);
-    console.log("TuNgay:", TuNgay);
-    console.log("DenNgay:", DenNgay);
+    // console.log("puser:", pUser);
+    // console.log("popt:", pOpt);
+    // console.log("ctaikhoan:", ctaikhoan);
+    // console.log("KhoaDieuTri:", KhoaDieuTri);
+    // console.log("TuNgay:", TuNgay);
+    // console.log("DenNgay:", DenNgay);
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tphanquyenba",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -354,7 +354,7 @@ export const getphanquyenbaDSSovaovien = async (
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tphanquyenba_DSSovaovien",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -391,7 +391,7 @@ export const luuphanquyenba = async (
     // console.log("cnguoicapnhat:", pUser);
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pins_tphanquyenba",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -430,7 +430,7 @@ export const luuanhnguoidung = async (
     // console.log("choten:", choten);
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pins_tnguoidung_img",
       paraData: [
         { paraName: "puser", paraValue: pUser },

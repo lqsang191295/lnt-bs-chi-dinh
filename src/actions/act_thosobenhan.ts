@@ -14,7 +14,7 @@ export const getHosobenhan = async (
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_HoSoBenhAn_SelectByDate",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -44,7 +44,7 @@ export const getChiTietHSBA = async (
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_hosobenhan_chitiet",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -112,7 +112,7 @@ export const capnhathosobenhan = async (
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pins_HoSoBenhAn",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -178,7 +178,7 @@ export const ketxuathosobenhan = async (
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pupd_HoSoBenhAn",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -214,7 +214,7 @@ export const themmuontraHSBA = async (
     // Gọi API để them phiếu mượn - trả hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pins_tmuontrahsba",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -260,7 +260,7 @@ export const getmuontraHSBA = async (
     // Gọi API để them phiếu mượn - trả hồ sơ bệnh án
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tmuontrahsba",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -290,7 +290,7 @@ export const getnhatkythaotacba = async (
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tnhatkythaotacba",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -319,7 +319,7 @@ export const getnhatkyketxuatba = async (
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_tnhatkyketxuatba",
       paraData: [
         { paraName: "puser", paraValue: pUser },
@@ -354,7 +354,7 @@ export const checkSoLuuTru = async (
   try {
     const response = await post(`/api/callService`, {
       userId: "",
-      option: "",
+      optionId: "1",
       funcName: "dbo.emr_pget_soluutru",
       paraData: [
         { paraName: "puser", paraValue: pUser },

@@ -23,7 +23,7 @@ import {
   DialogActions,
   IconButton,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 
 // Component hiển thị danh sách HSBA từ Excel
 interface ImportedHSBAListProps {
@@ -52,21 +52,22 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
+  // Format date function
+  const formatDate = useCallback((date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }, []);
+
   // Fetch HSBA từ danh sách số vào viện
-  const fetchHSBAFromSoVaoVien = async () => {
-    if (!selectedUser || importedSoVaoVienList.length === 0) return;
+  const fetchHSBAFromSoVaoVien = useCallback(async () => {
+    if (!selectedUser || importedSoVaoVienList.length === 0 || !loginedUser) return;
 
     setIsLoadingData(true);
     try {
       // Chuyển mảng số vào viện thành chuỗi: "123,124,125,126"
       const soVaoVienString = importedSoVaoVienList.join(',');
-      //console.log("Fetching HSBA for SoVaoVien:", soVaoVienString);
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-      };
       
       // Sử dụng popt từ component chính
       const searchPopt = popt;
@@ -78,6 +79,7 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
         formatDate(fromDate), // Sử dụng fromDate từ component chính
         formatDate(toDate)    // Sử dụng toDate từ component chính
       );
+      
       // Set trạng thái mặc định là phân quyền (ctrangthai = 1)
       const hsbaWithPermission = (result || []).map((item: IPhanQuyenHoSoBenhAn) => ({
         ...item,
@@ -92,51 +94,14 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
     } finally {
       setIsLoadingData(false);
     }
-  };
+  }, [selectedUser, importedSoVaoVienList, loginedUser, popt, fromDate, toDate, formatDate]);
 
+  // Effect để fetch data khi dialog mở
   React.useEffect(() => {
     if (open && importedSoVaoVienList.length > 0) {
       fetchHSBAFromSoVaoVien();
     }
-  }, [open, importedSoVaoVienList, fetchHSBAFromSoVaoVien]);
-
-    setIsLoadingData(true);
-    try {
-      // Chuyển mảng số vào viện thành chuỗi: "123,124,125,126"
-      const soVaoVienString = importedSoVaoVienList.join(',');
-      //console.log("Fetching HSBA for SoVaoVien:", soVaoVienString);
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-      };
-      
-      // Sử dụng popt từ component chính
-      const searchPopt = popt;
-
-      const result = await getphanquyenbaDSSovaovien(
-        loginedUser.ctaikhoan,
-        searchPopt,
-        soVaoVienString,
-        formatDate(fromDate), // Sử dụng fromDate từ component chính
-        formatDate(toDate)    // Sử dụng toDate từ component chính
-      );
-      // Set trạng thái mặc định là phân quyền (ctrangthai = 1)
-      const hsbaWithPermission = (result || []).map((item: IPhanQuyenHoSoBenhAn) => ({
-        ...item,
-        ctrangthai: 1
-      }));
-      
-      setDsHSBAImported(hsbaWithPermission);
-    } catch (error) {
-      console.error("Error fetching HSBA from SoVaoVien:", error);
-      ToastError("Lỗi khi tải danh sách HSBA từ số vào viện");
-      setDsHSBAImported([]);
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
+  }, [open, fetchHSBAFromSoVaoVien, importedSoVaoVienList.length]);
 
   const handleCheckHSBA = (ID: string) => {
     setDsHSBAImported((prev) =>
@@ -149,7 +114,7 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
   };
 
   const handleSelectAll = () => {
-    const allChecked = dsHSBAImported.every(item => item.ctrangthai === 1);
+    const allChecked = dsHSBAImported.every((item: IPhanQuyenHoSoBenhAn) => item.ctrangthai === 1);
     setDsHSBAImported(prev =>
       prev.map(item => ({
         ...item,
@@ -159,7 +124,7 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
   };
 
   const handleLuuPhanQuyenImported = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || !loginedUser) return;
     
     setIsLoading(true);
     try {
@@ -347,7 +312,10 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
           
           <Box display="flex" gap={1}>
             <Button 
-              variant="outlined" onClick={handleClose} disabled={isLoading}>
+              variant="outlined" 
+              onClick={handleClose} 
+              disabled={isLoading}
+            >
               Hủy          
             </Button>
             <Button
