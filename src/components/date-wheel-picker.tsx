@@ -339,6 +339,8 @@ const Wheel = ({ items, selectedIndex, onSelectionChange, className, itemHeight 
   )
 }
 
+// Trong component DateWheelPickerPopup, sửa đổi logic như sau:
+
 export const DateWheelPickerPopup = ({
   isOpen,
   onClose,
@@ -368,23 +370,21 @@ export const DateWheelPickerPopup = ({
 
   const days = Array.from({ length: 31 }, (_, i) => i + 1)
   const months = [
-    "Tháng 1",
-    "Tháng 2",
-    "Tháng 3",
-    "Tháng 4",
-    "Tháng 5",
-    "Tháng 6",
-    "Tháng 7",
-    "Tháng 8",
-    "Tháng 9",
-    "Tháng 10",
-    "Tháng 11",
-    "Tháng 12",
+    "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+    "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12",
   ]
   const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => minYear + i)
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
   const availableDays = days.slice(0, daysInMonth)
+
+  // FIX: Đảm bảo currentDay luôn nằm trong phạm vi hợp lệ
+  const validCurrentDay = Math.min(currentDay, daysInMonth)
+  
+  // FIX: Tính toán index chính xác
+  const dayIndex = validCurrentDay - 1 // Vì array bắt đầu từ index 0 nhưng ngày bắt đầu từ 1
+  const monthIndex = currentMonth
+  const yearIndex = years.findIndex((year) => year === currentYear)
 
   const handleDayChange = (dayIndex: number) => {
     const newDay = availableDays[dayIndex]
@@ -395,6 +395,8 @@ export const DateWheelPickerPopup = ({
   const handleMonthChange = (monthIndex: number) => {
     const newDate = new Date(currentYear, monthIndex, currentDay)
     const daysInNewMonth = new Date(currentYear, monthIndex + 1, 0).getDate()
+    
+    // FIX: Nếu ngày hiện tại lớn hơn số ngày trong tháng mới, điều chỉnh
     if (currentDay > daysInNewMonth) {
       newDate.setDate(daysInNewMonth)
     }
@@ -405,26 +407,21 @@ export const DateWheelPickerPopup = ({
     const newYear = years[yearIndex]
     const newDate = new Date(newYear, currentMonth, currentDay)
     const daysInNewMonth = new Date(newYear, currentMonth + 1, 0).getDate()
+    
+    // FIX: Xử lý trường hợp năm nhuận
     if (currentDay > daysInNewMonth) {
       newDate.setDate(daysInNewMonth)
     }
     setTempValue(newDate)
   }
-
-  const handleConfirm = () => {
-    onChange(tempValue)
-    onClose()
-  }
-
   const handleCancel = () => {
     setTempValue(value)
     onClose()
   }
-
-  const dayIndex = availableDays.findIndex((day) => day === currentDay)
-  const monthIndex = currentMonth
-  const yearIndex = years.findIndex((year) => year === currentYear)
-
+ const handleConfirm = () => {
+    onChange(tempValue)
+    onClose()
+  }
   return (
     <Dialog
       open={isOpen}
@@ -450,21 +447,35 @@ export const DateWheelPickerPopup = ({
             <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: 'text.secondary', fontWeight:"bold" }}>
               Ngày
             </Typography>
-            <Wheel items={availableDays} selectedIndex={Math.max(0, dayIndex)} onSelectionChange={handleDayChange} />
+            {/* FIX: Sử dụng Math.max để đảm bảo index >= 0 */}
+            <Wheel 
+              items={availableDays} 
+              selectedIndex={Math.max(0, dayIndex)} 
+              onSelectionChange={handleDayChange} 
+            />
           </Box>
 
           <Box sx={{ flex: 1 }}>
             <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: 'text.secondary', fontWeight:"bold" }}>
               Tháng
             </Typography>
-            <Wheel items={months} selectedIndex={monthIndex} onSelectionChange={handleMonthChange} />
+            <Wheel 
+              items={months} 
+              selectedIndex={monthIndex} 
+              onSelectionChange={handleMonthChange} 
+            />
           </Box>
 
           <Box sx={{ flex: 1 }}>
             <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: 'text.secondary', fontWeight:"bold" }}>
               Năm
             </Typography>
-            <Wheel items={years} selectedIndex={Math.max(0, yearIndex)} onSelectionChange={handleYearChange} />
+            {/* FIX: Đảm bảo yearIndex hợp lệ */}
+            <Wheel 
+              items={years} 
+              selectedIndex={Math.max(0, yearIndex)} 
+              onSelectionChange={handleYearChange} 
+            />
           </Box>
         </Box>
       </DialogContent>
@@ -503,12 +514,11 @@ export const useDateWheelPicker = (initialValue: Date = START_OF_YEAR) => {
   }
 }
 
-// Giữ nguyên tên và interface để không cần thay đổi nơi import
 export const DateWheelPicker = ({
   value,
   onChange,
   className,
-  minYear = 1950,
+  minYear = 1930,
   maxYear = 2050,
   placeholder = "Chọn ngày",
 }: DateWheelPickerProps) => {
