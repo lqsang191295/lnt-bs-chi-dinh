@@ -25,14 +25,8 @@ import CssBaseline from "@mui/material/CssBaseline"
 import { useQueue } from "@/hooks/ListPatientWaiting";
 const queryClient = new QueryClient();
 function QueueComponent({ maQuay }: { maQuay: string }) {
-  const [animationKey, setAnimationKey] = useState(0)
   const { currentPatient, queueList, isLoading, error } = useQueue(maQuay);
 
-  useEffect(() => {
-    if (currentPatient) {
-      setAnimationKey((prev) => prev + currentPatient.STT);
-    }
-  }, [currentPatient]);
   if (isLoading) return <p>Đang tải...</p>;
   if (error) return <p>Lỗi khi tải dữ liệu</p>;
 
@@ -46,11 +40,12 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
         }}
         >
         {/* Bên trái - Thông tin bệnh nhân hiện tại */}
-        <Grid size={{xs: 7, lg: 8}}>
+        <Grid size={{xs: 9, lg: 9}}>
             <Card
             elevation={3}
             sx={{
-                height: "100%",
+                height: "70%",
+                maxHeight: "70vh",
                 display: "flex",
                 flexDirection: "column",
                 backgroundColor: "background.paper",
@@ -58,76 +53,124 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
             >
             <CardHeader
               title="SỐ ĐANG GỌI"
-              sx={{ color: "white", bgcolor: "primary.main", textAlign: "center"}}
+              sx={{ color: "white", bgcolor: "primary.main", textAlign: "center", maxHeight:"20px"}}
               slotProps={{
                 title: {
-                  sx: { fontSize: "60px", fontWeight: "bold", fontFamily:"sans-serif"}
+                  sx: { fontSize: "20", fontWeight: "bold", fontFamily:"sans-serif"}
                 }
               }}
             />
-            <CardContent sx={{flex:1, display: "flex",flexDirection: "column",  textAlign: "center", alignItems: "center",justifyContent: "center"  }}>
-                <Fade in={true} key={`number-${animationKey}`} timeout={800}>
-                <Typography
-                    variant="h1"
-                    component="div"
-                    sx={{
-                    color: "primary.main",
-                    mb: 3,
-                    fontWeight: "bold",
-                    fontSize: { xs: "4rem", sm: "6rem", md: "8rem" },
-                    textShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                    }}
-                    className="animate-pulse-custom"
+            <CardContent sx={{flex:1, display: "flex", textAlign: "center", alignItems: "center",justifyContent: "center"  }}>
+              <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                    height: "100%",
+                    backgroundColor: "background.paper",
+                }}
                 >
-                    {currentPatient?.STT.toString().padStart(3, "0")}
-                </Typography>
-                </Fade>
-
-                <Grow in={true} key={`name-${animationKey}`} timeout={1000}>
-                <Typography
-                    variant="h2"
-                    component="div"
-                    sx={{
-                    color: "#374151",
-                    mb: 2,
-                    fontSize: { xs: "1.8rem", sm: "2.5rem", md: "3rem" },
-                    fontWeight: 600,
-                    fontFamily: "sans-serif"
-                    }}
+                <Table stickyHeader>
+                    <TableBody>
+                    {currentPatient.map((item, index) => (
+                        <Fade in={true} key={item.STT} timeout={300 + index * 100}>
+                        <TableRow
+                            className="animate-fade-in"
+                            sx={{
+                            "&:nth-of-type(odd)": {
+                                backgroundColor: "#fafafa",
+                            },
+                            }}
+                        >
+                            <TableCell
+                            align="center"
+                            sx={{
+                                fontSize: { xs: "1.4rem", sm: "1.6rem" },
+                                fontWeight: 600,
+                                color: "primary.main",
+                            }}
+                            >
+                            {item.STT.toString().padStart(3, "0")}. {item.Hoten} - {item.NamSinh}
+                            </TableCell>
+                        </TableRow>
+                        </Fade>
+                    ))}
+                    </TableBody>
+                </Table>
+                </TableContainer>
+            </CardContent>
+            </Card>
+            <Card
+            elevation={3}
+            sx={{
+                height: "30%",
+                maxHeight: "30vh",
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "background.paper",
+            }}           
+            >
+            <CardHeader
+              title="SỐ ĐÃ GỌI"
+              sx={{ color: "white", bgcolor: "primary.main", textAlign: "center", maxHeight:"1px"}}
+              slotProps={{
+                title: {
+                  sx: { fontSize: "20", fontWeight: "bold", fontFamily:"sans-serif", p: "1"}
+                }
+              }}
+            />
+            <CardContent sx={{display: "flex", textAlign: "center" }}>
+             <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                    height: "100%",
+                    backgroundColor: "background.paper",
+                }}
                 >
-                    {currentPatient?.Hoten}
-                </Typography>
-                </Grow>
-
-                <Fade in={true} key={`year-${animationKey}`} timeout={1200}>
-                <Typography
-                    variant="h3"
-                    component="div"
-                    sx={{
-                    color: "text.secondary",
-                    fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
-                    fontWeight: 500,
-                    }}
-                >
-                    {currentPatient?.NamSinh}
-                </Typography>
-                </Fade>
+                <Table stickyHeader>
+                    <TableBody>
+                    {queueList.filter(x => x.TrangThai === 2).map((item, index) => (
+                        <Fade in={true} key={item.STT} timeout={300 + index * 100}>
+                        <TableRow
+                            className="animate-fade-in"
+                            sx={{
+                            "&:nth-of-type(odd)": {
+                                backgroundColor: "#fafafa",
+                            },
+                            }}
+                        >
+                            <TableCell
+                            align="center"
+                            sx={{
+                                fontSize: { xs: "1.2rem", sm: "1.2rem" },
+                                fontWeight: 600,
+                                color: "primary.main",
+                            }}
+                            >
+                            {item.STT.toString().padStart(3, "0")} - {item.Hoten} - {item.NamSinh}
+                            </TableCell>
+                        </TableRow>
+                        </Fade>
+                    ))}
+                    </TableBody>
+                </Table>
+                </TableContainer>          
             </CardContent>
             </Card>
         </Grid>
 
         {/* Bên phải - Danh sách chờ */}
-        <Grid size={{xs: 5, lg: 4}} >
+        <Grid size={{xs: 3, lg: 3}} >
             <Card
             elevation={3}
             sx={{
-                height: "49.5%",
-                maxHeight: "49.5vh",
+                height: "100%",
+                maxHeight: "100vh",
                 overflow: "auto",
             }}
             >
             <CardHeader
-              title="DANH SÁCH TIẾP THEO"
+              title="SỐ TIẾP THEO"
               sx={{ bgcolor: "primary.main", color: "white", textAlign: "center", maxHeight: "20px" }}
                 slotProps={{
                   title: {
@@ -145,43 +188,9 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                 }}
                 >
                 <Table stickyHeader>
-                    <TableHead>
-                    <TableRow>
-                        <TableCell
-                        align="center"
-                        sx={{
-                            fontSize: { xs: "0.8rem", sm: "1rem" },
-                            fontWeight: 700,
-                            color: "primary.main",
-                        }}
-                        >
-                        STT
-                        </TableCell>
-                        <TableCell
-                        align="center"
-                        sx={{
-                            fontSize: { xs: "0.8rem", sm: "1rem" },
-                            fontWeight: 700,
-                            color: "primary.main",
-                        }}
-                        >
-                        Họ Tên
-                        </TableCell>
-                        <TableCell
-                        align="center"
-                        sx={{
-                            fontSize: { xs: "0.8rem", sm: "1rem" },
-                            fontWeight: 700,
-                            color: "primary.main",
-                        }}
-                        >
-                        Năm Sinh
-                        </TableCell>
-                    </TableRow>
-                    </TableHead>
                     <TableBody>
                     {queueList.filter(x => x.TrangThai === 0).map((item, index) => (
-                        <Fade in={true} key={`${item.STT}-${animationKey}`} timeout={300 + index * 100}>
+                        <Fade in={true} key={item.STT} timeout={300 + index * 100}>
                         <TableRow
                             className="animate-fade-in"
                             sx={{
@@ -195,137 +204,10 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                             sx={{
                                 fontSize: { xs: "0.8rem", sm: "1rem" },
                                 fontWeight: 600,
-                                color: "secondary.main",
+                                color: "primary.main",
                             }}
                             >
                             {item.STT.toString().padStart(3, "0")}
-                            </TableCell>
-                            <TableCell
-                            align="center"
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                fontWeight: 500,
-                            }}
-                            >
-                            {item.Hoten}
-                            </TableCell>
-                            <TableCell
-                            align="center"
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                color: "text.secondary",
-                            }}
-                            >
-                            {item.NamSinh}
-                            </TableCell>
-                        </TableRow>
-                        </Fade>
-                    ))}
-                    </TableBody>
-                </Table>
-                </TableContainer>
-            </CardContent>
-            </Card>
-            <Card
-            elevation={3}
-            sx={{
-              mt:"5px",
-              height: "49.5%",
-              maxHeight: "49.5vh",
-              overflow: "auto",
-            }}
-            >
-            <CardHeader
-              title="ĐÃ THỰC HIỆN"
-              sx={{ bgcolor: "primary.main", color: "white", textAlign: "center", maxHeight: "20px" }}
-              slotProps={{
-                title: {
-                  sx: { fontSize: "20px" }
-                }
-              }}
-            />
-            <CardContent sx={{ p: 0, height: "100%" }}>
-                <TableContainer
-                component={Paper}
-                elevation={0}
-                sx={{
-                    height: "100%",
-                    backgroundColor: "background.paper",
-                }}
-                >
-                <Table stickyHeader>
-                    <TableHead>
-                    <TableRow>
-                        <TableCell
-                        align="center"
-                        sx={{
-                            fontSize: { xs: "0.8rem", sm: "1rem" },
-                            fontWeight: 700,
-                            color: "primary.main",
-                        }}
-                        >
-                        STT
-                        </TableCell>
-                        <TableCell
-                        align="center"
-                        sx={{
-                            fontSize: { xs: "0.8rem", sm: "1rem" },
-                            fontWeight: 700,
-                            color: "primary.main",
-                        }}
-                        >
-                        Họ Tên
-                        </TableCell>
-                        <TableCell
-                        align="center"
-                        sx={{
-                            fontSize: { xs: "0.8rem", sm: "1rem" },
-                            fontWeight: 700,
-                            color: "primary.main",
-                        }}
-                        >
-                        Năm Sinh
-                        </TableCell>
-                    </TableRow>
-                    </TableHead>
-                    <TableBody>
-                    {queueList.filter(x=>x.TrangThai === 2).map((item, index) => (
-                        <Fade in={true} key={`${item.STT}-${animationKey}`} timeout={300 + index * 100}>
-                        <TableRow
-                            className="animate-fade-in"
-                            sx={{
-                            "&:nth-of-type(odd)": {
-                                backgroundColor: "#fafafa",
-                            },
-                            }}
-                        >
-                            <TableCell
-                            align="center"
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                fontWeight: 600,
-                                color: "secondary.main",
-                            }}
-                            >
-                            {item.STT.toString().padStart(3, "0")}
-                            </TableCell>
-                            <TableCell
-                            align="center"
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                fontWeight: 500,
-                            }}
-                            >
-                            {item.Hoten}
-                            </TableCell>
-                            <TableCell
-                            align="center"
-                            sx={{
-                                fontSize: { xs: "0.8rem", sm: "1rem" },
-                                color: "text.secondary",
-                            }}
-                            >
-                            {item.NamSinh}
                             </TableCell>
                         </TableRow>
                         </Fade>
