@@ -3,7 +3,6 @@ import { searchPatientInfoByType, dangKyKhamBenh, CheckBHXHByPatientInfo } from 
 import { PatientInfo, BV_QlyCapThe } from "@/model/dangkykhambenh";
 import { createQRScanner } from "@/actions/act_qrscan";
 import { useState, useEffect, useRef, useCallback } from "react"
-import JsBarcode from "jsbarcode";
 import HeaderBVLNT from "@/components/HeaderBVLNT"
 import VirtualKeyboard from "@/components/VirtualKeyboard"
 import {DateWheelPickerPopup, useDateWheelPicker} from "@/components/date-wheel-picker"
@@ -336,98 +335,6 @@ export default function MedicalKioskPage() {
     })
     setPatientSelectOpen(false)
   }
-  const CanvasPrint = () => {
-    const printToCanvas = () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Thiết lập kích thước canvas (A4: 210x297mm ≈ 595x842 pixels)
-    canvas.width = 595;
-    canvas.height = 842;
-    
-    if (ctx) {
-      const lineHeight = 20;
-      let y = 30;
-
-      ctx.font = "bold 15px Courier New";
-      ctx.textAlign = "center";
-      ctx.fillText("BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG", canvas.width / 2, y);
-      y += lineHeight + 5;
-
-      ctx.font = "bold 16px Courier New";
-      ctx.fillText("THÔNG TIN ĐĂNG KÝ", canvas.width / 2, y);
-      y += lineHeight + 10;
-
-      ctx.font = "14px Courier New";
-      ctx.fillText(
-        `Loại khám: ${selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "Dịch vụ" : "Khám sức khỏe"}`,
-        canvas.width / 2,
-        y
-      );
-      y += lineHeight;
-
-      // Vẽ line dashed
-      ctx.beginPath();
-      ctx.setLineDash([4, 4]);
-      ctx.moveTo(10, y);
-      ctx.lineTo(canvas.width - 10, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      y += 15;
-
-      ctx.font = "14px Courier New";
-      ctx.fillText("SỐ THỨ TỰ", canvas.width / 2, y);
-      y += lineHeight;
-
-      ctx.font = "bold 72px Courier New";
-      ctx.fillText(patientInfo.queueNumber || "", canvas.width / 2, y);
-      y += 80;
-
-      ctx.font = "12px Courier New";
-      ctx.textAlign = "left";
-      ctx.fillText(`Họ tên: ${patientInfo.fullname}`, 10, y); y += lineHeight;
-      ctx.fillText(`Ngày sinh: ${patientInfo.birthDateString}`, 10, y); y += lineHeight;
-      ctx.fillText(`Giới tính: ${patientInfo.gender}`, 10, y); y += lineHeight;
-      ctx.fillText(`Địa chỉ: ${patientInfo.address}`, 10, y); y += lineHeight;
-      ctx.fillText(`Số CCCD: ${patientInfo.idNumber}`, 10, y); y += lineHeight;
-      ctx.fillText(`Số thẻ BHYT: ${patientInfo.insuranceNumber || "N/A"}`, 10, y); y += lineHeight;
-      ctx.fillText(`Số điện thoại: ${patientInfo.phone || "N/A"}`, 10, y); y += lineHeight;
-
-      // Line dashed
-      y += 5;
-      ctx.beginPath();
-      ctx.setLineDash([4, 4]);
-      ctx.moveTo(10, y);
-      ctx.lineTo(canvas.width - 10, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      y += 20;
-
-      ctx.textAlign = "right";
-      ctx.font = "14px Courier New";
-      ctx.fillText(patientInfo.registrationTime || "", canvas.width - 10, y);
-      
-      // Chuyển canvas thành image và in
-      const dataUrl = canvas.toDataURL();
-      const printWindow = window.open('', '_blank');
-      if (printWindow){
-        printWindow.document.writeln(`
-        <html>
-          <head><title>Print</title></head>
-          <body style="margin:0;">
-            <img src="${dataUrl}" style="width:100%;" />
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
-      printWindow.close();
-      }
-    }
-  };
-
-  return <button onClick={printToCanvas}>In bằng Canvas</button>;
-};
     const handlePrint = () => {
     const printWindow = window.open("", "_blank")
     if (printWindow) {
@@ -1321,7 +1228,7 @@ useEffect(() => {
                       borderWidth: 2,
                       "&:hover": { borderWidth: 2 },
                     }}
-                    onClick={CanvasPrint}
+                    onClick={handlePrint}
                   >
                     In phiếu đăng ký
                   </Button>

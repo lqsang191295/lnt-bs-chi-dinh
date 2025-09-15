@@ -1,23 +1,20 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useParams } from "next/navigation";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   Box,
-  Typography,
   Table,
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
   Paper,
   Grid,
   Card,
   CardContent,
   Fade,
-  Grow,
   CardHeader,
 } from "@mui/material"
 import { ThemeProvider, createTheme } from "@mui/material/styles"
