@@ -83,27 +83,27 @@ export default function VirtualKeyboard({
   };
 
   // ------------------ Telex composition helpers ------------------
-  const TONE_MAP: Record<string, number> = { s: 1, f: 2, r: 3, x: 4, j: 5 };
+  const TONE_MAP: Record<string, number> = { S: 1, F: 2, R: 3, X: 4, J: 5 };
 
-  const VOWEL_TONE_TABLE: Record<string, string[]> = {
-    a: ["a","á","à","ả","ã","ạ"],
-    ă: ["ă","ắ","ằ","ẳ","ẵ","ặ"],
-    â: ["â","ấ","ầ","ẩ","ẫ","ậ"],
-    e: ["e","é","è","ẻ","ẽ","ẹ"],
-    ê: ["ê","ế","ề","ể","ễ","ệ"],
-    i: ["i","í","ì","ỉ","ĩ","ị"],
-    o: ["o","ó","ò","ỏ","õ","ọ"],
-    ô: ["ô","ố","ồ","ổ","ỗ","ộ"],
-    ơ: ["ơ","ớ","ờ","ở","ỡ","ợ"],
-    u: ["u","ú","ù","ủ","ũ","ụ"],
-    ư: ["ư","ứ","ừ","ử","ữ","ự"],
-    y: ["y","ý","ỳ","ỷ","ỹ","ỵ"],
-  };
+const VOWEL_TONE_TABLE: Record<string, string[]> = {
+  A: ["A", "Á", "À", "Ả", "Ã", "Ạ"],
+  Ă: ["Ă", "Ắ", "Ằ", "Ẳ", "Ẵ", "Ặ"],
+  Â: ["Â", "Ấ", "Ầ", "Ẩ", "Ẫ", "Ậ"],
+  E: ["E", "É", "È", "Ẻ", "Ẽ", "Ẹ"],
+  Ê: ["Ê", "Ế", "Ề", "Ể", "Ễ", "Ệ"],
+  I: ["I", "Í", "Ì", "Ỉ", "Ĩ", "Ị"],
+  O: ["O", "Ó", "Ò", "Ỏ", "Õ", "Ọ"],
+  Ô: ["Ô", "Ố", "Ồ", "Ổ", "Ỗ", "Ộ"],
+  Ơ: ["Ơ", "Ớ", "Ờ", "Ở", "Ỡ", "Ợ"],
+  U: ["U", "Ú", "Ù", "Ủ", "Ũ", "Ụ"],
+  Ư: ["Ư", "Ứ", "Ừ", "Ử", "Ữ", "Ự"],
+  Y: ["Y", "Ý", "Ỳ", "Ỷ", "Ỹ", "Ỵ"],
+};
 
   const VOWELS = Object.keys(VOWEL_TONE_TABLE);
 
   function applyToneToChar(ch: string, toneIndex: number): string {
-    const lower = ch.toLowerCase();
+    const lower = ch.toUpperCase();
     const table = VOWEL_TONE_TABLE[lower];
     if (!table) return ch;
     const toned = table[toneIndex] || table[0];
@@ -115,17 +115,18 @@ export default function VirtualKeyboard({
     // replace common Telex vowel modifiers first: aa->â, aw->ă, ee->ê, oo->ô, ow->ơ, uw->ư, dd->đ
     // prioritize double-letter forms
     const patterns: [RegExp, string][] = [
-      [/dd/gi, "đ"],
-      [/aa/gi, "â"],
-      [/aw/gi, "ă"],
-      [/ee/gi, "ê"],
-      [/oo/gi, "ô"],
-      [/ow/gi, "ơ"],
-      [/uw/gi, "ư"],
+      [/DD/gi, "Đ"],
+      [/AA/gi, "Â"],
+      [/AW/gi, "Ă"],
+      [/EE/gi, "Ê"],
+      [/OO/gi, "Ô"],
+      [/OW/gi, "Ơ"],
+      [/UW/gi, "Ư"],
+      [/W/gi, "Ư"],
     ];
     for (const [re, repl] of patterns) {
       if (re.test(token)) {
-        token = token.replace(re, (m) => (m === m.toLowerCase() ? repl : repl.toUpperCase()));
+        token = token.replace(re, (m) => (m === m.toUpperCase() ? repl : repl.toUpperCase()));
         break; // only one modifier per token typically
       }
     }
@@ -140,7 +141,7 @@ export default function VirtualKeyboard({
     let transformed = token;
 
     // tone marker at end
-    const lastChar = token.slice(-1).toLowerCase();
+    const lastChar = token.slice(-1).toUpperCase();
     let toneIndex: number | null = null;
     if (TONE_MAP[lastChar] !== undefined) {
       toneIndex = TONE_MAP[lastChar];
@@ -156,15 +157,15 @@ export default function VirtualKeyboard({
       // find vowel positions
       const chars = Array.from(transformed);
       // choose target vowel by priority order
-      const priority = ["a","ă","â","e","ê","o","ô","ơ","u","ư","i","y"];
+      const priority = ["A","Ă","Â","E","Ê","O","Ô","Ơ","U","Ư","I","Y"];
       let targetIdx = -1;
       for (const p of priority) {
-        const idx = chars.findIndex(c => c.toLowerCase() === p);
+        const idx = chars.findIndex(c => c.toUpperCase() === p);
         if (idx !== -1) { targetIdx = idx; break; }
       }
       if (targetIdx === -1) {
         // fallback to any vowel
-        targetIdx = chars.findIndex(c => VOWELS.includes(c.toLowerCase()));
+        targetIdx = chars.findIndex(c => VOWELS.includes(c.toUpperCase()));
       }
       if (targetIdx !== -1) {
         const orig = chars[targetIdx];
@@ -450,9 +451,9 @@ export default function VirtualKeyboard({
                 onKeyPress={handleKeyPress}
                 layout={{
                   default: [
-                    "q w e r t y u i o p {bksp}",
-                    "a s d f g h j k l",
-                    "z x c v b n m , . {clear}",
+                    "Q W E R T Y U I O P {bksp}",
+                    "A S D F G H J K L",
+                    "Z X C V B N M , . {clear}",
                     "{space}"
                   ]
                 }}

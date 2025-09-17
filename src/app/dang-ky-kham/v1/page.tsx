@@ -89,7 +89,7 @@ interface ErrorDialog {
 }
 // Debounced TextField to reduce frequent parent updates/rendering
 function DebouncedTextField(props: TextFieldProps & { debounceMs?: number }) {
-  const { value, onChange, debounceMs = 250, ...rest } = props
+  const { value, onChange, debounceMs = 100, ...rest } = props
   const [local, setLocal] = useState<string>(() => (value as string) || "")
   const timerRef = useRef<number | null>(null)
   const prevValueRef = useRef<string>((value as string) || "")
@@ -494,13 +494,19 @@ useEffect(() => {
 }, [datePickerHook.value, formatDateForInput]);
 
 useEffect(() => {
-  const initalCamera = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-    } 
-    initalCamera();
+    const initalCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    catch (Exception) {
+      return;
+    }  
+  } 
+  initalCamera();
 })
 
   useEffect(() => {
@@ -562,9 +568,9 @@ useEffect(() => {
     },
     {
       id: "kyc" as ExamType,
-      title: "KHÁM THEO YÊU CẦU",
+      title: "KHÁM\nTHEO YÊU CẦU",
       color: "#2600ffff",
-      size: "1.6rem"
+      size: "1.8rem"
     },
   ]
   const resetKiosk = () => {
@@ -732,13 +738,13 @@ useEffect(() => {
           <Card elevation={3} sx={{ maxWidth: "xl"}}>
           <CardContent>
             <Grid container spacing={2}>
-              <Grid size={9}>
+              <Grid size={8}>
                 <DebouncedTextField
                   fullWidth
                   label="HỌ VÀ TÊN"
                   value={patientInfo.fullname}
                   onFocus={() => setFocusedField("fullname")}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, fullname: e.target.value })}
+                  onChange={(e) => setPatientInfo({ ...patientInfo, fullname: e.target.value.toUpperCase() })}
                   slotProps={{
                     input: {
                       startAdornment: (
@@ -759,10 +765,10 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 70, fontSize: "2rem", mt: 1.2, pt: 2 },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2, textTransform: "uppercase" },
                     },
                     inputLabel: {
-                      sx: { fontSize: "2rem", fontWeight: "bold" },
+                      sx: { fontSize: "2.5rem", fontWeight: "bold" },
                     },
                   }}
                 />
@@ -776,7 +782,7 @@ useEffect(() => {
                       sx={{ 
                         borderRadius:0,
                         flex: 1,
-                        height: 70, 
+                        height: 80, 
                         fontSize: "1.6rem", 
                         fontWeight: 600, 
                         textTransform: "none", 
@@ -795,7 +801,7 @@ useEffect(() => {
                     sx={{ 
                       borderRadius:0,
                       flex: 1,
-                      height: 70, 
+                      height: 80, 
                       fontSize: "1.6rem", 
                       fontWeight: 600, 
                       textTransform: "none", 
@@ -811,10 +817,14 @@ useEffect(() => {
                   </Box> 
                 </Box>
               </Grid>
-              <Grid size={1}>
-              <IconButton sx={{mt:1.5}} onClick={() => searchPatient(patientInfo)}>
-                <Search sx={{ color: "#2563eb", fontSize:"2.5rem" }} />
-              </IconButton>
+              <Grid size={2}>
+                <Button               
+                variant="outlined"
+                sx={{mt:1, height: 80, color:"#2563eb", fontSize: "1.2rem" }} 
+                onClick={() => searchPatient(patientInfo)}>
+                <Search />
+                    TÌM KIẾM
+                </Button>
               </Grid>
               <Grid size={6}>
                 <DebouncedTextField
@@ -843,10 +853,10 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2rem", mt: 1.2, pt: 2 },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2 },
                     },
                     inputLabel: {
-                      sx: { fontSize: "2rem", fontWeight: "bold", },
+                      sx: { fontSize: "2.5rem", fontWeight: "bold", },
                     },
                   }}
                 />
@@ -865,10 +875,10 @@ useEffect(() => {
                         <InputAdornment position="start">
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2rem", mt: 1.2, pt: 2 },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2 },
                     },
                     inputLabel: {
-                      sx: { fontSize: "2rem", fontWeight: "bold" },
+                      sx: { fontSize: "2.5rem", fontWeight: "bold" },
                     },
                   }}
                 />
@@ -906,10 +916,10 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2rem", mt: 1.2, pt: 2 },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2 },
                     },
                     inputLabel: {
-                      sx: { fontSize: "2rem", fontWeight: "bold" },
+                      sx: { fontSize: "2.5rem", fontWeight: "bold" },
                     },
                   }}
                 />
@@ -941,10 +951,10 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2rem", mt: 1.2, pt: 2 },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2 },
                     },
                     inputLabel: {
-                      sx: { fontSize: "2rem", fontWeight: "bold"},
+                      sx: { fontSize: "2.5rem", fontWeight: "bold"},
                     },
                   }}
                 />
@@ -959,10 +969,10 @@ useEffect(() => {
             variant="contained"
             size="large"
             sx={{
-              height: 60,
+              height: 100,
               fontSize: "2.5rem",
               fontWeight: 600,
-              mt: 0.5,
+              mt: 1,
               background: "linear-gradient(45deg, #2563eb 30%, #059669 90%)",
             }}
             onClick={handleFormSubmit}
@@ -976,8 +986,8 @@ useEffect(() => {
               variant="outlined"
               size="large"
               sx={{
-                mt: 0.5,
-                height: 60,
+                mt: 1.5,
+                height: 100,
                 fontSize: "2.5rem",
                 fontWeight: 600,
                 visibility: selectedExamType === 'bhyt' ? "visible" : "hidden"
@@ -993,8 +1003,8 @@ useEffect(() => {
               variant="outlined"
               size="large"
               sx={{
-                mt: 1.2,
-                height: 66,
+                mt: 1,
+                height: 100,
                 fontSize: "2.5rem",
                 visibility: isConnectPort ? "hidden" : "visible"
               }}
