@@ -435,7 +435,7 @@ export const DateWheelPickerPopup = ({
       }}
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5" sx={{fontWeight:"bold"}}>Chọn ngày</Typography>
+        <Typography variant="body2" sx={{fontWeight:"bold"}}>Chọn ngày</Typography>
         <IconButton onClick={handleCancel} size="small">
           <CloseIcon />
         </IconButton>

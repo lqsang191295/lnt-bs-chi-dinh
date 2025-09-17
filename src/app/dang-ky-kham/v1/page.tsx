@@ -1,5 +1,5 @@
 "use client"
-import { searchPatientInfoByType, dangKyKhamBenh, CheckBHXHByPatientInfo } from "@/actions/act_dangkykhambenh";
+import { searchPatientInfoByTypeV1, dangKyKhamBenh, CheckBHXHByPatientInfo } from "@/actions/act_dangkykhambenh";
 import { PatientInfo, BV_QlyCapThe } from "@/model/dangkykhambenh";
 import { createQRScanner } from "@/actions/act_qrscan";
 import { useState, useEffect, useRef, useCallback } from "react"
@@ -71,7 +71,7 @@ import {
   Dialog, DialogTitle, DialogContent,
   DialogActions,
   IconButton,
-  List, ListItemButton, ListItemText, Divider,
+  List, ListItemButton, ListItemText, Divider
 } from "@mui/material"
 import {
   Error, Warning,CheckCircle,
@@ -154,7 +154,6 @@ export default function MedicalKioskPage() {
   const [isConnectPort, setIsConnectPort] = useState(false)
   const [patientSelectOpen, setPatientSelectOpen] = useState(false)
   const [patientCandidates, setPatientCandidates] = useState<BV_QlyCapThe[]>([])
-  
   // Click outside refs cho các Dialog
   const patientSelectDialogRef = useClickOutside<HTMLDivElement>(() => {
     if (patientSelectOpen) {
@@ -273,10 +272,10 @@ export default function MedicalKioskPage() {
       recognitionRef.current.start();
     }
   };  
-  const searchPatient = async (name: string, type: number) => {
+  const searchPatient = async (param: PatientInfo) => {
     await withLoading(
       async () => {
-        const respone = await searchPatientInfoByType(name, type);
+        const respone = await searchPatientInfoByTypeV1(param);
         if (respone && respone.length > 1){
           setPatientCandidates(respone)
           setPatientSelectOpen(true)
@@ -454,7 +453,6 @@ export default function MedicalKioskPage() {
   useEffect(() => {
   focusedFieldRef.current = focusedField;
 }, [focusedField]);
-
 // Format datetime theo dạng từ dd/mm/yyyy sang Date react
 function parseDDMMYYYY(dateStr: string): Date {
   const [day, month, year] = dateStr.split("/");
@@ -566,7 +564,7 @@ useEffect(() => {
       id: "kyc" as ExamType,
       title: "KHÁM THEO YÊU CẦU",
       color: "#2600ffff",
-      size: "1.65rem"
+      size: "1.6rem"
     },
   ]
   const resetKiosk = () => {
@@ -664,7 +662,7 @@ useEffect(() => {
     >
       {currentStep === "form" && (
           <Box>
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", p:1 }}>
             <Grid container spacing={1} justifyContent="center" maxWidth="xl" width="100%">
               {examTypes.map((type) => {
                 const isSelected = selectedExamType === type.id
@@ -729,8 +727,9 @@ useEffect(() => {
         )}
 
       {currentStep === "form" && (
-        <CardContent>                        
-          <Card elevation={3} sx={{ maxWidth: "xl", mx: "auto" }}>
+        <Card sx={{ width: "100%" }}>
+          <CardContent sx={{p:0}}>                        
+          <Card elevation={3} sx={{ maxWidth: "xl"}}>
           <CardContent>
             <Grid container spacing={2}>
               <Grid size={9}>
@@ -758,9 +757,6 @@ useEffect(() => {
                           <IconButton onClick={() => handleFieldFocus("fullname")} sx={{ color: "#059669" }}>
                             <Keyboard />
                           </IconButton>
-                          <IconButton onClick={() => searchPatient(patientInfo.fullname, 0)}>
-                            <Search sx={{ color: "#2563eb" }} />
-                          </IconButton>
                         </InputAdornment>
                       ),
                       sx: { height: 70, fontSize: "2rem", mt: 1.2, pt: 2 },
@@ -771,53 +767,54 @@ useEffect(() => {
                   }}
                 />
               </Grid>
-              <Grid size={3}>
-                <Box>
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <Button
-                      variant={patientInfo.gender === "Nam" ? "contained" : "outlined"}
-                      onClick={() => setPatientInfo({ ...patientInfo, gender: "Nam" })}
-                      sx={{
+              <Grid size={2}>
+              <Box sx={{mt:1.2}}> 
+                <Box sx={{ display: "flex", gap: 0 }}> 
+                  <Button 
+                    variant={patientInfo.gender === "Nam" ? "contained" : "outlined"} 
+                    onClick={() => setPatientInfo({ ...patientInfo, gender: "Nam" })} 
+                      sx={{ 
+                        borderRadius:0,
                         flex: 1,
-                        height: 80,
-                        fontSize: "1.6rem",
-                        fontWeight: 600,
-                        textTransform: "none",
-                        backgroundColor: patientInfo.gender === "Nam" ? "#2563eb" : "transparent",
-                        borderColor: patientInfo.gender === "Nam" ? "#2563eb" : "#e5e7eb",
-                        color: patientInfo.gender === "Nam" ? "white" : "#374151",
-                        "&:hover": {
-                          backgroundColor: patientInfo.gender === "Nam" ? "#1d4ed8" : "#f3f4f6",
-                          borderColor: patientInfo.gender === "Nam" ? "#1d4ed8" : "#d1d5db",
-                        },
-                        transition: "all 0.2s ease-in-out",
-                      }}
-                    >
-                      NAM
-                    </Button>
-                    <Button
-                      variant={patientInfo.gender === "Nữ" ? "contained" : "outlined"}
-                      onClick={() => setPatientInfo({ ...patientInfo, gender: "Nữ" })}
-                      sx={{
-                        flex: 1,
-                        height: 80,
-                        fontSize: "1.6rem",
-                        fontWeight: 600,
-                        textTransform: "none",
-                        backgroundColor: patientInfo.gender === "Nữ" ? "#2563eb" : "transparent",
-                        borderColor: patientInfo.gender === "Nữ" ? "#2563eb" : "#e5e7eb",
-                        color: patientInfo.gender === "Nữ" ? "white" : "#374151",
-                        "&:hover": {
-                          backgroundColor: patientInfo.gender === "Nữ" ? "#2563eb" : "#f3f4f6",
-                          borderColor: patientInfo.gender === "Nữ" ? "#2563eb" : "#d1d5db",
-                        },
-                        transition: "all 0.2s ease-in-out",
-                      }}
-                    >
-                      NỮ
-                    </Button>
-                  </Box>
+                        height: 70, 
+                        fontSize: "1.6rem", 
+                        fontWeight: 600, 
+                        textTransform: "none", 
+                        backgroundColor: patientInfo.gender === "Nam" ? "linear-gradient(45deg, #2563eb 30%, #059669 90%)" : "transparent", 
+                        borderColor: patientInfo.gender === "Nam" ? "linear-gradient(45deg, #2563eb 30%, #059669 90%)" : "#e5e7eb", 
+                        color: patientInfo.gender === "Nam" ? "white" : "#374151", 
+                        "&:hover": { backgroundColor: patientInfo.gender === "Nam" ? "linear-gradient(45deg, #2563eb 30%, #059669 90%)" : "#f3f4f6", 
+                        borderColor: patientInfo.gender === "Nam" ? "linear-gradient(45deg, #2563eb 30%, #059669 90%)" : "#d1d5db", }, 
+                        transition: "all 0.2s ease-in-out", 
+                      }} 
+                  > NAM 
+                  </Button> 
+                  <Button 
+                    variant={patientInfo.gender === "Nữ" ? "contained" : "outlined"} 
+                    onClick={() => setPatientInfo({ ...patientInfo, gender: "Nữ" })} 
+                    sx={{ 
+                      borderRadius:0,
+                      flex: 1,
+                      height: 70, 
+                      fontSize: "1.6rem", 
+                      fontWeight: 600, 
+                      textTransform: "none", 
+                      backgroundColor: patientInfo.gender === "Nữ" ? "#2563eb" : "transparent", 
+                      borderColor: patientInfo.gender === "Nữ" ? "#2563eb" : "#e5e7eb", 
+                      color: patientInfo.gender === "Nữ" ? "white" : "#374151", 
+                      "&:hover": { backgroundColor: patientInfo.gender === "Nữ" ? "#2563eb" : "#f3f4f6", 
+                      borderColor: patientInfo.gender === "Nữ" ? "#2563eb" : "#d1d5db", },
+                      transition: "all 0.2s ease-in-out", 
+                    }} 
+                      > NỮ 
+                  </Button> 
+                  </Box> 
                 </Box>
+              </Grid>
+              <Grid size={1}>
+              <IconButton sx={{mt:1.5}} onClick={() => searchPatient(patientInfo)}>
+                <Search sx={{ color: "#2563eb", fontSize:"2.5rem" }} />
+              </IconButton>
               </Grid>
               <Grid size={6}>
                 <DebouncedTextField
@@ -843,9 +840,6 @@ useEffect(() => {
                           </IconButton>
                           <IconButton onClick={() => handleFieldFocus("phone")} sx={{ color: "#059669" }}>
                             <Keyboard />
-                          </IconButton>
-                          <IconButton onClick={() => searchPatient(patientInfo.phone, 1)}>
-                            <Search sx={{ color: "#2563eb" }} />
                           </IconButton>
                         </InputAdornment>
                       ),
@@ -910,9 +904,6 @@ useEffect(() => {
                           <IconButton onClick={() => handleFieldFocus("idNumber")} sx={{ color: "#059669" }}>
                             <Keyboard />
                           </IconButton>
-                          <IconButton onClick={() => searchPatient(patientInfo.idNumber, 2)}>
-                            <Search sx={{ color: "#2563eb" }} />
-                          </IconButton>
                         </InputAdornment>
                       ),
                       sx: { height: 80, fontSize: "2rem", mt: 1.2, pt: 2 },
@@ -947,13 +938,6 @@ useEffect(() => {
                           </IconButton>
                           <IconButton onClick={() => handleFieldFocus("insuranceNumber")} sx={{ color: "#059669" }}>
                             <Keyboard />
-                          </IconButton>
-                          <IconButton
-                            onClick={() =>
-                              patientInfo.insuranceNumber ? searchPatient(patientInfo.insuranceNumber, 3) : null
-                            }
-                          >
-                            <Search sx={{ color: "#2563eb" }} />
                           </IconButton>
                         </InputAdornment>
                       ),
@@ -1021,7 +1005,8 @@ useEffect(() => {
           </Grid>
         </Grid>
         </CardContent>
-          )}
+        </Card>
+      )}
           {currentStep === "success" && (
             <Card elevation={3} sx={{width:"100%", textAlign: "center", height: "100vh" }}>
               <CardContent>

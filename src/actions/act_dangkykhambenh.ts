@@ -120,6 +120,32 @@ export const searchPatientInfoByType = async (params: string, type: number): Pro
     return [];
   }
 };
+
+// Tìm kiếm bệnh nhân theo CCCD hoặc số điện thoại
+export const searchPatientInfoByTypeV1 = async (params: PatientInfo): Promise<BV_QlyCapThe[]> => {
+  try {
+    const response = await post(`/his/call`, {
+      optionId: "3",
+      funcName: "dbo.sp_get_benhnhan_search_v1",
+      paraData: [
+        { paraName: "hoten", paraValue: params.fullname || '' },
+        { paraName: "gioitinh", paraValue: params.gender || '' },
+        { paraName: "namsinh", paraValue: params.birthDateString?.split('/')[2] || null},
+        { paraName: "dienthoai", paraValue: params.phone || '' },
+        { paraName: "cccd", paraValue: params.idNumber || '' },
+        { paraName: "bhyt", paraValue: params.insuranceNumber || '' },
+      ],
+    });
+    if (response.status === "error") {
+      return [];
+    }
+    return response.message || [];
+  } catch (error) {
+    console.error("Lỗi tìm kiếm bệnh nhân:", error);
+    return [];
+  }
+};
+
 export const searchByBHYTCode = async (params: string): Promise<PatientInfo[]> => {
   try {
     const response = await post(`/his/call`, {
