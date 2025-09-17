@@ -426,8 +426,8 @@ export const DateWheelPickerPopup = ({
     <Dialog
       open={isOpen}
       onClose={handleCancel}
-      maxWidth="sm"
-      fullWidth
+      maxWidth="xl"
+      fullWidth    
       slotProps={{
         paper: {
           sx: { borderRadius: 2 },
@@ -435,14 +435,14 @@ export const DateWheelPickerPopup = ({
       }}
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="body1" sx={{fontWeight:"bold"}}>Chọn ngày</Typography>
+        <Typography variant="h5" sx={{fontWeight:"bold"}}>Chọn ngày</Typography>
         <IconButton onClick={handleCancel} size="small">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Box sx={{ display: 'flex', gap: 2, py: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <Box sx={{ flex: 1 }}>
             <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mb: 1, color: 'text.secondary', fontWeight:"bold" }}>
               Ngày
