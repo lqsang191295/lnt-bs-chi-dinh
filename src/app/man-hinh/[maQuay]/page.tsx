@@ -70,14 +70,14 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
   const displayCurrentPatient =
     currentPatient?.length > 0 ? currentPatient : sampleData.currentPatient;
 
-  // const displayQueueList = queueList?.length > 0
-  //   ? queueList
-  //   : sampleData.queueList;
-  const displayQueueList = sampleData.queueList;
-  if (isLoading) return <p>Đang tải...</p>;
-  if (error) {
-    console.log("Using sample data due to error:", error);
-  }
+  const displayQueueList = queueList?.length > 0
+    ? queueList
+    : sampleData.queueList;
+  // const displayQueueList = sampleData.queueList;
+  // if (isLoading) return <p>Đang tải...</p>;
+  // if (error) {
+  //   console.log("Using sample data due to error:", error);
+  // }
 
   return (
     <Grid
