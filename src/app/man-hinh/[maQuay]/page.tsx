@@ -320,7 +320,6 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                             align="center"
                             sx={{
                               fontFamily: "roboto",
-                              fontKerning: "optical",
                               fontSize: {
                                 xs: "1.5rem",
                                 sm: "1.5rem",
@@ -414,6 +413,7 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
               sx={{
                 height: "100%",
                 backgroundColor: "background.paper",
+                overflow: "hidden",
               }}
             >
               <Table stickyHeader size="small" sx={{ tableLayout: "fixed" }}>
