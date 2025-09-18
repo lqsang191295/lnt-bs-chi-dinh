@@ -28,28 +28,143 @@ export default function VirtualKeyboard({
   const offsetRef = useRef({ dx: 0, dy: 0 });
   const keyboardRef = useRef<HTMLDivElement>(null);
   const isNumeric = keyboardMode === "numeric";
-  
-  // Sử dụng click outside để đóng bàn phím
+
+  // Close on click outside
   const clickOutsideRef = useClickOutside<HTMLDivElement>(() => {
-    if (visible) {
-      onClose();
-    }
+    if (visible) onClose();
   }, visible);
 
-  // Cập nhật text khi currentText thay đổi từ bên ngoài
+  // Sync external text
   useEffect(() => {
     setText(currentText || "");
   }, [currentText]);
 
-  // Reset position và scale khi bàn phím được hiển thị
+  // Reset on show
   useEffect(() => {
-    if (visible) {
-      handleReset();
-    }
+    if (visible) handleReset();
   }, [visible]);
 
+  // ------------------ Telex composition helpers ------------------
+  // s: sắc, f: huyền, r: hỏi, x: ngã, j: nặng, z: bỏ dấu
+  const TONE_MAP: Record<string, number | "remove"> = {
+    s: 1, f: 2, r: 3, x: 4, j: 5, z: "remove"
+  };
+
+  // tone order: [none, sắc, huyền, hỏi, ngã, nặng]
+  const VOWEL_TONE_TABLE: Record<string, string[]> = {
+    "a": ["a", "á", "à", "ả", "ã", "ạ"],
+    "ă": ["ă", "ắ", "ằ", "ẳ", "ẵ", "ặ"],
+    "â": ["â", "ấ", "ầ", "ẩ", "ẫ", "ậ"],
+    "e": ["e", "é", "è", "ẻ", "ẽ", "ẹ"],
+    "ê": ["ê", "ế", "ề", "ể", "ễ", "ệ"],
+    "i": ["i", "í", "ì", "ỉ", "ĩ", "ị"],
+    "o": ["o", "ó", "ò", "ỏ", "õ", "ọ"],
+    "ô": ["ô", "ố", "ồ", "ổ", "ỗ", "ộ"],
+    "ơ": ["ơ", "ớ", "ờ", "ở", "ỡ", "ợ"],
+    "u": ["u", "ú", "ù", "ủ", "ũ", "ụ"],
+    "ư": ["ư", "ứ", "ừ", "ử", "ữ", "ự"],
+    "y": ["y", "ý", "ỳ", "ỷ", "ỹ", "ỵ"],
+    "đ": ["đ", "đ", "đ", "đ", "đ", "đ"] // tiện cho tra cứu
+  };
+  const VOWELS = Object.keys(VOWEL_TONE_TABLE);
+
+  function applyToneToChar(ch: string, toneIndex: number): string {
+    const lower = ch.toLowerCase();
+    const table = VOWEL_TONE_TABLE[lower];
+    if (!table) return ch;
+    const toned = table[toneIndex] || table[0];
+    return ch === lower ? toned : toned.toUpperCase();
+  }
+
+  function removeToneFromChar(ch: string): string {
+    const lower = ch.toLowerCase();
+    for (const key of Object.keys(VOWEL_TONE_TABLE)) {
+      const idx = VOWEL_TONE_TABLE[key].indexOf(lower);
+      if (idx >= 0) {
+        const base = VOWEL_TONE_TABLE[key][0];
+        return ch === lower ? base : base.toUpperCase();
+      }
+    }
+    return ch;
+  }
+
+  // Replace Telex base forms before tone: aa/aw/ee/oo/ow/uw/dd
+  function replaceDiacriticVowel(token: string): string {
+    const patterns: [RegExp, string][] = [
+      [/dd/g, "đ"], [/DD/g, "Đ"],
+      [/aa/g, "â"], [/AA/g, "Â"],
+      [/aw/g, "ă"], [/AW/g, "Ă"],
+      [/ee/g, "ê"], [/EE/g, "Ê"],
+      [/oo/g, "ô"], [/OO/g, "Ô"],
+      [/ow/g, "ơ"], [/OW/g, "Ơ"],
+      [/uw/g, "ư"], [/UW/g, "Ư"]
+    ];
+    for (const [re, repl] of patterns) {
+      if (re.test(token)) {
+        token = token.replace(re, repl);
+      }
+    }
+    return token;
+  }
+
+    function findLastVowelIndex(chars: string[]): number {
+  for (let i = chars.length - 1; i >= 0; i--) {
+    if (VOWELS.includes(chars[i].toLowerCase())) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+
+  function stripToneFromToken(token: string): string {
+    const chars = Array.from(token);
+    // remove tone from the prioritized vowel
+    const idx = findLastVowelIndex(chars);
+    if (idx !== -1) {
+      chars[idx] = removeToneFromChar(chars[idx]);
+    }
+    return chars.join("");
+  }
+
+  // Compose text with Telex when typing at the end of a word
+  function composeTelex(fullText: string): string {
+  const m = fullText.match(/([\p{L}0-9]+)$/u);
+  if (!m) return fullText;
+
+  let token = m[1];
+  let action: number | "remove" | null = null;
+
+  const lastLower = token.slice(-1).toLowerCase();
+  if (TONE_MAP[lastLower] !== undefined) {
+    const hasVowelBefore = Array.from(token.slice(0, -1))
+      .some(c => VOWELS.includes(c.toLowerCase()));
+    if (hasVowelBefore) {
+      action = TONE_MAP[lastLower];
+      token = token.slice(0, -1);
+    }
+  }
+
+  // Bước 1: thay tổ hợp trước
+  token = replaceDiacriticVowel(token);
+
+  // Bước 2: áp dấu
+  if (action === "remove") {
+    token = stripToneFromToken(token);
+  } else if (typeof action === "number") {
+    const chars = Array.from(token);
+    const targetIdx = findLastVowelIndex(chars); // tìm nguyên âm cuối
+    if (targetIdx !== -1) {
+      chars[targetIdx] = applyToneToChar(chars[targetIdx], action);
+    }
+    token = chars.join("");
+  }
+
+  return fullText.slice(0, fullText.length - m[1].length) + token;
+}
+
+  // ------------------ Input handling ------------------
   const handleKeyPress = (button: string) => {
-  console.debug('[VK] keypress', { button, text });
     let newText = text;
 
     if (button === "{bksp}") {
@@ -62,19 +177,15 @@ export default function VirtualKeyboard({
       onClose();
       return;
     } else {
-      // nếu numeric mode, chỉ cho phép ký tự hợp lệ (số + dấu chấm/phẩy/plus/minus/space/paren)
       if (isNumeric) {
         const allowed = /^[0-9\.\,\+\-\s\(\)]$/;
-        if (!allowed.test(button)) {
-          return; // bỏ qua ký tự không hợp lệ
-        }
+        if (!allowed.test(button)) return;
         newText = text + button;
       } else {
-  // text mode: append then try to compose Telex if appropriate
-  newText = text + button;
-  const composed = composeTelex(newText);
-  console.debug('[VK] composeTelex', { before: newText, after: composed });
-  newText = composed;
+        // Keyboard layout is uppercase, but we must feed lowercase letters to Telex logic
+        const isSingleLetter = /^[A-Z]$/.test(button);
+        const normalized = isSingleLetter ? button.toLowerCase() : button.toLowerCase(); // tone keys S/F/R/X/J/Z also normalized
+        newText = composeTelex(text + normalized);
       }
     }
 
@@ -82,108 +193,8 @@ export default function VirtualKeyboard({
     onTextChange(newText);
   };
 
-  // ------------------ Telex composition helpers ------------------
-  const TONE_MAP: Record<string, number> = { S: 1, F: 2, R: 3, X: 4, J: 5 };
-
-const VOWEL_TONE_TABLE: Record<string, string[]> = {
-  A: ["A", "Á", "À", "Ả", "Ã", "Ạ"],
-  Ă: ["Ă", "Ắ", "Ằ", "Ẳ", "Ẵ", "Ặ"],
-  Â: ["Â", "Ấ", "Ầ", "Ẩ", "Ẫ", "Ậ"],
-  E: ["E", "É", "È", "Ẻ", "Ẽ", "Ẹ"],
-  Ê: ["Ê", "Ế", "Ề", "Ể", "Ễ", "Ệ"],
-  I: ["I", "Í", "Ì", "Ỉ", "Ĩ", "Ị"],
-  O: ["O", "Ó", "Ò", "Ỏ", "Õ", "Ọ"],
-  Ô: ["Ô", "Ố", "Ồ", "Ổ", "Ỗ", "Ộ"],
-  Ơ: ["Ơ", "Ớ", "Ờ", "Ở", "Ỡ", "Ợ"],
-  U: ["U", "Ú", "Ù", "Ủ", "Ũ", "Ụ"],
-  Ư: ["Ư", "Ứ", "Ừ", "Ử", "Ữ", "Ự"],
-  Y: ["Y", "Ý", "Ỳ", "Ỷ", "Ỹ", "Ỵ"],
-};
-
-  const VOWELS = Object.keys(VOWEL_TONE_TABLE);
-
-  function applyToneToChar(ch: string, toneIndex: number): string {
-    const lower = ch.toUpperCase();
-    const table = VOWEL_TONE_TABLE[lower];
-    if (!table) return ch;
-    const toned = table[toneIndex] || table[0];
-    // preserve case
-    return ch === lower ? toned : toned.toUpperCase();
-  }
-
-  function replaceDiacriticVowel(token: string): string {
-    // replace common Telex vowel modifiers first: aa->â, aw->ă, ee->ê, oo->ô, ow->ơ, uw->ư, dd->đ
-    // prioritize double-letter forms
-    const patterns: [RegExp, string][] = [
-      [/DD/gi, "Đ"],
-      [/AA/gi, "Â"],
-      [/AW/gi, "Ă"],
-      [/EE/gi, "Ê"],
-      [/OO/gi, "Ô"],
-      [/OW/gi, "Ơ"],
-      [/UW/gi, "Ư"],
-      [/W/gi, "Ư"],
-    ];
-    for (const [re, repl] of patterns) {
-      if (re.test(token)) {
-        token = token.replace(re, (m) => (m === m.toUpperCase() ? repl : repl.toUpperCase()));
-        break; // only one modifier per token typically
-      }
-    }
-    return token;
-  }
-
-  function composeTelex(fullText: string): string {
-    // find last word-like token (letters and diacritics)
-    const m = fullText.match(/([\p{L}0-9]+)$/u);
-  if (!m) return fullText;
-    const token = m[1];
-    let transformed = token;
-
-    // tone marker at end
-    const lastChar = token.slice(-1).toUpperCase();
-    let toneIndex: number | null = null;
-    if (TONE_MAP[lastChar] !== undefined) {
-      toneIndex = TONE_MAP[lastChar];
-      transformed = token.slice(0, -1);
-    }
-    console.debug('[VK] composeTelex token/tone', { token, lastChar, toneIndex });
-
-    // apply dd/aa/aw/ee/oo/ow/uw
-    transformed = replaceDiacriticVowel(transformed);
-
-    // if we had a tone marker, apply it to the main vowel
-  if (toneIndex !== null) {
-      // find vowel positions
-      const chars = Array.from(transformed);
-      // choose target vowel by priority order
-      const priority = ["A","Ă","Â","E","Ê","O","Ô","Ơ","U","Ư","I","Y"];
-      let targetIdx = -1;
-      for (const p of priority) {
-        const idx = chars.findIndex(c => c.toUpperCase() === p);
-        if (idx !== -1) { targetIdx = idx; break; }
-      }
-      if (targetIdx === -1) {
-        // fallback to any vowel
-        targetIdx = chars.findIndex(c => VOWELS.includes(c.toUpperCase()));
-      }
-      if (targetIdx !== -1) {
-        const orig = chars[targetIdx];
-        const newChar = applyToneToChar(orig, toneIndex);
-        chars[targetIdx] = newChar;
-        transformed = chars.join("");
-        console.debug('[VK] applied tone', { orig, newChar, targetIdx, transformed });
-      }
-    }
-
-    // if replaceDiacriticVowel changed letters and token ended with tone marker that we consumed, we already updated
-    // Put transformed token back into fullText
-    return fullText.slice(0, fullText.length - token.length) + transformed;
-  }
-
-  // Mouse events for dragging
+  // ------------------ Drag/zoom ------------------
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Cho phép drag khi click vào header hoặc các element con của header
     const target = e.target as HTMLElement;
     const header = target.closest('[data-drag-handle="true"]');
     if (header) {
@@ -198,24 +209,20 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
     e.preventDefault();
     const newX = e.clientX - offsetRef.current.dx;
     const newY = e.clientY - offsetRef.current.dy;
-    
-    // Giới hạn bàn phím trong viewport
+
     const keyboardWidth = keyboardRef.current?.offsetWidth || 800;
     const keyboardHeight = keyboardRef.current?.offsetHeight || 400;
     const maxX = window.innerWidth - keyboardWidth;
     const maxY = window.innerHeight - keyboardHeight;
-    
-    setPos({ 
-      x: Math.max(0, Math.min(newX, maxX)), 
-      y: Math.max(0, Math.min(newY, maxY)) 
+
+    setPos({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
     });
   }, [dragging]);
 
-  const handleMouseUp = () => {
-    setDragging(false);
-  };
+  const handleMouseUp = () => setDragging(false);
 
-  // Touch events for dragging
   const handleTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
     const header = target.closest('[data-drag-handle="true"]');
@@ -233,40 +240,28 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
     const t = e.touches[0];
     const newX = t.clientX - offsetRef.current.dx;
     const newY = t.clientY - offsetRef.current.dy;
-    
-    // Giới hạn bàn phím trong viewport
+
     const keyboardWidth = keyboardRef.current?.offsetWidth || 800;
     const keyboardHeight = keyboardRef.current?.offsetHeight || 400;
     const maxX = window.innerWidth - keyboardWidth;
     const maxY = window.innerHeight - keyboardHeight;
-    
-    setPos({ 
-      x: Math.max(0, Math.min(newX, maxX)), 
-      y: Math.max(0, Math.min(newY, maxY)) 
+
+    setPos({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
     });
   }, [dragging]);
 
-  const handleTouchEnd = () => {
-    setDragging(false);
-  };
+  const handleTouchEnd = () => setDragging(false);
 
-  // Zoom functions
-  const handleZoomIn = () => {
-    setScale(prev => Math.min(prev + 0.1, 2));
-  };
+  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.1, 2));
+  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.5));
 
-  const handleZoomOut = () => {
-    setScale(prev => Math.max(prev - 0.1, 0.5));
-  };
-
-  // Reset position and scale
   const handleReset = () => {
-    // Tính toán vị trí để bàn phím ở bottom: 0 và left: 50%
-    const keyboardWidth = 800; // minWidth của bàn phím
-    const keyboardHeight = 450; // estimated height
-    const x = (window.innerWidth / 2) - (keyboardWidth / 2); // left: 50%
-    const y = window.innerHeight - keyboardHeight; // bottom: 0
-    
+    const keyboardWidth = 800;
+    const keyboardHeight = 450;
+    const x = (window.innerWidth / 2) - (keyboardWidth / 2);
+    const y = window.innerHeight - keyboardHeight;
     setPos({ x: Math.max(0, x), y: Math.max(0, y) });
     setScale(1);
   };
@@ -274,7 +269,7 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
@@ -309,7 +304,7 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
         cursor: dragging ? "grabbing" : "default",
       }}
     >
-      {/* Header với các nút điều khiển */}
+      {/* Header */}
       <Box
         data-drag-handle="true"
         onMouseDown={handleMouseDown}
@@ -324,9 +319,7 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
           borderTopLeftRadius: 8,
           borderTopRightRadius: 8,
           cursor: "grab",
-          "&:active": {
-            cursor: "grabbing",
-          },
+          "&:active": { cursor: "grabbing" },
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -340,18 +333,13 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton
             onClick={handleZoomOut}
-            sx={{
-              color: "white",
-              "&:hover": { background: "rgba(255,255,255,0.1)" },
-              p: 0.5,
-            }}
+            sx={{ color: "white", "&:hover": { background: "rgba(255,255,255,0.1)" }, p: 0.5 }}
           >
             <ZoomOut sx={{ fontSize: 18 }} />
           </IconButton>
-          
-          <Box sx={{ 
-            fontSize: "0.8rem", 
-            minWidth: 30, 
+          <Box sx={{
+            fontSize: "0.8rem",
+            minWidth: 30,
             textAlign: "center",
             background: "rgba(255,255,255,0.2)",
             px: 1,
@@ -360,37 +348,15 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
           }}>
             {Math.round(scale * 100)}%
           </Box>
-          
           <IconButton
             onClick={handleZoomIn}
-            sx={{
-              color: "white",
-              "&:hover": { background: "rgba(255,255,255,0.1)" },
-              p: 0.5,
-            }}
+            sx={{ color: "white", "&:hover": { background: "rgba(255,255,255,0.1)" }, p: 0.5 }}
           >
             <ZoomIn sx={{ fontSize: 18 }} />
           </IconButton>
-
-          {/* <IconButton
-            onClick={handleReset}
-            sx={{
-              color: "white",
-              "&:hover": { background: "rgba(255,255,255,0.1)" },
-              p: 0.5,
-              fontSize: "0.7rem",
-            }}
-          >
-            Reset
-          </IconButton> */}
-
           <IconButton
             onClick={onClose}
-            sx={{
-              color: "white",
-              "&:hover": { color: "#fecaca", background: "rgba(255,255,255,0.1)" },
-              p: 0.5,
-            }}
+            sx={{ color: "white", "&:hover": { color: "#fecaca", background: "rgba(255,255,255,0.1)" }, p: 0.5 }}
           >
             <Close sx={{ fontSize: 18 }} />
           </IconButton>
@@ -416,10 +382,10 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
         {text || "Văn bản sẽ hiển thị ở đây..."}
       </Box>
 
-      {/* Nếu numeric -> chỉ render numeric layout, còn không render full layout */}
+      {/* Keyboard */}
       <Grid container spacing={2} sx={{ p: 2 }}>
         {isNumeric ? (
-          <Grid size={{xs:12}}>
+          <Grid size={{ xs: 12 }}>
             <Keyboard
               onKeyPress={handleKeyPress}
               layout={{
@@ -432,7 +398,7 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
               }}
               display={{
                 "{bksp}": "⌫",
-                "{clear}": "Clear",
+                "{clear}": "CLEAR",
               }}
               buttonTheme={[
                 { class: "hg-num", buttons: "1 2 3 4 5 6 7 8 9 0" },
@@ -446,7 +412,7 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
           </Grid>
         ) : (
           <>
-            <Grid size={{xs:8}}>
+            <Grid size={{ xs: 8 }}>
               <Keyboard
                 onKeyPress={handleKeyPress}
                 layout={{
@@ -459,18 +425,12 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
                 }}
                 display={{
                   "{bksp}": "⌫",
-                  "{space}": "Space",
-                  "{clear}": "Clear",
+                  "{space}": "SPACE",
+                  "{clear}": "CLEAR",
                 }}
                 buttonTheme={[
-                  {
-                    class: "hg-spacebar",
-                    buttons: "{space}"
-                  },
-                  {
-                    class: "hg-enter",
-                    buttons: "{enter}"
-                  }
+                  { class: "hg-spacebar", buttons: "{space}" },
+                  { class: "hg-enter", buttons: "{enter}" }
                 ]}
                 theme="hg-theme-default hg-layout-default"
                 physicalKeyboardHighlight={false}
@@ -478,7 +438,7 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
                 physicalKeyboardHighlightBgColor="#f0f0f0"
               />
             </Grid>
-            <Grid size={{xs:4}}>
+            <Grid size={{ xs: 4 }}>
               <Keyboard
                 onKeyPress={handleKeyPress}
                 layout={{
@@ -499,7 +459,7 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
         )}
       </Grid>
 
-      {/* CSS tùy chỉnh cho bàn phím */}
+      {/* Custom styles */}
       <style jsx global>{`
         .simple-keyboard {
           background: transparent !important;
@@ -513,11 +473,12 @@ const VOWEL_TONE_TABLE: Record<string, string[]> = {
           border: 2px solid #e2e8f0 !important;
           border-radius: 8px !important;
           color: #1e293b !important;
-          font-weight: 600 !important;
+          font-weight: 700 !important;
           font-size: 1rem !important;
           min-height: 50px !important;
           transition: all 0.2s ease !important;
           box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+          text-transform: uppercase !important; /* ensure uppercase labels */
         }
         .simple-keyboard .hg-button:hover {
           background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
