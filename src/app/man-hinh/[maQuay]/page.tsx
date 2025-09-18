@@ -33,35 +33,64 @@ const roboto = Roboto({
 // Dữ liệu mẫu cho demo
 const sampleData = {
   currentPatient: [
-    {
-      STT: 1,
-      Hoten: "Nguyễn Văn Quỳnh Nghiêng",
-      NamSinh: "1985",
-      TrangThai: 1,
-    },
-    { STT: 2, Hoten: "Trần Thị Bình", NamSinh: "1990", TrangThai: 1 },
-    { STT: 3, Hoten: "Lê Văn Cường", NamSinh: "1975", TrangThai: 1 },
-    { STT: 4, Hoten: "Phạm Thị Dung", NamSinh: "1988", TrangThai: 1 },
-    { STT: 5, Hoten: "Hoàng Văn Đạt", NamSinh: "1992", TrangThai: 1 },
+    { STT: 1, Hoten: "NGUYỄN NGỌC QUỲNH NGHIÊNG", NamSinh: "1985", TrangThai: 1 },
+    { STT: 2, Hoten: "TRẦN HUỲNH NHƯ BÌNH", NamSinh: "1990", TrangThai: 1 },
+    { STT: 3, Hoten: "LÊ TRẦN NGỌC PHÁT", NamSinh: "1975", TrangThai: 1 },
+    { STT: 4, Hoten: "PHẠM THỊ DUNG", NamSinh: "1988", TrangThai: 1 },
+    { STT: 5, Hoten: "HOÀNG VĂN ĐẠT", NamSinh: "1992", TrangThai: 1 },
   ],
   queueList: [
     // Số đã gọi (TrangThai = 2)
-    { STT: 15, Hoten: "Vũ Thị Mai", NamSinh: "1987", TrangThai: 2 },
-    { STT: 16, Hoten: "Đỗ Văn Nam", NamSinh: "1983", TrangThai: 2 },
-    { STT: 17, Hoten: "Bùi Thị Oanh", NamSinh: "1995", TrangThai: 2 },
+    { STT: 15, Hoten: "VŨ THỊ MAI", NamSinh: "1987", TrangThai: 2 },
+    { STT: 16, Hoten: "ĐỖ VĂN NAM", NamSinh: "1983", TrangThai: 2 },
+    { STT: 17, Hoten: "BÙI THỊ OANH", NamSinh: "1995", TrangThai: 2 },
 
     // Số tiếp theo (TrangThai = 0)
-    { STT: 6, Hoten: "Ngô Văn Phúc", NamSinh: "1980", TrangThai: 0 },
-    { STT: 7, Hoten: "Đinh Thị Quỳnh Nghiêng", NamSinh: "1993", TrangThai: 0 },
-    { STT: 8, Hoten: "Lý Văn Sơn", NamSinh: "1977", TrangThai: 0 },
-    { STT: 9, Hoten: "Võ Thị Tâm", NamSinh: "1989", TrangThai: 0 },
-    { STT: 10, Hoten: "Trịnh Văn Uy", NamSinh: "1986", TrangThai: 0 },
-    { STT: 11, Hoten: "Dương Thị Vân", NamSinh: "1991", TrangThai: 0 },
-    { STT: 12, Hoten: "Phan Văn Xuân", NamSinh: "1984", TrangThai: 0 },
-    { STT: 13, Hoten: "Tôn Thị Yến", NamSinh: "1996", TrangThai: 0 },
-    { STT: 14, Hoten: "Hà Văn Zung", NamSinh: "1978", TrangThai: 0 },
+    { STT: 6, Hoten: "NGÔ VĂN PHÚC", NamSinh: "1980", TrangThai: 0 },
+    { STT: 7, Hoten: "ĐINH QUỲNH NGHIÊNG", NamSinh: "1993", TrangThai: 0 },
+    { STT: 8, Hoten: "LÝ VĂN SƠN", NamSinh: "1977", TrangThai: 0 },
+    { STT: 9, Hoten: "VÕ THỊ TÂM", NamSinh: "1989", TrangThai: 0 },
+    { STT: 10, Hoten: "TRỊNH VĂN UY", NamSinh: "1986", TrangThai: 0 },
+    { STT: 11, Hoten: "DƯƠNG THỊ VÂN", NamSinh: "1991", TrangThai: 0 },
+    { STT: 12, Hoten: "PHAN VĂN XUÂN", NamSinh: "1984", TrangThai: 0 },
+    { STT: 13, Hoten: "TÔN THỊ YẾN", NamSinh: "1996", TrangThai: 0 },
+    { STT: 14, Hoten: "HÀ VĂN ZUNG", NamSinh: "1978", TrangThai: 0 },
   ],
 };
+
+// Function viết tắt tên theo quy tắc mới
+const abbreviateName = (fullName: string) => {
+  if (fullName.length <= 17) return fullName;
+  
+  const words = fullName.trim().split(' ').filter(word => word.length > 0);
+  
+  // Nếu có 2 từ hoặc ít hơn: không viết tắt
+  if (words.length <= 2) return fullName;
+  
+  // Nếu có 3 từ: Họ + Tên lót viết tắt + Tên
+  if (words.length === 3) {
+    const ho = words[0];           // Họ
+    const tenLot = words[1].charAt(0).toUpperCase() + '.'; // Tên lót viết tắt
+    const ten = words[2];          // Tên
+    return `${ho} ${tenLot} ${ten}`;
+  }
+  
+  // Nếu có > 3 từ: Họ + Các tên lót viết tắt + Tên
+  const ho = words[0];                              // Họ
+  const ten = words[words.length - 1];              // Tên (từ cuối)
+  const tenLotVietTat = words.slice(1, -1).map(word => 
+    word.charAt(0).toUpperCase() + '.'
+  ).join(' ');                                      // Các tên lót viết tắt
+  
+  return `${ho} ${tenLotVietTat} ${ten}`;
+};
+
+// Examples:
+// "NGUYỄN QUỲNH NGHIÊNG" (3 từ) → "NGUYỄN Q. NGHIÊNG"
+// "TRẦN VĂN MINH QUANG" (4 từ) → "TRẦN V. M. QUANG" 
+// "ĐINH QUỲNH NGHIÊNG" (3 từ) → "ĐINH Q. NGHIÊNG"
+// "TRẦN THỊ BÌNH" (3 từ) → "TRẦN T. BÌNH"
+// "LÊ VĂN" (2 từ) → "LÊ VĂN" (không viết tắt)
 
 function QueueComponent({ maQuay }: { maQuay: string }) {
   const { currentPatient, queueList, isLoading, error } = useQueue(maQuay);
@@ -70,14 +99,11 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
   const displayCurrentPatient =
     currentPatient?.length > 0 ? currentPatient : sampleData.currentPatient;
 
-  const displayQueueList = queueList?.length > 0
-    ? queueList
-    : sampleData.queueList;
-  // const displayQueueList = sampleData.queueList;
-  // if (isLoading) return <p>Đang tải...</p>;
-  // if (error) {
-  //   console.log("Using sample data due to error:", error);
-  // }
+  const displayQueueList = sampleData.queueList;
+  if (isLoading) return <p>Đang tải...</p>;
+  if (error) {
+    console.log("Using sample data due to error:", error);
+  }
 
   return (
     <Grid
@@ -90,15 +116,16 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
     >
       {/* Bên trái - Thông tin bệnh nhân hiện tại */}
       <Grid size={{ xs: 9, lg: 9 }}>
-        {/* SỐ ĐANG GỌI - Tăng chiều cao để hiển thị đủ 5 dòng */}
+        {/* SỐ ĐANG GỌI */}
         <Card
           elevation={3}
           sx={{
-            height: "70%", // Tăng từ 70% lên 75%
-            maxHeight: "70vh", // Tăng từ 70vh lên 75vh
+            height: "70%",
+            maxHeight: "70vh",
             display: "flex",
             flexDirection: "column",
             backgroundColor: "background.paper",
+            overflow: "hidden",
           }}
         >
           <CardHeader
@@ -128,8 +155,12 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
               textAlign: "center",
               alignItems: "center",
               justifyContent: "center",
-              p: 0, // Bỏ padding để tối đa hóa không gian
-              minHeight: 0, // Đảm bảo flex item có thể shrink
+              p: 0,
+              minHeight: 0,
+              overflow: "hidden",
+              "&:last-child": { // Bỏ padding bottom mặc định của CardContent
+                pb: 0,
+              },
             }}
           >
             <TableContainer
@@ -138,79 +169,86 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
               sx={{
                 height: "100%",
                 backgroundColor: "background.paper",
-                maxHeight: "calc(70vh - 60px)", // Điều chỉnh theo header mới
-                overflow: "auto",
+                maxHeight: "calc(70vh - 60px)",
+                overflow: "hidden",
               }}
             >
-              <Table stickyHeader>
+              <Table stickyHeader sx={{ tableLayout: "fixed" }}>
                 <TableBody>
-                  {displayCurrentPatient.slice(0, 5).map((item, index) => (
-                    <Fade in={true} key={item.STT} timeout={300 + index * 100}>
-                      <TableRow
-                        className="animate-fade-in"
-                        sx={{
-                          height: "calc(100% / 5)", // Chia đều chiều cao cho 5 dòng
-                          "&:nth-of-type(odd)": {
-                            backgroundColor: "#fafafa",
-                          },
-                        }}
-                      >
-                         <TableCell
+                  {displayCurrentPatient.slice(0, 5).map((item, index) => {
+                    const displayName = abbreviateName(item.Hoten);
+                    
+                    return (
+                      <Fade in={true} key={item.STT} timeout={300 + index * 100}>
+                        <TableRow
+                          className="animate-fade-in"
                           sx={{
-                            fontFamily: "roboto", 
-                            fontSize: `clamp(1.7rem, ${Math.max(
-                              1.7,
-                              2.7 - item.Hoten.length * 0.04
-                            )}rem, 2.7rem)`,
-                            letterSpacing: "0.05em",
-                            fontWeight: 650,
-                            color: "primary.main",
-                            py: 2.5, // Padding lớn hơn để tránh cắt text
-                            px: 1,
-                            lineHeight: 1,
-                            display: "grid",
-                            gridTemplateColumns: `clamp(80px, ${Math.max(80, 120 - item.Hoten.length * 1.5)}px, 120px) 1fr clamp(80px, ${Math.max(80, 100 - item.Hoten.length * 1)}px, 100px)`,
-                            gap: `clamp(0.5rem, ${Math.max(0.5, 2 - item.Hoten.length * 0.1)}rem, 2rem)`,
-                            alignItems: "center",
-                            width: "100%",
-                            height: "100%",
-                            minHeight: "75px", // Chiều cao đủ lớn
+                            height: "calc(100% / 5)",
+                            "&:nth-of-type(odd)": {
+                              backgroundColor: "#fafafa",
+                              overflow: "hidden",
+                            },
+                            "&:last-child td": { // Bỏ border bottom của row cuối
+                              borderBottom: "none",
+                            },
                           }}
                         >
-                          <Box sx={{ textAlign: "right", justifySelf: "end" }}>
-                            {item.STT.toString().padStart(3, "0")}.
-                          </Box>
-                          <Box sx={{ 
-                            textAlign: "center", 
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            justifySelf: "center",
-                          }}>
-                            {item.Hoten}
-                          </Box>
-                          <Box sx={{ textAlign: "left", justifySelf: "start" }}>
-                            {item.NamSinh}
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    </Fade>
-                  ))}
+                          <TableCell
+                            sx={{
+                              fontFamily: "roboto", 
+                              fontSize: `clamp(1.7rem, 2.5rem, 3rem)`,
+                              letterSpacing: "0.05em",
+                              fontWeight: 650,
+                              color: "primary.main",
+                              py: 1,
+                              px: 2.0,
+                              lineHeight: 1.4,
+                              display: "grid",
+                              gridTemplateColumns: `clamp(80px, 100px, 120px) 1fr clamp(80px, 90px, 100px)`,
+                              gap: `clamp(0.5rem, 0.5rem, 1rem)`,
+                              alignItems: "left",
+                              width: "100%",
+                              height: "100%",
+                              minHeight: "75px",
+                              borderBottom: index === 4 ? "none" : undefined, // Bỏ border bottom của cell cuối
+                            }}
+                          >
+                            <Box sx={{ textAlign: "left", justifySelf: "start" }}>
+                              {item.STT.toString().padStart(3, "0")}.
+                            </Box>
+                            <Box sx={{
+                              textAlign: "left",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              justifySelf: "left",
+                            }}>
+                              {displayName}
+                            </Box>
+                            <Box sx={{ textAlign: "right", justifySelf: "start" }}>
+                              {item.NamSinh}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      </Fade>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
           </CardContent>
         </Card>
 
-        {/* SỐ ĐÃ GỌI - Giảm chiều cao tương ứng */}
+        {/* SỐ ĐÃ GỌI */}
         <Card
           elevation={3}
           sx={{
-            height: "30%", // Giảm từ 30% xuống 25%
-            maxHeight: "30vh", // Giảm từ 30vh xuống 25vh
+            height: "30%",
+            maxHeight: "30vh",
             display: "flex",
             flexDirection: "column",
             backgroundColor: "background.paper",
+            overflow: "hidden",
           }}
         >
           <CardHeader
@@ -239,6 +277,10 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
               textAlign: "center",
               p: 0,
               minHeight: 0,
+              overflow: "hidden",
+              "&:last-child": { // Bỏ padding bottom mặc định của CardContent
+                pb: 0,
+              },
             }}
           >
             <TableContainer
@@ -247,11 +289,11 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
               sx={{
                 height: "100%",
                 backgroundColor: "background.paper",
-                maxHeight: "calc(30vh - 60px)", // Điều chỉnh theo chiều cao mới
-                overflow: "auto",
+                maxHeight: "calc(30vh - 60px)",
+                overflow: "hidden",
               }}
             >
-              <Table stickyHeader>
+              <Table stickyHeader sx={{ tableLayout: "fixed" }}>
                 <TableBody>
                   {displayQueueList
                     .filter((x) => x.TrangThai === 2)
@@ -265,9 +307,12 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                         <TableRow
                           className="animate-fade-in"
                           sx={{
-                            height: "calc(100% / 3)", // Chia đều cho 3 dòng
+                            height: "calc(100% / 3)",
                             "&:nth-of-type(odd)": {
                               backgroundColor: "#fafafa",
+                            },
+                            "&:last-child td": { // Bỏ border bottom của row cuối
+                              borderBottom: "none",
                             },
                           }}
                         >
@@ -280,17 +325,18 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                                 xs: "1.5rem",
                                 sm: "1.5rem",
                                 letterSpacing: "0.05em",
-                              }, // Giảm font size cho phù hợp
+                              },
                               fontWeight: 600,
                               color: "primary.main",
-                              py: 1.65, // Tăng padding
-                              lineHeight: 0.65, // Tăng line height
+                              py: 1.65,
+                              lineHeight: 0.65,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "flex-start",
                               fontStyle: "italic",
-                              gap: 3, // Giảm gap cho phù hợp
-                              height: "100%", // Đảm bảo cell chiếm full height
+                              gap: 3,
+                              height: "100%",
+                              borderBottom: index === 2 ? "none" : undefined, // Bỏ border bottom của cell cuối
                             }}
                           >
                             <Box
@@ -331,7 +377,7 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
             maxHeight: "100vh",
             overflow: "hidden",
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "column", 
           }}
         >
           <CardHeader
@@ -354,7 +400,14 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
               },
             }}
           />
-          <CardContent sx={{ p: 1, flex: 1, overflow: "auto" }}>
+          <CardContent sx={{ 
+            p: 1, 
+            flex: 1, 
+            overflow: "hidden",
+            "&:last-child": { // Bỏ padding bottom mặc định của CardContent
+              pb: 1,
+            },
+          }}>
             <TableContainer
               component={Paper}
               elevation={0}
@@ -363,11 +416,11 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                 backgroundColor: "background.paper",
               }}
             >
-              <Table stickyHeader size="small">
+              <Table stickyHeader size="small" sx={{ tableLayout: "fixed" }}>
                 <TableBody>
                   {displayQueueList
                     .filter((x) => x.TrangThai === 0)
-                    .map((item, index) => (
+                    .map((item, index, array) => (
                       <Fade
                         in={true}
                         key={item.STT}
@@ -379,6 +432,9 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                             "&:nth-of-type(odd)": {
                               backgroundColor: "#fafafa",
                             },
+                            "&:last-child td": { // Bỏ border bottom của row cuối
+                              borderBottom: "none",
+                            },
                           }}
                         >
                           <TableCell
@@ -386,16 +442,16 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                             sx={{
                               fontFamily: "roboto",
                               fontSize: {
-                                xs: "4.5rem",
-                                sm: "4.5rem",
+                                xs: "3.5rem",
+                                sm: "3.5rem",
                                 letterSpacing: "0.05em",
                               },
                               fontWeight: 700,
                               color: "primary.main",
-                              py: 2.2,
+                              py: 1.8,
                               px: 1,
-                              lineHeight: 0.76,
-                              borderBottom: "1px solid #e0e0e0",
+                              lineHeight: 0.73,
+                              borderBottom: index === array.length - 1 ? "none" : "1px solid #e0e0e0", // Bỏ border bottom của cell cuối
                             }}
                           >
                             {item.STT.toString().padStart(3, "0")}
@@ -412,7 +468,6 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
     </Grid>
   );
 }
-
 // Tạo theme MUI tùy chỉnh
 const theme = createTheme({
   palette: {
