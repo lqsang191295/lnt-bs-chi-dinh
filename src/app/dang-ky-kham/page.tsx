@@ -194,8 +194,8 @@ export default function MedicalKioskPage() {
   };
   const handleCheckBHYT = async () => {
     if (selectedExamType !== "bhyt") return;
-    const { fullname, birthDateString, idNumber } = patientInfo;
-    if (!fullname || !birthDateString || !idNumber) {
+    const { fullname, birthDateString, idNumber, insuranceNumber } = patientInfo;
+    if (!fullname || !birthDateString || (!idNumber && !insuranceNumber)) {
       showErrorDialog(
         "Thiếu thông tin",
         "Vui lòng nhập đầy đủ Họ tên, Ngày sinh và Số CCCD trước khi kiểm tra.",
@@ -207,7 +207,7 @@ export default function MedicalKioskPage() {
     await withLoading(
       async () => {
         // TODO: Gọi API kiểm tra BHXH/BHYT tại đây
-        const result = await CheckBHXHByPatientInfo(fullname, idNumber, birthDateString);
+        const result = await CheckBHXHByPatientInfo(fullname, idNumber, insuranceNumber || "", birthDateString);
         if (result?.maKetQua != "000")
         {
           showErrorDialog("Lỗi", result?.ghiChu || "Vui lòng đến quầy đăng ký để được tư vấn", "warning")
@@ -1359,13 +1359,9 @@ useEffect(() => {
         ref={videoRef}
         autoPlay
         playsInline
-        className="border rounded-lg w-80 h-60 bg-black hidden"
+        className="absolute opacity-0 w-0 h-0"
       />
       <canvas ref={canvasRef} style={{ display: "none" }} />
-
-      {/* {photo && (
-        <Image src={photo} alt="Ảnh đã chụp" className="border rounded-lg w-80 hidden" />
-      )} */}
     </div>
 
       {/* Bàn phím ảo */}

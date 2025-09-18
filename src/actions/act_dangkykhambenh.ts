@@ -75,7 +75,7 @@ export const getTokenBHXH = async (): Promise<APIKey | null>=> {
     return null;
   }
 }
-export const CheckBHXHByPatientInfo = async (hoten: string, cccd: string, ngaysinh: string): Promise<ObBHXH | null> => {
+export const CheckBHXHByPatientInfo = async (hoten: string, cccd: string, bhyt: string, ngaysinh: string): Promise<ObBHXH | null> => {
   try {
     const responeAPIKey = await postExternal(`https://egw.baohiemxahoi.gov.vn/api/token/take`, {
       Username: "72122_BV",
@@ -84,7 +84,7 @@ export const CheckBHXHByPatientInfo = async (hoten: string, cccd: string, ngaysi
     if (responeAPIKey.maKetQua === "200"){
       const apiUrl = `https://egw.baohiemxahoi.gov.vn/api/egw/KQNhanLichSuKCB2024?token=${responeAPIKey.APIKey.access_token}&id_token=${responeAPIKey.APIKey.id_token}&username=${responeAPIKey.APIKey.username}&password=9FBEE874F62B8D7B486EFE31CC9E178B`;
       const response = await postExternal(apiUrl, {
-        maThe: cccd,
+        maThe: cccd || bhyt,
         hoTen: hoten,
         ngaySinh: ngaysinh.split("/")[2],
         hoTenCb: "Nguyễn Thảo Chi",
