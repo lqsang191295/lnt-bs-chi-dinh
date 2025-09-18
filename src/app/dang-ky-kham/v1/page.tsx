@@ -376,6 +376,10 @@ export default function MedicalKioskPage() {
         </html>
       `)
       printWindow.document.close()
+      printWindow.onafterprint = () => {
+        printWindow.close(); // tự đóng tab in
+        resetKiosk(); // quay về trang đăng ký
+      };
     }
   }
     
@@ -464,8 +468,8 @@ useEffect(() => {
         videoRef.current.srcObject = stream;
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     catch (ex) {
-      console.error(ex)
       return;
     }  
   } 
@@ -777,9 +781,9 @@ useEffect(() => {
                 {selectedExamType === "bhyt" && (
                 <Button               
                 variant="outlined"
-                sx={{mt:1, height: 80, color:"#2563eb", fontSize: "1.2rem", fontWeight: "bold" }} 
+                sx={{mt:1, height: 80, color:"#2563eb", fontSize: "0.97rem", fontWeight: "bold" }} 
                 onClick={() => handleCheckBHYT()}>
-                    KIỂM TRA THẺ BHYT
+                    KIỂM TRA <br/> THẺ BHYT
                 </Button>
                 )}
               </Grid>
