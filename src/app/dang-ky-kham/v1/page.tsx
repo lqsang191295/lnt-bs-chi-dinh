@@ -166,7 +166,7 @@ export default function MedicalKioskPage() {
     if (focusedField) {
       setPatientInfo(prev => ({
         ...prev,
-        [focusedField]: text
+        [focusedField]: text.toUpperCase()
       }));
     }
   };
@@ -698,6 +698,7 @@ useEffect(() => {
             <Grid container spacing={2} mt={1}>
               <Grid size={8}>
                 <DebouncedTextField
+                  autoFocus
                   fullWidth
                   label="HỌ VÀ TÊN"
                   value={patientInfo.fullname}
@@ -723,7 +724,7 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2, textTransform: "uppercase",  "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2, textTransform: "uppercase",  "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem",
                       }},
                     },
@@ -742,7 +743,7 @@ useEffect(() => {
                       sx={{ 
                         borderRadius: 1,
                         flex: 1,
-                        height: 80, 
+                        height: 95, 
                         fontSize: "1.6rem", 
                         fontWeight: 600, 
                         textTransform: "none", 
@@ -761,7 +762,7 @@ useEffect(() => {
                     sx={{ 
                       borderRadius: 1,
                       flex: 1,
-                      height: 80, 
+                      height: 95, 
                       fontSize: "1.6rem", 
                       fontWeight: 600, 
                       textTransform: "none", 
@@ -781,7 +782,7 @@ useEffect(() => {
                 {selectedExamType === "bhyt" && (
                 <Button               
                 variant="outlined"
-                sx={{mt:1, height: 80, color:"#2563eb", fontSize: "0.97rem", fontWeight: "bold" }} 
+                sx={{mt:1, height: 95, color:"#2563eb", fontSize: "1.2rem", fontWeight: "bold", fontFamily: "sans-serif" }} 
                 onClick={() => handleCheckBHYT()}>
                     KIỂM TRA <br/> THẺ BHYT
                 </Button>
@@ -790,6 +791,7 @@ useEffect(() => {
               <Grid size={6}>
                 <DebouncedTextField
                   fullWidth
+                  autoFocus
                   label="SỐ ĐIỆN THOẠI"
                   value={patientInfo.phone}
                   onFocus={() => setFocusedField("phone")}
@@ -814,7 +816,7 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem",
                       }},
                     },
@@ -838,7 +840,7 @@ useEffect(() => {
                         <InputAdornment position="start">
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem",
                       }},
                     },
@@ -881,7 +883,7 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2, "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2, "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem" }}
                     },
                     inputLabel: {
@@ -917,7 +919,44 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                        fontSize: "1.5rem",
+                      }},
+                    },
+                    inputLabel: {
+                      sx: { fontSize: "2rem", fontWeight: "bold"},
+                    },
+                  }}
+                />
+              </Grid>
+                <Grid size={12}>
+                <DebouncedTextField
+                  fullWidth
+                  label= "ĐỊA CHỈ"
+                  value={patientInfo.address}
+                  onFocus={() => setFocusedField("address")}
+                  onChange={(e) => setPatientInfo({ ...patientInfo, address: e.target.value.toUpperCase() })}
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                        </InputAdornment>
+                      ),
+                      endAdornment: focusedField === "address" && (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => startVoiceInput("address")}
+                            sx={{ color: isListening ? "red" : "primary" }}
+                          >
+                            <Mic />
+                          </IconButton>
+                          <IconButton onClick={() => handleFieldFocus("address")} sx={{ color: "#059669" }}>
+                            <Keyboard />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem",
                       }},
                     },
@@ -938,7 +977,7 @@ useEffect(() => {
             size="large"
             sx={{
               borderRadius: 1,
-              height: 100,
+              height: 95,
               fontSize: "3rem",
               fontWeight: 600,
               background: "linear-gradient(45deg, #2563eb 30%, #059669 90%)",
@@ -955,8 +994,8 @@ useEffect(() => {
               variant="outlined"
               size="large"
               sx={{
-                height: 100,
-                fontSize: "2.5rem",
+                height: 95,
+                fontSize: "3rem",
               }}
               onClick={() => scannerRef.current?.autoConnect()}
             >
