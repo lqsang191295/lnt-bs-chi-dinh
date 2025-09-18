@@ -1,6 +1,6 @@
 "use client"
-import { searchPatientInfoByTypeV1, dangKyKhamBenh, CheckBHXHByPatientInfo } from "@/actions/act_dangkykhambenh";
-import { PatientInfo, BV_QlyCapThe } from "@/model/dangkykhambenh";
+import { dangKyKhamBenh, CheckBHXHByPatientInfo } from "@/actions/act_dangkykhambenh";
+import { PatientInfo } from "@/model/dangkykhambenh";
 import { createQRScanner } from "@/actions/act_qrscan";
 import { useState, useEffect, useRef, useCallback } from "react"
 import VirtualKeyboard from "@/components/VirtualKeyboard"
@@ -71,14 +71,13 @@ import {
   Dialog, DialogTitle, DialogContent,
   DialogActions,
   IconButton,
-  List, ListItemButton, ListItemText, Divider
 } from "@mui/material"
 import {
   Error, Warning,CheckCircle,
-  Mic, Search, Keyboard
+  Mic, Keyboard
 } from "@mui/icons-material"
 type RegistrationStep = "home" | "bhyt" | "dv" | "form" | "success"
-type ExamType = "bhyt" | "dv" | "ksk"
+type ExamType = "bhyt" | "dv" | "ksk" | "kyc"
 type KeyboardField = "fullname" | "phone" | "address" | "birthDateString" | "idNumber" | "insuranceNumber" | "chiefComplaint"
 
 interface ErrorDialog {
@@ -89,7 +88,7 @@ interface ErrorDialog {
 }
 // Debounced TextField to reduce frequent parent updates/rendering
 function DebouncedTextField(props: TextFieldProps & { debounceMs?: number }) {
-  const { value, onChange, debounceMs = 100, ...rest } = props
+  const { value, onChange, debounceMs = 200, ...rest } = props
   const [local, setLocal] = useState<string>(() => (value as string) || "")
   const timerRef = useRef<number | null>(null)
   const prevValueRef = useRef<string>((value as string) || "")
@@ -152,14 +151,7 @@ export default function MedicalKioskPage() {
   const [selectedExamType, setSelectedExamType] = useState<ExamType | null>(null)
   const [currentStep, setCurrentStep] = useState<RegistrationStep>("form")
   const [isConnectPort, setIsConnectPort] = useState(false)
-  const [patientSelectOpen, setPatientSelectOpen] = useState(false)
-  const [patientCandidates, setPatientCandidates] = useState<BV_QlyCapThe[]>([])
   // Click outside refs cho các Dialog
-  const patientSelectDialogRef = useClickOutside<HTMLDivElement>(() => {
-    if (patientSelectOpen) {
-      setPatientSelectOpen(false)
-    }
-  }, patientSelectOpen)
   
   const showErrorDialog = (title: string, message: string, type: "error" | "warning" | "info" = "error") => {
     setErrorDialog({
@@ -180,11 +172,11 @@ export default function MedicalKioskPage() {
   };
   const handleCheckBHYT = async () => {
     if (selectedExamType !== "bhyt") return;
-    const { fullname, birthDateString, idNumber } = patientInfo;
-    if (!fullname || !birthDateString || !idNumber) {
+    const { fullname, birthDateString, idNumber, insuranceNumber } = patientInfo;
+    if (!fullname || !birthDateString || (!idNumber && !insuranceNumber)) {
       showErrorDialog(
         "Thiếu thông tin",
-        "Vui lòng nhập đầy đủ Họ tên, Ngày sinh và Số CCCD trước khi kiểm tra.",
+        "Vui lòng nhập đúng Họ tên, Năm sinh và Số CCCD hoặc Số BHYT trước khi kiểm tra.",
         "warning"
       );
       return;
@@ -193,7 +185,7 @@ export default function MedicalKioskPage() {
     await withLoading(
       async () => {
         // TODO: Gọi API kiểm tra BHXH/BHYT tại đây
-        const result = await CheckBHXHByPatientInfo(fullname, idNumber, birthDateString);
+        const result = await CheckBHXHByPatientInfo(fullname, idNumber, insuranceNumber || "", birthDateString);
         if (result?.maKetQua != "000")
         {
           showErrorDialog("Lỗi", result?.ghiChu || "Vui lòng đến quầy đăng ký để được tư vấn", "warning")
@@ -272,55 +264,6 @@ export default function MedicalKioskPage() {
       recognitionRef.current.start();
     }
   };  
-  const searchPatient = async (param: PatientInfo) => {
-    await withLoading(
-      async () => {
-        const respone = await searchPatientInfoByTypeV1(param);
-        if (respone && respone.length > 1){
-          setPatientCandidates(respone)
-          setPatientSelectOpen(true)
-        }
-        else if (respone && respone.length === 1) {
-          const newBirthDate = new Date(respone[0].Birthday);
-          if (newBirthDate) {
-            datePickerHookRef.current.setValue(newBirthDate);
-          }
-          setPatientInfo({
-            id: respone[0].Ma,
-            fullname: respone[0].Hoten,
-            address: respone[0].Diachi,
-            birthDateString: newBirthDate ? formatDateForInput(newBirthDate) : "",
-            gender: respone[0].Gioitinh,
-            idNumber: respone[0].SoCMND,
-            insuranceNumber: respone[0].SoBHYT,
-            phone: respone[0].Dienthoai,
-          })
-        }
-        else {
-          showErrorDialog("Không tìm thấy bệnh nhân", "Vui lòng kiểm tra lại thông tin hoặc đăng ký bệnh nhân mới.", "warning" )
-        }
-      },
-      "Đang tìm kiếm bệnh nhân",
-      "Đang tra cứu trong hệ thống..."
-    );
-  }
-  const handleSelectPatient = (p: BV_QlyCapThe) => {
-    const newBirthDate = new Date(p.Birthday);
-    if (newBirthDate) {
-      datePickerHookRef.current.setValue(newBirthDate);
-    }
-    setPatientInfo({
-      id: p.Ma,
-      fullname: p.Hoten,
-      address: p.Diachi,
-      birthDateString: newBirthDate ? formatDateForInput(newBirthDate) : "",
-      gender: p.Gioitinh,
-      idNumber: p.SoCMND,
-      insuranceNumber: p.SoBHYT,
-      phone: p.Dienthoai,
-    })
-    setPatientSelectOpen(false)
-  }
     const handlePrint = () => {
     const printWindow = window.open("", "_blank")
     if (printWindow) {
@@ -330,40 +273,48 @@ export default function MedicalKioskPage() {
         <meta charset="UTF-8">
         <title></title>
         <style>
+          @media print {
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
+          }
           body {
             font-family: "Courier New", monospace;
-            width: 280px; /* chiều rộng giống giấy in bill */
+            width: 310px; /* chiều rộng giống giấy in bill */
             margin: 0 auto;
-            padding: 10px;
+            padding: 0;
           }
           .title {
             text-align: center;
             font-weight: bold;
             margin-bottom: 10px;
-            font-size: 15px;
+            font-size: 24px;
           }
           .header {
             font-weight: bold;
+            margin-top: 20px;
             margin-bottom: 10px;
-            font-size: 16px;
+            font-size: 24px;
             text-align: center;
           }
 
           .line {
             border-top: 1px dashed #000;
-            margin: 8px 0;
+            margin: 0;
           }
 
           .queue-label {
-            font-size: 14px;
-            margin: 10px 0;
+            font-size: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
             text-align: center;
           }
 
           .queue-number {
-            font-size: 72px;
+            font-size: 96px;
             font-weight: bold;
-            margin: 10px 0;
+            margin-top: 10px;
             text-align: center; 
           }
 
@@ -373,14 +324,14 @@ export default function MedicalKioskPage() {
           }
 
           .social {
-            margin: 8px 0;
+            margin: 0;
             font-size: 12px;
           }
 
           .date-time {
             margin-top: 10px;
-            font-size: 14px;
-            text-align: right;
+            font-size: 20px;
+            text-align: center;
           }
           .barcode {
             margin-top: 10px;
@@ -388,35 +339,47 @@ export default function MedicalKioskPage() {
           }
         </style>
         </head>
-        <body onload="window.print()">
-        <div class="title">BỆNH VIỆN ĐA KHOA LÊ NGỌC TÙNG</div>
+        <body>
+      
           <div class="header">THÔNG TIN ĐĂNG KÝ</div>
-          <div class="queue-label">Loại khám: ${selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "Dịch vụ" : "Khám sức khỏe"}</div>
+          <div class="queue-label">KHÁM ${selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "DỊCH VỤ" : selectedExamType === "ksk" ? "SỨC KHỎE" : "THEO YÊU CẦU"}</div>
           <div class="line"></div>
           <div class="queue-label">SỐ THỨ TỰ</div>
           <div class="queue-number">${patientInfo.queueNumber}</div>
-          <div class="footer">
-            Họ tên: ${patientInfo.fullname}</br>
-            Ngày sinh: ${patientInfo.birthDateString}</br>
-            Giới tính: ${patientInfo.gender}</br>
-            Số CCCD: ${patientInfo.idNumber}</br>
-            Số thẻ BHYT: ${patientInfo.insuranceNumber || "N/A"}</br>
-            Số điện thoại: ${patientInfo.phone || "N/A"}</br>
-          </div>
+
           <div class="line"></div>
           <div class="date-time">
-            ${patientInfo.registrationTime}
+            NGÀY ${patientInfo.registrationTime}
           </div>
+          
+          <script>
+            // In ngay khi trang load xong
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                // Đóng tab sau khi in xong (hoặc hủy in)
+                window.onafterprint = function() {
+                  window.close();
+                };
+                // Đóng tab nếu người dùng hủy in
+                window.onbeforeprint = function() {
+                  // Có thể thêm logic xử lý trước khi in
+                };
+                // Fallback: tự động đóng sau 3 giây nếu không có sự kiện in
+                setTimeout(function() {
+                  window.close();
+                }, 3000);
+              }, 100);
+            };
+          </script>
         </body>
         </html>
       `)
       printWindow.document.close()
-      printWindow.onafterprint = () => {
-        printWindow.close(); // tự đóng tab in
-      };
-    }}
+    }
+  }
     
-      const closeErrorDialog = () => {
+    const closeErrorDialog = () => {
       setErrorDialog({
         open: false,
         title: "",
@@ -501,8 +464,8 @@ useEffect(() => {
         videoRef.current.srcObject = stream;
       }
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    catch (Exception) {
+    catch (ex) {
+      console.error(ex)
       return;
     }  
   } 
@@ -662,24 +625,23 @@ useEffect(() => {
   return (
     <Box
       sx={{
-        height: "100vh",
+        maxHeight: "100vh",
         background: "white",
       }}
     >
       {currentStep === "form" && (
           <Box>
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", p:1 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", pt: 1, pb: 0, pl: 2, pr: 2 }}>
             <Grid container spacing={1} justifyContent="center" maxWidth="xl" width="100%">
               {examTypes.map((type) => {
                 const isSelected = selectedExamType === type.id
-                const isHidden = selectedExamType !== null && !isSelected
                 return (
                   <Grid
                     size={3}
                     key={type.id}
                     sx={{
                       transition: "all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
-                      opacity: isHidden ? 0.5 : 1,
+                      opacity: 1,
                     }}
                   >
                     <Card
@@ -690,20 +652,9 @@ useEffect(() => {
                         transition: "all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
                         transformOrigin: "center",
                         willChange: "transform, box-shadow, border-color, background",
-                        boxShadow: isSelected ? `0 20px 60px ${type.color}30` : "0 4px 20px rgba(0,0,0,0.08)",
-                        border: isSelected ? `3px solid ${type.color}` : "3px solid transparent",
                         background: isSelected
-                          ? `linear-gradient(135deg, ${type.color}15 0%, ${type.color}25 100%)`
+                          ? type.color
                           : "white",
-                        backdropFilter: isSelected ? "blur(15px)" : "none",
-                        "&:hover": !isSelected
-                          ? {
-                              boxShadow: `0 12px 40px ${type.color}25`,
-                              borderColor: `${type.color}40`,
-                            }
-                          : {
-                              boxShadow: `0 25px 80px ${type.color}40`,
-                            },
                         "&:active": {
                           transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                         },
@@ -716,7 +667,7 @@ useEffect(() => {
                           sx={{
                             fontSize: type.size,
                             fontWeight: "bold",
-                            color: isSelected ? type.color : "#333",
+                            color: isSelected ? "white" : type.color,
                             whiteSpace: "pre-line"
                           }}
                         >
@@ -734,10 +685,13 @@ useEffect(() => {
 
       {currentStep === "form" && (
         <Card sx={{ width: "100%" }}>
-          <CardContent sx={{p:0}}>                        
-          <Card elevation={3} sx={{ maxWidth: "xl"}}>
-          <CardContent>
-            <Grid container spacing={2}>
+          <CardContent sx={{p:0, "&:last-child": {
+            paddingBottom: 0,
+          }}}>    
+          <Card elevation={3} >
+          <CardContent sx={{textAlign:"center"}}>
+            <Typography component="span" fontStyle="italic" color="red" textAlign={"center"}> * Quét mã QR trên CCCD hoặc BHYT để tự động lấy thông tin.</Typography>
+            <Grid container spacing={2} mt={1}>
               <Grid size={8}>
                 <DebouncedTextField
                   fullWidth
@@ -765,22 +719,24 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2, textTransform: "uppercase" },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2, textTransform: "uppercase",  "& .MuiOutlinedInput-notchedOutline legend": {
+                        fontSize: "1.5rem",
+                      }},
                     },
                     inputLabel: {
-                      sx: { fontSize: "2.5rem", fontWeight: "bold" },
+                      sx: { fontSize: "2rem", fontWeight: "bold" },
                     },
                   }}
                 />
               </Grid>
-              <Grid size={2}>
-              <Box sx={{mt:1.2}}> 
+              <Grid size={2.5}>
+              <Box sx={{mt: 1.2}}> 
                 <Box sx={{ display: "flex", gap: 0 }}> 
                   <Button 
                     variant={patientInfo.gender === "Nam" ? "contained" : "outlined"} 
                     onClick={() => setPatientInfo({ ...patientInfo, gender: "Nam" })} 
                       sx={{ 
-                        borderRadius:0,
+                        borderRadius: 1,
                         flex: 1,
                         height: 80, 
                         fontSize: "1.6rem", 
@@ -799,7 +755,7 @@ useEffect(() => {
                     variant={patientInfo.gender === "Nữ" ? "contained" : "outlined"} 
                     onClick={() => setPatientInfo({ ...patientInfo, gender: "Nữ" })} 
                     sx={{ 
-                      borderRadius:0,
+                      borderRadius: 1,
                       flex: 1,
                       height: 80, 
                       fontSize: "1.6rem", 
@@ -817,14 +773,15 @@ useEffect(() => {
                   </Box> 
                 </Box>
               </Grid>
-              <Grid size={2}>
+              <Grid size={1.5}>
+                {selectedExamType === "bhyt" && (
                 <Button               
                 variant="outlined"
-                sx={{mt:1, height: 80, color:"#2563eb", fontSize: "1.2rem" }} 
-                onClick={() => searchPatient(patientInfo)}>
-                <Search />
-                    TÌM KIẾM
+                sx={{mt:1, height: 80, color:"#2563eb", fontSize: "1.2rem", fontWeight: "bold" }} 
+                onClick={() => handleCheckBHYT()}>
+                    KIỂM TRA THẺ BHYT
                 </Button>
+                )}
               </Grid>
               <Grid size={6}>
                 <DebouncedTextField
@@ -853,10 +810,12 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2 },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                        fontSize: "1.5rem",
+                      }},
                     },
                     inputLabel: {
-                      sx: { fontSize: "2.5rem", fontWeight: "bold", },
+                      sx: { fontSize: "2rem", fontWeight: "bold", },
                     },
                   }}
                 />
@@ -875,10 +834,12 @@ useEffect(() => {
                         <InputAdornment position="start">
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2 },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                        fontSize: "1.5rem",
+                      }},
                     },
                     inputLabel: {
-                      sx: { fontSize: "2.5rem", fontWeight: "bold" },
+                      sx: { fontSize: "2rem", fontWeight: "bold" },
                     },
                   }}
                 />
@@ -892,7 +853,7 @@ useEffect(() => {
               <Grid size={6}>
                 <DebouncedTextField
                   fullWidth
-                  label="SỐ CCCD"
+                  label= "SỐ CCCD"
                   value={patientInfo.idNumber}
                   onFocus={() => setFocusedField("idNumber")}
                   onChange={(e) => setPatientInfo({ ...patientInfo, idNumber: e.target.value })}
@@ -916,10 +877,11 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2 },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2, "& .MuiOutlinedInput-notchedOutline legend": {
+                        fontSize: "1.5rem" }}
                     },
                     inputLabel: {
-                      sx: { fontSize: "2.5rem", fontWeight: "bold" },
+                      sx: { fontSize: "2rem", fontWeight: "bold" },
                     },
                   }}
                 />
@@ -927,7 +889,7 @@ useEffect(() => {
               <Grid size={6}>
                 <DebouncedTextField
                   fullWidth
-                  label="MÃ THẺ BHYT"
+                  label= "MÃ THẺ BHYT"
                   value={patientInfo.insuranceNumber}
                   onFocus={() => setFocusedField("insuranceNumber")}
                   onChange={(e) => setPatientInfo({ ...patientInfo, insuranceNumber: e.target.value })}
@@ -951,10 +913,12 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2 },
+                      sx: { height: 80, fontSize: "2.5rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                        fontSize: "1.5rem",
+                      }},
                     },
                     inputLabel: {
-                      sx: { fontSize: "2.5rem", fontWeight: "bold"},
+                      sx: { fontSize: "2rem", fontWeight: "bold"},
                     },
                   }}
                 />
@@ -965,14 +929,14 @@ useEffect(() => {
         <Grid>
           <Grid size={12}>
           <Button
-            fullWidth
+          fullWidth
             variant="contained"
             size="large"
             sx={{
+              borderRadius: 1,
               height: 100,
-              fontSize: "2.5rem",
+              fontSize: "3rem",
               fontWeight: 600,
-              mt: 1,
               background: "linear-gradient(45deg, #2563eb 30%, #059669 90%)",
             }}
             onClick={handleFormSubmit}
@@ -980,33 +944,15 @@ useEffect(() => {
             Hoàn tất đăng ký
           </Button>
           </Grid>
-          <Grid size={12}>
+          <Grid size={12} sx={{display: isConnectPort ? "none" : "block"}}>
+          {/* <Grid size={12} sx={{display: "none"}}> */}
           <Button
               fullWidth
               variant="outlined"
               size="large"
               sx={{
-                mt: 1.5,
                 height: 100,
                 fontSize: "2.5rem",
-                fontWeight: 600,
-                visibility: selectedExamType === 'bhyt' ? "visible" : "hidden"
-              }}
-              onClick={handleCheckBHYT}
-            >
-              Kiểm tra thẻ BHYT
-            </Button>
-          </Grid>
-          <Grid size={12}>
-          <Button
-              fullWidth
-              variant="outlined"
-              size="large"
-              sx={{
-                mt: 1,
-                height: 100,
-                fontSize: "2.5rem",
-                visibility: isConnectPort ? "hidden" : "visible"
               }}
               onClick={() => scannerRef.current?.autoConnect()}
             >
@@ -1037,11 +983,11 @@ useEffect(() => {
                       SỐ THỨ TỰ
                     </Typography>
                   </Box>
-                  <Typography variant="h1" sx={{ fontWeight: "bold", fontSize: "4rem", mb: 1 }}>
+                  <Typography variant="h1" sx={{ fontWeight: "bold", fontSize: "4.5rem", mb: 1 }}>
                     {patientInfo.queueNumber}
                   </Typography>
-                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                    Loại khám: {selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "Dịch vụ" : "Khám sức khỏe"}
+                  <Typography variant="h6" sx={{ opacity: 0.9, fontFamily:"sans-serif" }}>
+                    LOẠI KHÁM: {selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "DỊCH VỤ" : selectedExamType === "ksk" ? "KHÁM SỨC KHỎE" : "KHÁM THEO YÊU CẦU"}
                   </Typography>
                 </Paper>
                 <Paper
@@ -1054,30 +1000,30 @@ useEffect(() => {
                     textAlign: "left",
                   }}
                 >
-                  <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: "primary.main", textAlign: "center" }}>
+                  <Typography variant="h4" sx={{ fontWeight: 600, mb: 3, color: "primary.main", textAlign: "center" }}>
                     THÔNG TIN ĐĂNG KÝ
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid size={6}>
-                      <Typography variant="body1" sx={{ mb: 1 }}>
+                      <Typography variant="h5" sx={{ mb: 1 }}>
                         <strong>Họ tên:</strong> {patientInfo.fullname}
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1 }}>
+                      <Typography variant="h5" sx={{ mb: 1 }}>
                         <strong>Ngày sinh:</strong> {patientInfo.birthDateString?.replace(/-/g, "/")}
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1 }}>
+                      <Typography variant="h5" sx={{ mb: 1 }}>
                         <strong>Số điện thoại:</strong> {patientInfo.phone}
                       </Typography>
                     </Grid>
                     <Grid size={6}>
-                      <Typography variant="body1" sx={{ mb: 1 }}>
+                      <Typography variant="h5" sx={{ mb: 1 }}>
                         <strong>Giới tính:</strong> {patientInfo.gender}
                       </Typography>
-                      <Typography variant="body1" sx={{ mb: 1 }}>
+                      <Typography variant="h5" sx={{ mb: 1 }}>
                         <strong>Số CCCD:</strong> {patientInfo.idNumber}
                       </Typography>
                       {selectedExamType === "bhyt" && (
-                        <Typography variant="body1" sx={{ mb: 1 }}>
+                        <Typography variant="h5" sx={{ mb: 1 }}>
                           <strong>Số thẻ BHYT:</strong> {patientInfo.insuranceNumber}
                         </Typography>
                       )}
@@ -1122,36 +1068,6 @@ useEffect(() => {
               </CardContent>
             </Card>
           )}
-      <Dialog
-        open={patientSelectOpen}
-        onClose={() => setPatientSelectOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: 3, p: 1 },
-          ref: patientSelectDialogRef
-        }}
-      >
-        <DialogTitle sx={{ fontWeight: 700 }}>Chọn bệnh nhân</DialogTitle>
-        <DialogContent dividers>
-          <List>
-            {patientCandidates.map((p, idx) => (
-              <>
-                <ListItemButton key={p.Ma} onClick={() => handleSelectPatient(p)}>
-                  <ListItemText
-                    primary= {p.Hoten}
-                    secondary={`${p.Birthday ? `Ngày sinh: ${p.Birthday} • ` : ""}${p.Dienthoai ? `SDT: ${p.Dienthoai} • ` : ""}${p.SoCMND ? `CCCD: ${p.SoCMND} • ` : ""}${p.SoBHYT ? `BHYT: ${p.SoBHYT} • ` : ""}${p.Diachi ? `Đ/c: ${p.Diachi}` : ""}`}
-                  />
-                </ListItemButton>
-                {idx < patientCandidates.length - 1 && <Divider component="li" />}
-              </>
-            ))}
-          </List>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPatientSelectOpen(false)} variant="outlined">Đóng</Button>
-        </DialogActions>
-      </Dialog>
        <Dialog
           open={errorDialog.open}
           onClose={closeErrorDialog}
@@ -1219,18 +1135,14 @@ useEffect(() => {
           backdrop={true}
         />
         
-      <div className="p-4 flex flex-col gap-4 items-center">
+      <div className="opacity-0 absolute -z-10">
       <video
         ref={videoRef}
         autoPlay
         playsInline
-        className="border rounded-lg w-80 h-60 bg-black hidden"
+        className="absolute opacity-0 w-0 h-0"
       />
-      <canvas ref={canvasRef} style={{ display: "none" }} />
-
-      {/* {photo && (
-        <Image src={photo} alt="Ảnh đã chụp" className="border rounded-lg w-80 hidden" />
-      )} */}
+      <canvas ref={canvasRef} className="absolute opacity-0 w-0 h-0" />
     </div>
 
       {/* Bàn phím ảo */}
