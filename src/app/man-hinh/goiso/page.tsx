@@ -1,0 +1,901 @@
+"use client";
+
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Roboto } from "next/font/google";
+
+import {
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
+  CardHeader,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { useQueue } from "@/hooks/ListPatientWaiting";
+import { capnhatTrangThaiQueueNumbers } from "@/actions/act_dangkykhambenh";
+
+interface iPatient {
+  MaQuay: string
+  STT: number
+  Hoten: string
+  NamSinh: string
+  TrangThai: number
+  isEmpty: boolean
+  emptyIndex: number
+}
+
+interface NotificationState {
+  open: boolean;
+  message: string;
+  severity: 'success' | 'error' | 'warning' | 'info';
+}
+
+const queryClient = new QueryClient();
+
+const roboto = Roboto({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+});
+
+// Helper function để tạo danh sách đầy đủ với dòng trống
+const createFullList = (data: iPatient[], maxItems: number) => {
+  const currentItems = data.slice(0, maxItems);
+  
+  if (currentItems.length < maxItems) {
+    const emptyRowsCount = maxItems - currentItems.length;
+    const emptyRows = Array.from({ length: emptyRowsCount }, (_, index) => ({
+      MaQuay: "",
+      STT: 0,
+      Hoten: "",
+      NamSinh: "",
+      TrangThai: 0,
+      isEmpty: true,
+      emptyIndex: index
+    }));
+    
+    return [...currentItems, ...emptyRows];
+  }
+  
+  return currentItems;
+};
+
+// Function viết tắt tên theo quy tắc mới
+const abbreviateName = (fullName: string) => {
+  if (fullName.length <= 17) return fullName;
+  
+  const words = fullName.trim().split(' ').filter(word => word.length > 0);
+  
+  // Nếu có 2 từ hoặc ít hơn: không viết tắt
+  if (words.length <= 2) return fullName;
+  
+  // Nếu có 3 từ: Họ + Tên lót viết tắt + Tên
+  if (words.length === 3) {
+    const ho = words[0];
+    const tenLot = words[1].charAt(0).toUpperCase() + '.';
+    const ten = words[2];
+    return `${ho} ${tenLot} ${ten}`;
+  }
+  
+  // Nếu có > 3 từ: Họ + Các tên lót viết tắt + Tên
+  const ho = words[0];
+  const ten = words[words.length - 1];
+  const tenLotVietTat = words.slice(1, -1).map(word => 
+    word.charAt(0).toUpperCase() + '.'
+  ).join(' ');
+  
+  return `${ho} ${tenLotVietTat} ${ten}`;
+};
+
+function QueueManagementComponent() {
+  // Lấy tất cả return values từ hook
+  const queueData = useQueue("");
+  const { 
+    currentPatient, 
+    queueList, 
+    isLoading, 
+    error, 
+    refetch
+  } = queueData;
+
+  const [notification, setNotification] = useState<NotificationState>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [localCurrentPatient, setLocalCurrentPatient] = useState<iPatient[]>([]);
+  const [localQueueList, setLocalQueueList] = useState<iPatient[]>([]);
+  
+  // Refs để theo dõi data đã được set chưa
+  const isCurrentPatientSet = useRef(false);
+  const isQueueListSet = useRef(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cập nhật local state khi data thay đổi - FIX vòng lặp vô hạn
+  useEffect(() => {
+    if (currentPatient && currentPatient.length > 0 && !isCurrentPatientSet.current) {
+      setLocalCurrentPatient([...currentPatient]);
+      isCurrentPatientSet.current = true;
+    } else if (currentPatient && currentPatient.length > 0) {
+      // Chỉ update nếu thực sự khác biệt
+      const currentStr = JSON.stringify(currentPatient);
+      const localStr = JSON.stringify(localCurrentPatient);
+      if (currentStr !== localStr) {
+        setLocalCurrentPatient([...currentPatient]);
+      }
+    }
+  }, [currentPatient]); // Chỉ depend vào currentPatient
+
+  useEffect(() => {
+    if (queueList && queueList.length > 0 && !isQueueListSet.current) {
+      setLocalQueueList([...queueList]);
+      isQueueListSet.current = true;
+    } else if (queueList && queueList.length > 0) {
+      // Chỉ update nếu thực sự khác biệt
+      const queueStr = JSON.stringify(queueList);
+      const localStr = JSON.stringify(localQueueList);
+      if (queueStr !== localStr) {
+        setLocalQueueList([...queueList]);
+      }
+    }
+  }, [queueList]); // Chỉ depend vào queueList
+
+  // Function để refresh data - ổn định hơn
+  const refreshData = useCallback(async () => {
+    if (!isUpdating && typeof refetch === 'function') {
+      try {
+        await refetch();
+      } catch (error) {
+        console.error('Error refreshing data:', error);
+      }
+    }
+  }, [refetch, isUpdating]);
+
+  // Auto refresh mỗi 10 giây - FIX memory leak
+  useEffect(() => {
+    // Clear interval cũ nếu có
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Tạo interval mới
+    intervalRef.current = setInterval(() => {
+      refreshData();
+    }, 10000);
+
+    // Cleanup khi component unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [refreshData]);
+
+  // Hiển thị thông báo
+  const showNotification = useCallback((message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setNotification({
+      open: true,
+      message,
+      severity
+    });
+  }, []);
+
+  // Đóng thông báo
+  const handleCloseNotification = useCallback(() => {
+    setNotification(prev => ({ ...prev, open: false }));
+  }, []);
+
+  // Update local state ngay lập tức khi click
+  const updateLocalState = useCallback((stt: number, maQuay: string, newStatus: number) => {
+    // Cập nhật localCurrentPatient
+    setLocalCurrentPatient(prev => 
+      prev.map(item => 
+        item.STT === stt && item.MaQuay === maQuay 
+          ? { ...item, TrangThai: newStatus }
+          : item
+      )
+    );
+
+    // Cập nhật localQueueList
+    setLocalQueueList(prev => 
+      prev.map(item => 
+        item.STT === stt && item.MaQuay === maQuay 
+          ? { ...item, TrangThai: newStatus }
+          : item
+      )
+    );
+  }, []);
+
+  // Cập nhật trạng thái bệnh nhân
+  const updatePatientStatus = useCallback(async (stt: number, maQuay: string, newStatus: number, actionName: string) => {
+    if (isUpdating) return; // Prevent multiple calls
+    
+    setIsUpdating(true);
+    
+    // Cập nhật local state ngay lập tức để UX mượt mà
+    updateLocalState(stt, maQuay, newStatus);
+    
+    try {
+      const response = await capnhatTrangThaiQueueNumbers(newStatus.toString(), stt.toString());
+      
+      if (response.status === 'success') {
+        showNotification(`${actionName} số ${stt.toString().padStart(3, "0")} (${maQuay}) thành công!`, 'success');
+        
+        // Refresh data sau 2 giây để đồng bộ với server
+        setTimeout(() => {
+          refreshData();
+        }, 2000);
+        
+      } else {
+        showNotification(`Lỗi ${actionName.toLowerCase()}: ${response.message}`, 'error');
+        // Revert local state nếu API thất bại
+        refreshData();
+      }
+    } catch (error) {
+      console.error('Error updating patient status:', error);
+      showNotification(`Lỗi hệ thống khi ${actionName.toLowerCase()}`, 'error');
+      // Revert local state nếu có lỗi
+      refreshData();
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [isUpdating, updateLocalState, showNotification, refreshData]);
+
+  // Xử lý click trái (left click)
+  const handleLeftClick = useCallback(async (item: iPatient) => {
+    if (item.isEmpty || isUpdating) return;
+
+    if (item.TrangThai === 0) {
+      // Từ danh sách chờ -> đang gọi (trạng thái = 1)
+      await updatePatientStatus(item.STT, item.MaQuay, 1, 'Gọi bệnh nhân');
+    } else if (item.TrangThai === 1) {
+      // Từ đang gọi -> hoàn thành (trạng thái = 3)
+      await updatePatientStatus(item.STT, item.MaQuay, 3, 'Hoàn thành khám');
+    }
+  }, [isUpdating, updatePatientStatus]);
+
+  // Xử lý click phải (right click)
+  const handleRightClick = useCallback(async (e: React.MouseEvent, item: iPatient) => {
+    e.preventDefault(); // Ngăn context menu xuất hiện
+    if (item.isEmpty || isUpdating) return;
+
+    if (item.TrangThai === 1) {
+      // Từ đang gọi -> đã gọi (trạng thái = 2)
+      await updatePatientStatus(item.STT, item.MaQuay, 2, 'Chuyển sang đã gọi');
+    } else if (item.TrangThai === 2) {
+      // Từ đã gọi -> hoàn thành (trạng thái = 3)
+      await updatePatientStatus(item.STT, item.MaQuay, 3, 'Hoàn thành khám');
+    }
+  }, [isUpdating, updatePatientStatus]);
+
+  // Sử dụng local state thay vì state từ hook để tránh giật lag
+  const displayCurrentPatient = useMemo(() => {
+    console.log('localCurrentPatient:', localCurrentPatient);
+    console.log('localCurrentPatient length:', localCurrentPatient?.length);
+    
+    const filtered = (localCurrentPatient || []).filter((x) => {
+      console.log(`Patient ${x.STT} - ${x.MaQuay}: TrangThai = ${x.TrangThai}`);
+      return x.TrangThai === 1;
+    });
+    
+    console.log('Filtered patients with TrangThai=1:', filtered);
+    
+    return filtered.map((item, idx) => ({
+      ...item,
+      MaQuay: item.MaQuay ?? "",
+      Hoten: item.Hoten || "",
+      NamSinh: String(item.NamSinh || ""),
+      STT: item.STT,
+      TrangThai: item.TrangThai,
+      isEmpty: false,
+      emptyIndex: idx,
+    }));
+  }, [localCurrentPatient]);
+
+  // Debug: Log cả currentPatient từ hook
+  useEffect(() => {
+    console.log('=== DEBUG DATA ===');
+    console.log('currentPatient from hook:', currentPatient);
+    console.log('localCurrentPatient state:', localCurrentPatient);
+    console.log('displayCurrentPatient result:', displayCurrentPatient);
+    console.log('==================');
+  }, [currentPatient, localCurrentPatient, displayCurrentPatient]);
+
+  const fullCurrentPatientList = createFullList(displayCurrentPatient, 5);
+
+  const calledPatients = useMemo(() => {
+    console.log('localQueueList for called patients:', localQueueList);
+    
+    const filtered = (localQueueList || [])
+      .filter((x) => {
+        console.log(`Queue Patient ${x.STT} - ${x.MaQuay}: TrangThai = ${x.TrangThai}`);
+        return x.TrangThai === 2;
+      })
+      .slice(-3); // Lấy 3 item cuối cùng (mới nhất)
+      
+    console.log('Filtered called patients with TrangThai=2:', filtered);
+    
+    return filtered.map((item, idx) => ({
+      ...item,
+      MaQuay: item.MaQuay ?? "",
+      Hoten: item.Hoten || "",
+      NamSinh: String(item.NamSinh || ""),
+      STT: item.STT,
+      TrangThai: item.TrangThai,
+      isEmpty: false,
+      emptyIndex: idx,
+    }));
+  }, [localQueueList]);
+
+  const fullCalledPatientList = createFullList(calledPatients, 3);
+
+  // Fallback: Nếu localCurrentPatient trống, sử dụng currentPatient trực tiếp
+  const fallbackCurrentPatient = useMemo(() => {
+    if (displayCurrentPatient.length === 0 && currentPatient && currentPatient.length > 0) {
+      console.log('Using fallback currentPatient:', currentPatient);
+      return currentPatient
+        .filter((x) => x.TrangThai === 1)
+        .map((item, idx) => ({
+          ...item,
+          MaQuay: item.MaQuay ?? "",
+          Hoten: item.Hoten || "",
+          NamSinh: String(item.NamSinh || ""),
+          STT: item.STT,
+          TrangThai: item.TrangThai,
+          isEmpty: false,
+          emptyIndex: idx,
+        }));
+    }
+    return displayCurrentPatient;
+  }, [displayCurrentPatient, currentPatient]);
+
+  // Sử dụng fallback nếu cần
+  const finalCurrentPatientList = createFullList(fallbackCurrentPatient, 5);
+
+  // Tương tự cho queue list
+  const fallbackQueueList = useMemo(() => {
+    if (calledPatients.length === 0 && queueList && queueList.length > 0) {
+      console.log('Using fallback queueList:', queueList);
+      return queueList
+        .filter((x) => x.TrangThai === 2)
+        .slice(-3)
+        .map((item, idx) => ({
+          ...item,
+          MaQuay: item.MaQuay ?? "",
+          Hoten: item.Hoten || "",
+          NamSinh: String(item.NamSinh || ""),
+          STT: item.STT,
+          TrangThai: item.TrangThai,
+          isEmpty: false,
+          emptyIndex: idx,
+        }));
+    }
+    return calledPatients;
+  }, [calledPatients, queueList]);
+
+  const finalCalledPatientList = createFullList(fallbackQueueList, 3);
+
+  const displayQueueList = localQueueList.length > 0 ? localQueueList : (queueList || []);
+
+  if (isLoading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <p style={{ fontSize: '2rem' }}>Đang tải...</p>
+    </Box>
+  );
+  
+  if (error) {
+    console.log("Error loading data:", error);
+  }
+
+  return (
+    <>
+      <Grid
+        container
+        spacing={0.5}
+        sx={{
+          height: "100vh",
+          alignItems: "stretch",
+          opacity: isUpdating ? 0.9 : 1,
+          transition: "opacity 0.2s ease",
+        }}
+      >
+        {/* Bên trái - Thông tin bệnh nhân hiện tại */}
+        <Grid size={{ xs: 9, lg: 9 }}>
+          {/* SỐ ĐANG GỌI */}
+          <Card
+            elevation={3}
+            sx={{
+              height: "70%",
+              maxHeight: "70vh",
+              display: "flex",
+              flexDirection: "column",
+              backgroundColor: "background.paper",
+              overflow: "hidden",
+              border: isUpdating ? "1px solid #2196F3" : "none",
+            }}
+          >
+            <CardHeader
+              title={`SỐ ĐANG GỌI (Click để hoàn thành - Click phải để chuyển sang đã gọi)`}
+              sx={{
+                color: "white",
+                bgcolor: "primary.main",
+                textAlign: "center",
+                py: 1,
+              }}
+              slotProps={{
+                title: {
+                  sx: {
+                    fontSize: "1.2rem",
+                    fontWeight: "bold",
+                    fontFamily: "roboto",
+                    fontKerning: "optical",
+                    letterSpacing: "0.05em",
+                  },
+                },
+              }}
+            />
+            <CardContent
+              sx={{
+                flex: 1,
+                display: "flex",
+                textAlign: "center",
+                alignItems: "center",
+                justifyContent: "center",
+                p: 0,
+                minHeight: 0,
+                overflow: "hidden",
+                "&:last-child": {
+                  pb: 0,
+                },
+              }}
+            >
+              <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                  height: "100%",
+                  backgroundColor: "background.paper",
+                  maxHeight: "calc(70vh - 60px)",
+                  overflow: "hidden",
+                }}
+              >
+                <Table stickyHeader sx={{ tableLayout: "fixed" }}>
+                  <TableBody>
+                    {finalCurrentPatientList.map((item, index) => {
+                      const displayName = item.isEmpty ? "" : abbreviateName(item.Hoten);
+                      const uniqueKey = item.isEmpty ? 
+                        `empty-current-${index}` : 
+                        `current-${item.MaQuay}-${item.STT}`;
+                      return (
+                        <TableRow
+                          key={uniqueKey}
+                          className="animate-fade-in"
+                          onClick={() => handleLeftClick(item)}
+                          onContextMenu={(e) => handleRightClick(e, item)}
+                          sx={{
+                            height: "calc(100% / 5)",
+                            cursor: item.isEmpty || isUpdating ? 'default' : 'pointer',
+                            "&:nth-of-type(odd)": {
+                              backgroundColor: item.isEmpty ? "transparent" : "#fafafa",
+                              overflow: "hidden",
+                            },
+                            "&:hover": {
+                              backgroundColor: item.isEmpty || isUpdating ? "transparent" : "#e3f2fd",
+                            },
+                            "&:last-child td": {
+                              borderBottom: "none",
+                            },
+                          }}
+                        >
+                          <TableCell
+                            sx={{
+                              fontFamily: "roboto", 
+                              fontSize: `clamp(1.7rem, 2.5rem, 3rem)`,
+                              letterSpacing: "0.05em",
+                              fontWeight: 650,
+                              color: item.isEmpty ? "transparent" : "primary.main",
+                              py: 1,
+                              px: 2.0,
+                              lineHeight: 1.4,
+                              display: "grid",
+                              gridTemplateColumns: `clamp(60px, 80px, 100px) clamp(80px, 100px, 120px) 1fr clamp(80px, 90px, 100px)`,
+                              gap: `clamp(0.5rem, 0.5rem, 1rem)`,
+                              alignItems: "left",
+                              width: "100%",
+                              height: "100%",
+                              minHeight: "75px",
+                              borderBottom: index === 4 ? "none" : undefined,
+                            }}
+                          >
+                            {/* Cột Mã Quầy */}
+                            <Box sx={{ textAlign: "left", justifySelf: "start", fontSize: "1.5rem", fontWeight: 500 }}>
+                              {item.isEmpty ? "" : item.MaQuay}
+                            </Box>
+                            {/* Cột STT */}
+                            <Box sx={{ textAlign: "left", justifySelf: "start" }}>
+                              {item.isEmpty ? "" : `${item.STT.toString().padStart(3, "0")}.`}
+                            </Box>
+                            {/* Cột Họ tên */}
+                            <Box sx={{
+                              textAlign: "left",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              justifySelf: "left",
+                            }}>
+                              {displayName}
+                            </Box>
+                            {/* Cột Năm sinh */}
+                            <Box sx={{ textAlign: "right", justifySelf: "start" }}>
+                              {item.isEmpty ? "" : item.NamSinh}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+
+          {/* SỐ ĐÃ GỌI */}
+          <Card
+            elevation={3}
+            sx={{
+              height: "30%",
+              maxHeight: "30vh",
+              display: "flex",
+              flexDirection: "column",
+              backgroundColor: "background.paper",
+              overflow: "hidden",
+              border: isUpdating ? "1px solid #FF9800" : "none",
+            }}
+          >
+            <CardHeader
+              title={`SỐ ĐÃ GỌI (Click phải để hoàn thành)`}
+              sx={{
+                color: "white",
+                bgcolor: "secondary.main",
+                textAlign: "center",
+                py: 1,
+              }}
+              slotProps={{
+                title: {
+                  sx: {
+                    fontSize: "1.5rem",
+                    fontWeight: "bold",
+                    fontFamily: "roboto",
+                    letterSpacing: "0.05em",
+                  },
+                },
+              }}
+            />
+            <CardContent
+              sx={{
+                flex: 1,
+                display: "flex",
+                textAlign: "center",
+                p: 0,
+                minHeight: 0,
+                overflow: "hidden",
+                "&:last-child": {
+                  pb: 0,
+                },
+              }}
+            >
+              <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                  height: "100%",
+                  backgroundColor: "background.paper",
+                  maxHeight: "calc(30vh - 60px)",
+                  overflow: "hidden",
+                }}
+              >
+                <Table stickyHeader sx={{ tableLayout: "fixed" }}>
+                  <TableBody>
+                    {finalCalledPatientList.map((item, index) => {
+                      const uniqueKey = item.isEmpty ? 
+                        `empty-called-${index}` : 
+                        `called-${item.MaQuay}-${item.STT}`;
+                      
+                      return (
+                        <TableRow
+                          key={uniqueKey}
+                          className="animate-fade-in"
+                          onContextMenu={(e) => handleRightClick(e, item)}
+                          sx={{
+                            height: "calc(100% / 3)",
+                            cursor: item.isEmpty || isUpdating ? 'default' : 'pointer',
+                            "&:nth-of-type(odd)": {
+                              backgroundColor: item.isEmpty ? "transparent" : "#fafafa",
+                            },
+                            "&:hover": {
+                              backgroundColor: item.isEmpty || isUpdating ? "transparent" : "#fff3e0",
+                            },
+                            "&:last-child td": {
+                              borderBottom: "none",
+                            },
+                          }}
+                        >
+                          <TableCell
+                            align="center"
+                            sx={{
+                              fontFamily: "roboto",
+                              fontSize: {
+                                xs: "1.5rem",
+                                sm: "1.5rem",
+                                letterSpacing: "0.05em",
+                              },
+                              fontWeight: 600,
+                              color: item.isEmpty ? "transparent" : "secondary.main",
+                              py: 1.65,
+                              lineHeight: 0.65,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "flex-start",
+                              fontStyle: "italic",
+                              gap: 2,
+                              height: "100%",
+                              borderBottom: index === 2 ? "none" : undefined,
+                            }}
+                          >
+                            {/* Cột Mã Quầy */}
+                            <Box
+                              component="span"
+                              sx={{ minWidth: "60px", textAlign: "left", fontSize: "1.2rem", fontWeight: 500 }}
+                            >
+                              {item.isEmpty ? "" : item.MaQuay}
+                            </Box>
+                            {/* Cột STT */}
+                            <Box
+                              component="span"
+                              sx={{ minWidth: "80px", textAlign: "right" }}
+                            >
+                              {item.isEmpty ? "" : `${item.STT.toString().padStart(3, "0")}.`}
+                            </Box>
+                            {/* Cột Họ tên */}
+                            <Box
+                              component="span"
+                              sx={{ flex: 1, textAlign: "center" }}
+                            >
+                              {item.isEmpty ? "" : item.Hoten}
+                            </Box>
+                            {/* Cột Năm sinh */}
+                            <Box
+                              component="span"
+                              sx={{ minWidth: "80px", textAlign: "left" }}
+                            >
+                              {item.isEmpty ? "" : item.NamSinh}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Bên phải - Danh sách chờ */}
+        <Grid size={{ xs: 3, lg: 3 }}>
+          <Card
+            elevation={3}
+            sx={{
+              height: "100%",
+              maxHeight: "100vh",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              border: isUpdating ? "1px solid #4CAF50" : "none",
+            }}
+          >
+            <CardHeader
+              title={`SỐ TIẾP THEO (Click để gọi)`}
+              sx={{
+                bgcolor: "#4CAF50",
+                color: "white",
+                textAlign: "center",
+                py: 1,
+                flexShrink: 0,
+              }}
+              slotProps={{
+                title: {
+                  sx: {
+                    fontFamily: "roboto",
+                    fontSize: "1.5rem",
+                    fontWeight: "bold",
+                    letterSpacing: "0.1em",
+                  },
+                },
+              }}
+            />
+            <CardContent sx={{ 
+              p: 1, 
+              flex: 1, 
+              overflow: "auto",
+              "&:last-child": {
+                pb: 1,
+              },
+            }}>
+              <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                  height: "100%",
+                  backgroundColor: "background.paper",
+                  overflow: "auto",
+                }}
+              >
+                <Table stickyHeader size="small" sx={{ tableLayout: "fixed" }}>
+                  <TableBody>
+                    {displayQueueList
+                      .filter((x) => x.TrangThai === 0)
+                      .map((item, index, array) => (
+                        <TableRow
+                          key={`${item.MaQuay}-${item.STT}`}
+                          className="animate-fade-in"
+                          onClick={() => handleLeftClick(item)}
+                          sx={{
+                            cursor: isUpdating ? 'default' : 'pointer',
+                            "&:nth-of-type(odd)": {
+                              backgroundColor: "#fafafa",
+                            },
+                            "&:hover": {
+                              backgroundColor: isUpdating ? "#fafafa" : "#e8f5e8",
+                            },
+                            "&:last-child td": {
+                              borderBottom: "none",
+                            },
+                          }}
+                        >
+                          <TableCell
+                            align="center"
+                            sx={{
+                              fontFamily: "roboto",
+                              fontSize: {
+                                xs: "2.5rem",
+                                sm: "2.5rem",
+                                letterSpacing: "0.05em",
+                              },
+                              fontWeight: 700,
+                              color: "#4CAF50",
+                              py: 1.5,
+                              px: 1,
+                              lineHeight: 0.8,
+                              borderBottom: index === array.length - 1 ? "none" : "1px solid #e0e0e0",
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            <Box sx={{ fontSize: "1.2rem", fontWeight: 500, color: "#666" }}>
+                              {item.MaQuay}
+                            </Box>
+                            <Box sx={{ fontSize: "2.5rem" }}>
+                              {item.STT.toString().padStart(3, "0")}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={3000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          sx={{ width: '100%', fontSize: '1.1rem' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
+    </>
+  );
+}
+
+// Tạo theme MUI tùy chỉnh
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#354b9c",
+    },
+    secondary: {
+      main: "#FF9800",
+    },
+    background: {
+      default: "#ffffff",
+      paper: "#f9fafb",
+    },
+    text: {
+      primary: "#4b5563",
+      secondary: "#374151",
+    },
+  },
+  typography: {
+    fontFamily: "var(--font-geist-sans), sans-serif",
+    h1: {
+      fontWeight: 700,
+      fontSize: "8rem",
+      lineHeight: 1,
+    },
+    h2: {
+      fontWeight: 600,
+      fontSize: "3rem",
+    },
+    h3: {
+      fontWeight: 600,
+      fontSize: "2rem",
+    },
+  },
+  components: {
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottom: "1px solid #e5e7eb",
+          padding: "16px",
+        },
+        head: {
+          backgroundColor: "#f9fafb",
+          fontWeight: 600,
+          fontSize: "1.1rem",
+        },
+      },
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          "&:hover": {
+            backgroundColor: "#f3f4f6",
+            transition: "background-color 0.2s ease",
+          },
+        },
+      },
+    },
+  },
+});
+
+export default function QueueManagementDisplay() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box
+        sx={{
+          minHeight: "100vh",
+          backgroundColor: "background.default",
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
+          <QueueManagementComponent />
+        </QueryClientProvider>
+      </Box>
+    </ThemeProvider>
+  );
+}

@@ -58,6 +58,39 @@ export const fetchCurrentQueueNumbers = async (all: boolean, maQuay: string | nu
     };
   }
 }
+// lấy danh sách bệnh nhân hiện tại ở các quầy
+export const capnhatTrangThaiQueueNumbers = async (trangthai: string | null, stt: string | null): Promise<IResponse<ICurrentQueueNumber[]>> => {
+  try {
+    console.log("capnhatTrangThaiQueueNumbers", trangthai, stt);
+    const response = await post(`/his/call`, {
+      optionId: "3",
+      funcName: "dbo.sp_update_status_BV_DangKyLaySo",
+      paraData: [
+        { paraName: "status", paraValue: trangthai },
+        { paraName: "stt", paraValue: stt },
+      ],
+    });
+    if (response.status === "error") {
+      return {
+        status: "error",
+        message: response.message || "Lỗi lấy số thứ tự hiện tại",
+        error: response.message
+      };
+    }
+    return {
+      status: "success",
+      message: "Lấy số thứ tự hiện tại thành công",
+      data: response.message
+    };
+  } catch (error) {
+    console.error("Lỗi lấy số thứ tự hiện tại:", error);
+    return {
+      status: "error",
+      message: "Lỗi hệ thống khi lấy số thứ tự hiện tại",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
+}
 export const getTokenBHXH = async (): Promise<APIKey | null>=> {
   try{
     const respone = await postExternal(`https://egw.baohiemxahoi.gov.vn/api/token/take`, {

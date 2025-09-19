@@ -41,32 +41,32 @@ const roboto = Roboto({
 });
 
 // Dữ liệu mẫu cho demo
-const sampleData = {
-  currentPatient: [
-    // { MaQuay: "dv1", STT: 1, Hoten: "NGUYỄN NGỌC QUỲNH NGHIÊNG", NamSinh: "1985", TrangThai: 1 },
-    // { MaQuay: "dv1",  STT: 2, Hoten: "TRẦN HUỲNH NHƯ BÌNH", NamSinh: "1990", TrangThai: 1 },
-    // { MaQuay: "dv1",  STT: 3, Hoten: "LÊ TRẦN NGỌC PHÁT", NamSinh: "1975", TrangThai: 1 },
-    // { MaQuay: "dv1",  STT: 4, Hoten: "PHẠM THỊ DUNG", NamSinh: "1988", TrangThai: 1 },
-    // { MaQuay: "dv1",  STT: 5, Hoten: "HOÀNG VĂN ĐẠT", NamSinh: "1992", TrangThai: 1 },
-  ],
-  queueList: [
-    // Số đã gọi (TrangThai = 2)
-    { MaQuay: "dv1",  STT: 15, Hoten: "VŨ THỊ MAI", NamSinh: "1987", TrangThai: 2 },
-    { MaQuay: "dv1",  STT: 16, Hoten: "ĐỖ VĂN NAM", NamSinh: "1983", TrangThai: 2 },
-    { MaQuay: "dv1",  STT: 17, Hoten: "BÙI THỊ OANH", NamSinh: "1995", TrangThai: 2 },
+// const sampleData = {
+//   currentPatient: [
+//     // { MaQuay: "dv1", STT: 1, Hoten: "NGUYỄN NGỌC QUỲNH NGHIÊNG", NamSinh: "1985", TrangThai: 1 },
+//     // { MaQuay: "dv1",  STT: 2, Hoten: "TRẦN HUỲNH NHƯ BÌNH", NamSinh: "1990", TrangThai: 1 },
+//     // { MaQuay: "dv1",  STT: 3, Hoten: "LÊ TRẦN NGỌC PHÁT", NamSinh: "1975", TrangThai: 1 },
+//     // { MaQuay: "dv1",  STT: 4, Hoten: "PHẠM THỊ DUNG", NamSinh: "1988", TrangThai: 1 },
+//     // { MaQuay: "dv1",  STT: 5, Hoten: "HOÀNG VĂN ĐẠT", NamSinh: "1992", TrangThai: 1 },
+//   ],
+//   queueList: [
+//     // Số đã gọi (TrangThai = 2)
+//     { MaQuay: "dv1",  STT: 15, Hoten: "VŨ THỊ MAI", NamSinh: "1987", TrangThai: 2 },
+//     { MaQuay: "dv1",  STT: 16, Hoten: "ĐỖ VĂN NAM", NamSinh: "1983", TrangThai: 2 },
+//     { MaQuay: "dv1",  STT: 17, Hoten: "BÙI THỊ OANH", NamSinh: "1995", TrangThai: 2 },
 
-    // Số tiếp theo (TrangThai = 0)
-    { MaQuay: "dv1",  STT: 6, Hoten: "NGÔ VĂN PHÚC", NamSinh: "1980", TrangThai: 0 },
-    { MaQuay: "dv1",  STT: 7, Hoten: "ĐINH QUỲNH NGHIÊNG", NamSinh: "1993", TrangThai: 0 },
-    { MaQuay: "dv1",  STT: 8, Hoten: "LÝ VĂN SƠN", NamSinh: "1977", TrangThai: 0 },
-    { MaQuay: "dv1",  STT: 9, Hoten: "VÕ THỊ TÂM", NamSinh: "1989", TrangThai: 0 },
-    { MaQuay: "dv1",  STT: 10, Hoten: "TRỊNH VĂN UY", NamSinh: "1986", TrangThai: 0 },
-    { MaQuay: "dv1",  STT: 11, Hoten: "DƯƠNG THỊ VÂN", NamSinh: "1991", TrangThai: 0 },
-    { MaQuay: "dv1",  STT: 12, Hoten: "PHAN VĂN XUÂN", NamSinh: "1984", TrangThai: 0 },
-    { MaQuay: "dv1",  STT: 13, Hoten: "TÔN THỊ YẾN", NamSinh: "1996", TrangThai: 0 },
-    { MaQuay: "dv1",  STT: 14, Hoten: "HÀ VĂN ZUNG", NamSinh: "1978", TrangThai: 0 },
-  ],
-};
+//     // Số tiếp theo (TrangThai = 0)
+//     { MaQuay: "dv1",  STT: 6, Hoten: "NGÔ VĂN PHÚC", NamSinh: "1980", TrangThai: 0 },
+//     { MaQuay: "dv1",  STT: 7, Hoten: "ĐINH QUỲNH NGHIÊNG", NamSinh: "1993", TrangThai: 0 },
+//     { MaQuay: "dv1",  STT: 8, Hoten: "LÝ VĂN SƠN", NamSinh: "1977", TrangThai: 0 },
+//     { MaQuay: "dv1",  STT: 9, Hoten: "VÕ THỊ TÂM", NamSinh: "1989", TrangThai: 0 },
+//     { MaQuay: "dv1",  STT: 10, Hoten: "TRỊNH VĂN UY", NamSinh: "1986", TrangThai: 0 },
+//     { MaQuay: "dv1",  STT: 11, Hoten: "DƯƠNG THỊ VÂN", NamSinh: "1991", TrangThai: 0 },
+//     { MaQuay: "dv1",  STT: 12, Hoten: "PHAN VĂN XUÂN", NamSinh: "1984", TrangThai: 0 },
+//     { MaQuay: "dv1",  STT: 13, Hoten: "TÔN THỊ YẾN", NamSinh: "1996", TrangThai: 0 },
+//     { MaQuay: "dv1",  STT: 14, Hoten: "HÀ VĂN ZUNG", NamSinh: "1978", TrangThai: 0 },
+//   ],
+// };
 
 // Helper function để tạo danh sách đầy đủ với dòng trống
 const createFullList = (data: iPatient[], maxItems: number) => {
@@ -125,7 +125,7 @@ const abbreviateName = (fullName: string) => {
 
 function QueueComponent({ maQuay }: { maQuay: string }) {
   const { currentPatient, queueList, isLoading, error } = useQueue(maQuay);
-
+    console.log("Current Patient:", currentPatient);
   // Sử dụng dữ liệu mẫu nếu data rỗng hoặc có lỗi
    const displayCurrentPatient = currentPatient.filter((x) => x.TrangThai === 1)
     .map((item, idx) => ({
