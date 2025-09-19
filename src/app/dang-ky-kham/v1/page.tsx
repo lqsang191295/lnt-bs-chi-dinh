@@ -250,7 +250,7 @@ export default function MedicalKioskPage() {
         if (focusedFieldRef.current) {
           setPatientInfo((prev) => ({
             ...prev,
-            [focusedFieldRef.current!]: transcript,
+            [focusedFieldRef.current!]: transcript.toUpperCase(),
           }));
         }
       };
