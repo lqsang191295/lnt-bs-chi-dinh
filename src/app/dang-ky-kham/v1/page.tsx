@@ -694,7 +694,7 @@ useEffect(() => {
           }}}>    
           <Card elevation={3} >
           <CardContent sx={{textAlign:"center"}}>
-            <Typography component="span" fontStyle="italic" color="red" textAlign={"center"}> * Quét mã QR trên CCCD hoặc BHYT để tự động lấy thông tin.</Typography>
+            <Typography component="span" fontStyle="italic" color="red" textAlign="center" fontSize="1.5rem"> * Quét mã QR trên CCCD hoặc BHYT để tự động lấy thông tin.</Typography>
             <Grid container spacing={2} mt={1}>
               <Grid size={8}>
                 <DebouncedTextField
@@ -724,7 +724,7 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2, textTransform: "uppercase",  "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 92, fontSize: "3rem", mt: 1.2, pt: 2, textTransform: "uppercase",  "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem",
                       }},
                     },
@@ -743,7 +743,7 @@ useEffect(() => {
                       sx={{ 
                         borderRadius: 1,
                         flex: 1,
-                        height: 95, 
+                        height: 92, 
                         fontSize: "1.6rem", 
                         fontWeight: 600, 
                         textTransform: "none", 
@@ -762,7 +762,7 @@ useEffect(() => {
                     sx={{ 
                       borderRadius: 1,
                       flex: 1,
-                      height: 95, 
+                      height: 92, 
                       fontSize: "1.6rem", 
                       fontWeight: 600, 
                       textTransform: "none", 
@@ -782,7 +782,7 @@ useEffect(() => {
                 {selectedExamType === "bhyt" && (
                 <Button               
                 variant="outlined"
-                sx={{mt:1, height: 95, color:"#2563eb", fontSize: "1.2rem", fontWeight: "bold", fontFamily: "sans-serif" }} 
+                sx={{mt:1, height: 92, color:"#2563eb", fontSize: "1.2rem", fontWeight: "bold", fontFamily: "sans-serif" }} 
                 onClick={() => handleCheckBHYT()}>
                     KIỂM TRA <br/> THẺ BHYT
                 </Button>
@@ -816,7 +816,7 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 92, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem",
                       }},
                     },
@@ -840,7 +840,7 @@ useEffect(() => {
                         <InputAdornment position="start">
                         </InputAdornment>
                       ),
-                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 92, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem",
                       }},
                     },
@@ -883,7 +883,7 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2, "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 92, fontSize: "3rem", mt: 1.2, pt: 2, "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem" }}
                     },
                     inputLabel: {
@@ -919,7 +919,7 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 92, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem",
                       }},
                     },
@@ -956,7 +956,7 @@ useEffect(() => {
                           </IconButton>
                         </InputAdornment>
                       ),
-                      sx: { height: 95, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
+                      sx: { height: 92, fontSize: "3rem", mt: 1.2, pt: 2,  "& .MuiOutlinedInput-notchedOutline legend": {
                         fontSize: "1.5rem",
                       }},
                     },
@@ -977,7 +977,7 @@ useEffect(() => {
             size="large"
             sx={{
               borderRadius: 1,
-              height: 95,
+              height: 92,
               fontSize: "3rem",
               fontWeight: 600,
               background: "linear-gradient(45deg, #2563eb 30%, #059669 90%)",
@@ -994,7 +994,7 @@ useEffect(() => {
               variant="outlined"
               size="large"
               sx={{
-                height: 95,
+                height: 92,
                 fontSize: "3rem",
               }}
               onClick={() => scannerRef.current?.autoConnect()}
