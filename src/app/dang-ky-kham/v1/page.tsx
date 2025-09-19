@@ -8,7 +8,8 @@ import {DateWheelPickerPopup, useDateWheelPicker} from "@/components/date-wheel-
 import LoadingOverlay, { useLoading } from "@/components/LoadingOverlay"
 import { CURRENT_DATE, DateUtils } from "@/utils/dateUtils"
 import { useClickOutside } from "@/utils/useClickOutside"
-import "react-simple-keyboard/build/css/index.css";
+import "react-simple-keyboard/build/css/index.css"; 
+
 // Định nghĩa interface cho Speech Recognition API
 interface SpeechRecognition extends EventTarget {
   lang: string;
@@ -264,6 +265,8 @@ export default function MedicalKioskPage() {
       recognitionRef.current.start();
     }
   };  
+
+   
     const handlePrint = () => {
     const billtext1 = `
         <html lang="en">
