@@ -14,7 +14,7 @@ import {ObBHXH} from "@/model/baohiemxahoimodel";
 export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
   try {
     const response = await post(`/his/call`, {
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.sp_get_HT_DMQuayDangKy",
     });
     if (response.status === "error") {
@@ -30,7 +30,7 @@ export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
 export const fetchCurrentQueueNumbers = async (all: boolean, maQuay: string | null): Promise<IResponse<ICurrentQueueNumber[]>> => {
   try {
     const response = await post(`/his/call`, {
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.sp_get_danhsachdangkyhientai_trangthai",
       paraData: [
         { paraName: "all", paraValue: all },
@@ -63,7 +63,7 @@ export const capnhatTrangThaiQueueNumbers = async (trangthai: string | null, stt
   try {
     console.log("capnhatTrangThaiQueueNumbers", trangthai, stt);
     const response = await post(`/his/call`, {
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.sp_update_status_BV_DangKyLaySo",
       paraData: [
         { paraName: "status", paraValue: trangthai },
@@ -137,7 +137,7 @@ export const CheckBHXHByPatientInfo = async (hoten: string, cccd: string, bhyt: 
 export const searchPatientInfoByType = async (params: string, type: number): Promise<BV_QlyCapThe[]> => {
   try {
     const response = await post(`/his/call`, {
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.sp_get_benhnhan_search",
       paraData: [
         { paraName: "search", paraValue: params || "" },
@@ -158,7 +158,7 @@ export const searchPatientInfoByType = async (params: string, type: number): Pro
 export const searchPatientInfoByTypeV1 = async (params: PatientInfo): Promise<BV_QlyCapThe[]> => {
   try {
     const response = await post(`/his/call`, {
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.sp_get_benhnhan_search_v1",
       paraData: [
         { paraName: "hoten", paraValue: params.fullname || '' },
@@ -182,7 +182,7 @@ export const searchPatientInfoByTypeV1 = async (params: PatientInfo): Promise<BV
 export const searchByBHYTCode = async (params: string): Promise<PatientInfo[]> => {
   try {
     const response = await post(`/his/call`, {
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.sp_search_bhyt",
       paraData: [
         { paraName: "bhyt", paraValue: params || "" }
@@ -203,7 +203,7 @@ export const searchByBHYTCode = async (params: string): Promise<PatientInfo[]> =
 export const dangKyKhamBenh = async (dangKy: PatientInfo): Promise<IResponse<IQueueNumber[]>> => {
   try {
     const response = await post(`/his/call`, {
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.sp_BV_DangKyLaySo",
       paraData: [
         { paraName: "hoten", paraValue: dangKy.fullname },
