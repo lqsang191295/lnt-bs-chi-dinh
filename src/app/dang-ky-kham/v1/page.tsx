@@ -265,9 +265,7 @@ export default function MedicalKioskPage() {
     }
   };  
     const handlePrint = () => {
-    const printWindow = window.open("", "_blank")
-    if (printWindow) {
-      printWindow.document.writeln(`
+    const billtext1 = `
         <html lang="en">
         <head>
         <meta charset="UTF-8">
@@ -288,7 +286,7 @@ export default function MedicalKioskPage() {
           .title {
             text-align: center;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 30px;
             font-size: 24px;
           }
           .header {
@@ -340,9 +338,9 @@ export default function MedicalKioskPage() {
         </style>
         </head>
         <body>
-      
-          <div class="header">THÔNG TIN ĐĂNG KÝ</div>
-          <div class="queue-label">KHÁM ${selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "DỊCH VỤ" : selectedExamType === "ksk" ? "SỨC KHỎE" : "THEO YÊU CẦU"}</div>
+      <br />
+          <div class="title">THÔNG TIN ĐĂNG KÝ</div>
+          <div class="header">KHÁM ${selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "DỊCH VỤ" : selectedExamType === "ksk" ? "SỨC KHỎE" : "THEO YÊU CẦU"}</div>
           <div class="line"></div>
           <div class="queue-label">SỐ THỨ TỰ</div>
           <div class="queue-number">${patientInfo.queueNumber}</div>
@@ -374,7 +372,115 @@ export default function MedicalKioskPage() {
           </script>
         </body>
         </html>
-      `)
+      `;
+      const billtext2 = `
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <title></title>
+        <style>
+          @media print {
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
+          }
+          body {
+            font-family: "Courier New", monospace;
+            width: 310px; /* chiều rộng giống giấy in bill */
+            margin: 0 auto;
+            padding: 0;
+          }
+          .title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 20px;
+          }
+          .header {
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            font-size: 20px;
+            text-align: center;
+          }
+
+          .line {
+            border-top: 1px dashed #000;
+            margin: 0;
+          }
+
+          .queue-label {
+            font-size: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+          }
+
+          .queue-number {
+            font-size: 72px;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center; 
+          }
+
+          .footer {
+            margin-top: 10px;
+            font-size: 12px;
+          }
+
+          .social {
+            margin: 0;
+            font-size: 12px;
+          }
+
+          .date-time {
+            margin-top: 10px;
+            font-size: 20px;
+            text-align: center;
+          }
+          .barcode {
+            margin-top: 10px;
+            text-align: center;
+          }
+        </style>
+        </head>
+        <body>      
+          <div class="header">KHÁM ${selectedExamType === "bhyt" ? "BHYT" : selectedExamType === "dv" ? "DỊCH VỤ" : selectedExamType === "ksk" ? "SỨC KHỎE" : "THEO YÊU CẦU"}</div>
+          <div class="line"></div>
+          <div class="queue-number">${patientInfo.queueNumber}</div>
+
+          <div class="line"></div>
+          <div class="date-time">
+            NGÀY ${patientInfo.registrationTime}
+          </div>
+          
+          <script>
+            // In ngay khi trang load xong
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                // Đóng tab sau khi in xong (hoặc hủy in)
+                window.onafterprint = function() {
+                  window.close();
+                };
+                // Đóng tab nếu người dùng hủy in
+                window.onbeforeprint = function() {
+                  // Có thể thêm logic xử lý trước khi in
+                };
+                // Fallback: tự động đóng sau 3 giây nếu không có sự kiện in
+                setTimeout(function() {
+                  window.close();
+                }, 3000);
+              }, 100);
+            };
+          </script>
+        </body>
+        </html>
+      `;
+    const printWindow = window.open("", "_blank")
+    if (printWindow) {
+      printWindow.document.writeln(billtext1)
       printWindow.document.close()
       printWindow.onafterprint = () => {
         printWindow.close(); // tự đóng tab in
