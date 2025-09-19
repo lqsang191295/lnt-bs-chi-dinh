@@ -51,12 +51,13 @@ const roboto = Roboto({
 
 // Helper function để tạo danh sách đầy đủ với dòng trống
 const createFullList = (data: iPatient[], maxItems: number) => {
+  console.log("data", data)
   const currentItems = data.slice(0, maxItems);
   
   if (currentItems.length < maxItems) {
     const emptyRowsCount = maxItems - currentItems.length;
     const emptyRows = Array.from({ length: emptyRowsCount }, (_, index) => ({
-      MaQuay: "",
+      MaQuay: "dv1",
       STT: 0,
       Hoten: "",
       NamSinh: "",
@@ -99,7 +100,7 @@ const abbreviateName = (fullName: string) => {
 };
 
 function QueueManagementComponent({ maQuay }: { maQuay: string }) {
-  const { currentPatient, queueList, isLoading, error, refetch } = useQueue(maQuay);
+  const { currentPatient, queueList, isLoading, error } = useQueue(maQuay);
   const [notification, setNotification] = useState<NotificationState>({
     open: false,
     message: '',
@@ -123,17 +124,15 @@ function QueueManagementComponent({ maQuay }: { maQuay: string }) {
   // Cập nhật trạng thái bệnh nhân
   const updatePatientStatus = async (stt: number, newStatus: number, actionName: string) => {
     try {
-      const response = await capnhatTrangThaiQueueNumbers(`${newStatus}:${stt}`, maQuay);
+      const response = await capnhatTrangThaiQueueNumbers(newStatus.toString(),stt.toString());
       
       if (response.status === 'success') {
         showNotification(`${actionName} số ${stt.toString().padStart(3, "0")} thành công!`, 'success');
         // Refresh data sau khi cập nhật
-        setTimeout(() => {
-          refetch();
-        }, 500);
       } else {
         showNotification(`Lỗi ${actionName.toLowerCase()}: ${response.message}`, 'error');
       }
+      console.log("full current", fullCurrentPatientList)
     } catch (error) {
       console.error('Error updating patient status:', error);
       showNotification(`Lỗi hệ thống khi ${actionName.toLowerCase()}`, 'error');
@@ -171,7 +170,7 @@ function QueueManagementComponent({ maQuay }: { maQuay: string }) {
   const displayCurrentPatient = currentPatient.filter((x) => x.TrangThai === 1)
     .map((item, idx) => ({
       ...item,
-      MaQuay: item.MaQuay ?? "",
+      MaQuay: item.MaQuay ?? "dv1",
       Hoten: item.Hoten,
       NamSinh: String(item.NamSinh),
       STT: item.STT,
@@ -186,7 +185,7 @@ function QueueManagementComponent({ maQuay }: { maQuay: string }) {
     .filter((x) => x.TrangThai === 2)
     .map((item, idx) => ({
       ...item,
-      MaQuay: item.MaQuay ?? "",
+      MaQuay: item.MaQuay ?? "dv1",
       Hoten: item.Hoten,
       NamSinh: String(item.NamSinh),
       STT: item.STT,
@@ -197,7 +196,17 @@ function QueueManagementComponent({ maQuay }: { maQuay: string }) {
 
   const fullCalledPatientList = createFullList(calledPatients, 3);
 
-  const displayQueueList = queueList;
+  const displayQueueList = queueList
+    .map((item, idx) => ({
+      ...item,
+      MaQuay: item.MaQuay ?? "dv1",
+      Hoten: item.Hoten,
+      NamSinh: String(item.NamSinh),
+      STT: item.STT,
+      TrangThai: item.TrangThai,
+      isEmpty: false,
+      emptyIndex: idx,
+    }));
 
   if (isLoading) return <p>Đang tải...</p>;
   if (error) {
@@ -275,6 +284,7 @@ function QueueManagementComponent({ maQuay }: { maQuay: string }) {
               >
                 <Table stickyHeader sx={{ tableLayout: "fixed" }}>
                   <TableBody>
+                    
                     {fullCurrentPatientList.map((item, index) => {
                       const displayName = item.isEmpty ? "" : abbreviateName(item.Hoten);
                       const uniqueKey = item.isEmpty ? 
@@ -666,7 +676,7 @@ const theme = createTheme({
 
 export default function QueueManagementDisplay() {
   const params = useParams();
-  const maQuays = params?.maQuay || "";
+  const maQuays = params?.maQuay || "dv1";
   const maQuay = Array.isArray(maQuays) ? maQuays[0] : maQuays;
 
   useEffect(() => {
