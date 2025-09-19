@@ -130,38 +130,34 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
    const displayCurrentPatient = currentPatient.filter((x) => x.TrangThai === 1)
     .map((item, idx) => ({
       ...item,
+      MaQuay: item.MaQuay ?? "",
+      Hoten: item.Hoten,
+      NamSinh: String(item.NamSinh), // Ensure NamSinh is a string
+      STT: item.STT,
+      TrangThai: item.TrangThai,
       isEmpty: false,
       emptyIndex: idx,
     })) ;
-  // const displayCurrentPatient =
-  //   currentPatient?.length > 0 ? currentPatient.filter((x) => x.TrangThai === 1)
-  //   .map((item, idx) => ({
-  //     ...item,
-  //     isEmpty: false,
-  //     emptyIndex: idx,
-  //   }))
-    
-  //   :  sampleData.currentPatient
-  //   .filter((x) => x.TrangThai === 1)
-  //   .map((item, idx) => ({
-  //     ...item,
-  //     isEmpty: false,
-  //     emptyIndex: idx,
-  //   }));
+   
   // Tạo danh sách đầy đủ 5 items cho "SỐ ĐANG GỌI"
   const fullCurrentPatientList = createFullList(displayCurrentPatient, 5);
 
   // Tạo danh sách đầy đủ 3 items cho "SỐ ĐÃ GỌI"
   
-  // const calledPatients = sampleData.queueList
-  const calledPatients = queueList
-    .filter((x) => x.TrangThai === 2)
-    .map((item, idx) => ({
-      ...item,
-      isEmpty: false,
-      emptyIndex: idx,
-    }));
-  const fullCalledPatientList = createFullList(calledPatients, 3);
+const calledPatients = queueList
+  .filter((x) => x.TrangThai === 2)
+  .map((item, idx) => ({
+    ...item,
+    MaQuay: item.MaQuay ?? "",
+    Hoten: item.Hoten,
+    NamSinh: String(item.NamSinh), // Ensure NamSinh is a string
+    STT: item.STT,
+    TrangThai: item.TrangThai,
+    isEmpty: false,
+    emptyIndex: idx,
+  }));
+
+const fullCalledPatientList = createFullList(calledPatients, 3);
 
   const displayQueueList = queueList;
   
