@@ -51,7 +51,6 @@ export interface ICurrentQueueNumber {
   NamSinh: number; 
   STT: number;
   TrangThai: number;
-  refetch: unknown
 }
 
 export interface IDangKyKhamBenh {
