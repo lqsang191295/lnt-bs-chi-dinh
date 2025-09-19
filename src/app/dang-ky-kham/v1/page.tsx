@@ -795,7 +795,7 @@ useEffect(() => {
                   label="SỐ ĐIỆN THOẠI"
                   value={patientInfo.phone}
                   onFocus={() => setFocusedField("phone")}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, phone: e.target.value })}
+                  onChange={(e) => setPatientInfo({ ...patientInfo, phone: e.target.value.replace(/\s+/g, "")})}
                   slotProps={{
                     input: {
                       startAdornment: (
@@ -862,7 +862,7 @@ useEffect(() => {
                   label= "SỐ CCCD"
                   value={patientInfo.idNumber}
                   onFocus={() => setFocusedField("idNumber")}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, idNumber: e.target.value })}
+                  onChange={(e) => setPatientInfo({ ...patientInfo, idNumber: e.target.value.replace(/\s+/g, "")})}
                   slotProps={{
                     input: {
                       startAdornment: (
@@ -898,7 +898,7 @@ useEffect(() => {
                   label= "MÃ THẺ BHYT"
                   value={patientInfo.insuranceNumber}
                   onFocus={() => setFocusedField("insuranceNumber")}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, insuranceNumber: e.target.value })}
+                  onChange={(e) => setPatientInfo({ ...patientInfo, insuranceNumber: e.target.value.replace(/\s+/g, "") })}
                   slotProps={{
                     input: {
                       startAdornment: (
