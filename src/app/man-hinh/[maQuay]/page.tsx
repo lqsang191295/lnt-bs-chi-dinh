@@ -23,6 +23,16 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { useQueue } from "@/hooks/ListPatientWaiting";
 
+interface iPatient {
+  MaQuay: string
+  STT: number
+  Hoten: string
+  NamSinh: string
+  TrangThai: number
+  isEmpty: boolean
+  emptyIndex: number
+}
+
 const queryClient = new QueryClient();
 
 const roboto = Roboto({
@@ -33,31 +43,52 @@ const roboto = Roboto({
 // Dữ liệu mẫu cho demo
 const sampleData = {
   currentPatient: [
-    { STT: 1, Hoten: "NGUYỄN NGỌC QUỲNH NGHIÊNG", NamSinh: "1985", TrangThai: 1 },
-    { STT: 2, Hoten: "TRẦN HUỲNH NHƯ BÌNH", NamSinh: "1990", TrangThai: 1 },
-    { STT: 3, Hoten: "LÊ TRẦN NGỌC PHÁT", NamSinh: "1975", TrangThai: 1 },
-    { STT: 4, Hoten: "PHẠM THỊ DUNG", NamSinh: "1988", TrangThai: 1 },
-    { STT: 5, Hoten: "HOÀNG VĂN ĐẠT", NamSinh: "1992", TrangThai: 1 },
+    // { MaQuay: "dv1", STT: 1, Hoten: "NGUYỄN NGỌC QUỲNH NGHIÊNG", NamSinh: "1985", TrangThai: 1 },
+    // { MaQuay: "dv1",  STT: 2, Hoten: "TRẦN HUỲNH NHƯ BÌNH", NamSinh: "1990", TrangThai: 1 },
+    // { MaQuay: "dv1",  STT: 3, Hoten: "LÊ TRẦN NGỌC PHÁT", NamSinh: "1975", TrangThai: 1 },
+    // { MaQuay: "dv1",  STT: 4, Hoten: "PHẠM THỊ DUNG", NamSinh: "1988", TrangThai: 1 },
+    // { MaQuay: "dv1",  STT: 5, Hoten: "HOÀNG VĂN ĐẠT", NamSinh: "1992", TrangThai: 1 },
   ],
   queueList: [
     // Số đã gọi (TrangThai = 2)
-    { STT: 15, Hoten: "VŨ THỊ MAI", NamSinh: "1987", TrangThai: 2 },
-    { STT: 16, Hoten: "ĐỖ VĂN NAM", NamSinh: "1983", TrangThai: 2 },
-    { STT: 17, Hoten: "BÙI THỊ OANH", NamSinh: "1995", TrangThai: 2 },
+    { MaQuay: "dv1",  STT: 15, Hoten: "VŨ THỊ MAI", NamSinh: "1987", TrangThai: 2 },
+    { MaQuay: "dv1",  STT: 16, Hoten: "ĐỖ VĂN NAM", NamSinh: "1983", TrangThai: 2 },
+    { MaQuay: "dv1",  STT: 17, Hoten: "BÙI THỊ OANH", NamSinh: "1995", TrangThai: 2 },
 
     // Số tiếp theo (TrangThai = 0)
-    { STT: 6, Hoten: "NGÔ VĂN PHÚC", NamSinh: "1980", TrangThai: 0 },
-    { STT: 7, Hoten: "ĐINH QUỲNH NGHIÊNG", NamSinh: "1993", TrangThai: 0 },
-    { STT: 8, Hoten: "LÝ VĂN SƠN", NamSinh: "1977", TrangThai: 0 },
-    { STT: 9, Hoten: "VÕ THỊ TÂM", NamSinh: "1989", TrangThai: 0 },
-    { STT: 10, Hoten: "TRỊNH VĂN UY", NamSinh: "1986", TrangThai: 0 },
-    { STT: 11, Hoten: "DƯƠNG THỊ VÂN", NamSinh: "1991", TrangThai: 0 },
-    { STT: 12, Hoten: "PHAN VĂN XUÂN", NamSinh: "1984", TrangThai: 0 },
-    { STT: 13, Hoten: "TÔN THỊ YẾN", NamSinh: "1996", TrangThai: 0 },
-    { STT: 14, Hoten: "HÀ VĂN ZUNG", NamSinh: "1978", TrangThai: 0 },
+    { MaQuay: "dv1",  STT: 6, Hoten: "NGÔ VĂN PHÚC", NamSinh: "1980", TrangThai: 0 },
+    { MaQuay: "dv1",  STT: 7, Hoten: "ĐINH QUỲNH NGHIÊNG", NamSinh: "1993", TrangThai: 0 },
+    { MaQuay: "dv1",  STT: 8, Hoten: "LÝ VĂN SƠN", NamSinh: "1977", TrangThai: 0 },
+    { MaQuay: "dv1",  STT: 9, Hoten: "VÕ THỊ TÂM", NamSinh: "1989", TrangThai: 0 },
+    { MaQuay: "dv1",  STT: 10, Hoten: "TRỊNH VĂN UY", NamSinh: "1986", TrangThai: 0 },
+    { MaQuay: "dv1",  STT: 11, Hoten: "DƯƠNG THỊ VÂN", NamSinh: "1991", TrangThai: 0 },
+    { MaQuay: "dv1",  STT: 12, Hoten: "PHAN VĂN XUÂN", NamSinh: "1984", TrangThai: 0 },
+    { MaQuay: "dv1",  STT: 13, Hoten: "TÔN THỊ YẾN", NamSinh: "1996", TrangThai: 0 },
+    { MaQuay: "dv1",  STT: 14, Hoten: "HÀ VĂN ZUNG", NamSinh: "1978", TrangThai: 0 },
   ],
 };
 
+// Helper function để tạo danh sách đầy đủ với dòng trống
+const createFullList = (data: iPatient[], maxItems: number) => {
+  const currentItems = data.slice(0, maxItems);
+  
+  if (currentItems.length < maxItems) {
+    const emptyRowsCount = maxItems - currentItems.length;
+    const emptyRows = Array.from({ length: emptyRowsCount }, (_, index) => ({
+      MaQuay: "dv1",
+      STT: 0,
+      Hoten: "",
+      NamSinh: "",
+      TrangThai: 0,
+      isEmpty: true,
+      emptyIndex: index // Thêm index để key unique
+    }));
+    
+    return [...currentItems, ...emptyRows];
+  }
+  
+  return currentItems;
+};
 // Function viết tắt tên theo quy tắc mới
 const abbreviateName = (fullName: string) => {
   if (fullName.length <= 17) return fullName;
@@ -96,10 +127,45 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
   const { currentPatient, queueList, isLoading, error } = useQueue(maQuay);
 
   // Sử dụng dữ liệu mẫu nếu data rỗng hoặc có lỗi
-  const displayCurrentPatient =
-    currentPatient?.length > 0 ? currentPatient : sampleData.currentPatient;
+   const displayCurrentPatient = currentPatient.filter((x) => x.TrangThai === 1)
+    .map((item, idx) => ({
+      ...item,
+      isEmpty: false,
+      emptyIndex: idx,
+    })) ;
+  // const displayCurrentPatient =
+  //   currentPatient?.length > 0 ? currentPatient.filter((x) => x.TrangThai === 1)
+  //   .map((item, idx) => ({
+  //     ...item,
+  //     isEmpty: false,
+  //     emptyIndex: idx,
+  //   }))
+    
+  //   :  sampleData.currentPatient
+  //   .filter((x) => x.TrangThai === 1)
+  //   .map((item, idx) => ({
+  //     ...item,
+  //     isEmpty: false,
+  //     emptyIndex: idx,
+  //   }));
+  // Tạo danh sách đầy đủ 5 items cho "SỐ ĐANG GỌI"
+  const fullCurrentPatientList = createFullList(displayCurrentPatient, 5);
 
-  const displayQueueList = sampleData.queueList;
+  // Tạo danh sách đầy đủ 3 items cho "SỐ ĐÃ GỌI"
+  
+  // const calledPatients = sampleData.queueList
+  const calledPatients = queueList
+    .filter((x) => x.TrangThai === 2)
+    .map((item, idx) => ({
+      ...item,
+      isEmpty: false,
+      emptyIndex: idx,
+    }));
+  const fullCalledPatientList = createFullList(calledPatients, 3);
+
+  const displayQueueList = queueList;
+  
+  // const displayQueueList = sampleData.queueList; // Sử dụng dữ liệu mẫu nếu data rỗng hoặc có lỗi
   if (isLoading) return <p>Đang tải...</p>;
   if (error) {
     console.log("Using sample data due to error:", error);
@@ -175,11 +241,13 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
             >
               <Table stickyHeader sx={{ tableLayout: "fixed" }}>
                 <TableBody>
-                  {displayCurrentPatient.slice(0, 5).map((item, index) => {
-                    const displayName = abbreviateName(item.Hoten);
-                    
+                  {fullCurrentPatientList.map((item, index) => {
+                    const displayName = item.isEmpty ? "" : abbreviateName(item.Hoten);
+                    const uniqueKey = item.isEmpty ? 
+                      `empty-current-${index}` : 
+                      `current-${item.STT}`;
                     return (
-                      <Fade in={true} key={item.STT} timeout={300 + index * 100}>
+                      <Fade in={true} key={uniqueKey} timeout={300 + index * 100}>
                         <TableRow
                           className="animate-fade-in"
                           sx={{
@@ -214,7 +282,7 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                             }}
                           >
                             <Box sx={{ textAlign: "left", justifySelf: "start" }}>
-                              {item.STT.toString().padStart(3, "0")}.
+                              {item.isEmpty ? "" : `${item.STT.toString().padStart(3, "0")}.`}
                             </Box>
                             <Box sx={{
                               textAlign: "left",
@@ -226,7 +294,7 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                               {displayName}
                             </Box>
                             <Box sx={{ textAlign: "right", justifySelf: "start" }}>
-                              {item.NamSinh}
+                              {item.isEmpty ? "" : item.NamSinh}
                             </Box>
                           </TableCell>
                         </TableRow>
@@ -295,23 +363,21 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
             >
               <Table stickyHeader sx={{ tableLayout: "fixed" }}>
                 <TableBody>
-                  {displayQueueList
-                    .filter((x) => x.TrangThai === 2)
-                    .slice(0, 3)
-                    .map((item, index) => (
-                      <Fade
-                        in={true}
-                        key={item.STT}
-                        timeout={300 + index * 100}
-                      >
+                  {fullCalledPatientList.map((item, index) => {
+                    const uniqueKey = item.isEmpty ? 
+                      `empty-called-${index}` : 
+                      `called-${item.STT}`;
+                    
+                    return (
+                      <Fade in={true} key={uniqueKey} timeout={300 + index * 100}>
                         <TableRow
                           className="animate-fade-in"
                           sx={{
                             height: "calc(100% / 3)",
                             "&:nth-of-type(odd)": {
-                              backgroundColor: "#fafafa",
+                              backgroundColor: item.isEmpty ? "transparent" : "#fafafa",
                             },
-                            "&:last-child td": { // Bỏ border bottom của row cuối
+                            "&:last-child td": {
                               borderBottom: "none",
                             },
                           }}
@@ -326,7 +392,7 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                                 letterSpacing: "0.05em",
                               },
                               fontWeight: 600,
-                              color: "primary.main",
+                              color: item.isEmpty ? "transparent" : "primary.main",
                               py: 1.65,
                               lineHeight: 0.65,
                               display: "flex",
@@ -335,31 +401,32 @@ function QueueComponent({ maQuay }: { maQuay: string }) {
                               fontStyle: "italic",
                               gap: 3,
                               height: "100%",
-                              borderBottom: index === 2 ? "none" : undefined, // Bỏ border bottom của cell cuối
+                              borderBottom: index === 2 ? "none" : undefined,
                             }}
                           >
                             <Box
                               component="span"
                               sx={{ minWidth: "100px", textAlign: "right" }}
                             >
-                              {item.STT.toString().padStart(3, "0")}.
+                              {item.isEmpty ? "" : `${item.STT.toString().padStart(3, "0")}.`}
                             </Box>
                             <Box
                               component="span"
                               sx={{ flex: 1, textAlign: "center" }}
                             >
-                              {item.Hoten}
+                              {item.isEmpty ? "" : item.Hoten}
                             </Box>
                             <Box
                               component="span"
                               sx={{ minWidth: "80px", textAlign: "left" }}
                             >
-                              {item.NamSinh}
+                              {item.isEmpty ? "" : item.NamSinh}
                             </Box>
                           </TableCell>
                         </TableRow>
                       </Fade>
-                    ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
