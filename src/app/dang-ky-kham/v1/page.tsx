@@ -494,13 +494,13 @@ useEffect(() => {
           
           setPatientInfo({
             id: "",
-            fullname: data.fullname || "",
+            fullname: data.fullname.toUpperCase() || "",
             gender: data.gender || "",
             phone: data.phone || "",
-            address: data.address || "",
+            address: data.address.toUpperCase() || "",
             birthDateString: data.birthDate ? formatDateForInput(data.birthDate) : "",
             idNumber: data.idNumber || "",
-            insuranceNumber: data.insuranceNumber || "",
+            insuranceNumber: data.insuranceNumber?.toUpperCase() || "",
             chiefComplaint: data.chiefComplaint || ""        
           })
         }
