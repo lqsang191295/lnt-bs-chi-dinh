@@ -74,10 +74,11 @@ export function createQRScanner(opts?: {
           const clean = chunk.trim();
           if (clean) {
             const parts: string[] = clean.split("|");
-            if (parts[0].length === 15) {
+            console.log(parts)
+            if (parts.length > 7) {
                 onData?.(ConvertRawQRCodeToObject(parts) as PatientInfo);
             }
-            else if (parts[0].length === 12) {
+            else if (parts.length === 7) {
               onData?.(ConvertRawQRCCDCodeToObject(parts) as PatientInfo);
             } else {
               onStatus?.("Dữ liệu không đúng định dạng.");
@@ -107,10 +108,7 @@ export function createQRScanner(opts?: {
       }
     }
     function ConvertRawQRCodeToObject(rawData: string[]): PatientInfo | null {
-        if (rawData[0].trim().length !== 15) {
-            onStatus?.("Mã số BHYT Không đúng định dạng");
-            return null;
-        }
+
         // const ngayHieuLucBHYT = rawData[6].trim(); // YYYYMMDD
         // if (ngayHieuLucBHYT > new Date().toISOString().slice(0, 10).replace(/-/g, "")) {
         //     onStatus?.("Thẻ BHYT chưa có hiệu lực.");
@@ -132,9 +130,7 @@ export function createQRScanner(opts?: {
             address: hexToUtf8(rawData[4].trim()),
     }
 }
-  function ConvertRawQRCCDCodeToObject(rawData: string[]): PatientInfo | null {
-    if (!rawData[3] || rawData[3].length !== 8) return null; // kiểm tra chuỗi hợp lệ
-
+  function ConvertRawQRCCDCodeToObject(rawData: string[]): PatientInfo | null { 
     const day = parseInt(rawData[3].substring(0, 2), 10);
     const month = parseInt(rawData[3].substring(2, 4), 10) - 1; // JS tính tháng từ 0-11
     const year = parseInt(rawData[3].substring(4, 8), 10);
