@@ -119,15 +119,14 @@ export function createQRScanner(opts?: {
         //     onStatus?.("Thẻ BHYT đã hết hạn.");
         //     return null;
         // }
-        
         return {
             fullname: hexToUtf8(rawData[1].trim()),
             insuranceNumber: rawData[0].trim(),
             birthDate: parseToDate(rawData[2].trim()) || undefined,
-            gender: rawData[3].trim() === "Nam" ? "Nam" : "Nữ",
+            gender: rawData[3].trim() === "1" ? "Nam" : "Nữ",
             phone: "",
             idNumber: "",
-            address: hexToUtf8(rawData[4].trim()),
+            address: rawData.length > 14 ? "" : hexToUtf8(rawData[4].trim()),
     }
 }
   function ConvertRawQRCCDCodeToObject(rawData: string[]): PatientInfo | null { 
