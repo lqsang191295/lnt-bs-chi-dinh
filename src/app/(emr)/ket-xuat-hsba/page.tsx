@@ -821,9 +821,10 @@ export default function KetXuatHsbaPage() {
               rows={rows}
               columns={columnsKetXuat}
               loading={searchingData}
-              pagination
+              checkboxSelection
               disableRowSelectionOnClick
               density="compact"
+              onRowSelectionModelChange={handleRowSelectionChange}
               sx={{
                 height: "100%",
                 "& .MuiDataGrid-columnHeaders": {
