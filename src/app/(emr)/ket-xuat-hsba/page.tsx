@@ -19,7 +19,7 @@ import { useMenuStore } from "@/store/menu";
 import { useUserStore } from "@/store/user";
 import { mergePDFsWithProgress } from "@/utils/pdfLibs";
 import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
-import { NoteAdd, Refresh, Search } from "@mui/icons-material";
+import { Download, NoteAdd, Refresh, Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import {
@@ -795,19 +795,14 @@ export default function KetXuatHsbaPage() {
           <Box className="bg-white flex gap-2 p-2">
             <Button
               variant="contained"
-              startIcon={<NoteAdd />}
-              size="small"
-              onClick={handleKetXuat}
-              disabled={loading || pdfLoading}>
-              {loading ? `Kết xuất... ${progress.toFixed(0)}%` : "Kết xuất"}
-            </Button>
-            <Button
-              variant="contained"
               startIcon={<Refresh />}
               size="small"
-              onClick={handleSearch}
-              disabled={searchingData}>
+              onClick={handleSearchLichSu}
+              disabled={searchingLichSu}>
               Làm mới
+            </Button>
+            <Button variant="outlined" startIcon={<Download />} size="small">
+              Xuất Excel
             </Button>
           </Box>
 
