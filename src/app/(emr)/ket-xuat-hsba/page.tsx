@@ -828,20 +828,20 @@ export default function KetXuatHsbaPage() {
               sx={{
                 height: "100%",
                 "& .MuiDataGrid-columnHeaders": {
-                  backgroundColor: "#e8f5e8",
+                  backgroundColor: "#f5f5f5",
                   fontWeight: "bold",
                 },
                 "& .MuiDataGrid-cell": {
                   border: "1px solid #e0e0e0",
                 },
                 "& .MuiDataGrid-row:nth-of-type(odd)": {
-                  backgroundColor: "#f9fff9",
+                  backgroundColor: "#f9f9f9",
                 },
                 "& .MuiDataGrid-row:nth-of-type(even)": {
                   backgroundColor: "white",
                 },
                 "& .MuiDataGrid-row:hover": {
-                  backgroundColor: "#e8f5e8 !important",
+                  backgroundColor: "#e3f2fd !important",
                 },
                 "& .MuiDataGrid-main": {
                   overflow: "hidden",
