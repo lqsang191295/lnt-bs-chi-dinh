@@ -22,6 +22,7 @@ import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { Download, NoteAdd, Refresh, Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import * as XLSX from 'xlsx';
 import {
   Alert,
   Box,
@@ -160,6 +161,64 @@ export default function KetXuatHsbaPage() {
       []
     )
   );
+  // Hàm xử lý export Excel cho tab Lịch sử
+  const handleExportExcel = () => {
+    if (lichSuRows.length === 0) {
+      ToastError("Không có dữ liệu để export");
+      return;
+    }
+
+    try {
+      // Chuẩn bị dữ liệu cho Excel
+      const exportData = lichSuRows.map(item => ({
+        'Mã BA': item.cmabenhan,
+        'Số vào viện': item.SoVaoVien,
+        'Họ tên': item.Hoten,
+        'Ngày sinh': item.Ngaysinh,
+        'Giới tính': item.Gioitinh,
+        'Địa chỉ': item.Diachi,
+        'Ngày Kết xuất': item.cngayketxuat, 
+        'Khoa điều trị': item.KhoaDieuTri, 
+      }));
+
+      // Tạo workbook
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "HSBA");
+
+      // Auto-size columns
+      const colWidths = [
+        { wch: 10 }, // Mã BA
+        { wch: 15 }, // Số vào viện
+        { wch: 25 }, // Họ tên
+        { wch: 12 }, // Ngày sinh
+        { wch: 10 }, // Giới tính
+        { wch: 30 }, // Địa chỉ
+        { wch: 12 }, // Ngày vào 
+        { wch: 20 }, // Khoa điều trị 
+      ];
+      ws['!cols'] = colWidths;
+
+      // Tạo tên file với timestamp
+      const now = new Date();
+      const timestamp = now.getFullYear().toString() +
+        (now.getMonth() + 1).toString().padStart(2, '0') +
+        now.getDate().toString().padStart(2, '0') +
+        now.getHours().toString().padStart(2, '0') +
+        now.getMinutes().toString().padStart(2, '0') +
+        now.getSeconds().toString().padStart(2, '0');
+      
+      const fileName = `hsba_${timestamp}.xlsx`;
+
+      // Download file
+      XLSX.writeFile(wb, fileName);
+      
+      ToastSuccess(`Đã export thành công file ${fileName}`);
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      ToastError("Lỗi khi export Excel");
+    }
+  };
 
   // Hàm xử lý download PDF cho tab Kết xuất
   const handleDownload = useCallback(
@@ -803,7 +862,7 @@ export default function KetXuatHsbaPage() {
               disabled={searchingLichSu}>
               Làm mới
             </Button>
-            <Button variant="outlined" startIcon={<Download />} size="small">
+            <Button variant="outlined" onClick={handleExportExcel} startIcon={<Download />} size="small">
               Xuất Excel
             </Button>
           </Box>
