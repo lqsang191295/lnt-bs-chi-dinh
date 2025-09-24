@@ -624,16 +624,6 @@ export default function KetXuatHsbaPage() {
         formatDate(tuNgay),
         formatDate(denNgay)
       );
-
-      console.log(
-        "data ==== ",
-        data,
-        (data || []).map((item: IHoSoBenhAn) => ({
-          id: item.ID,
-          ...item,
-        }))
-      );
-
       setRows(
         (data || []).map((item: IHoSoBenhAn) => ({
           id: item.ID,
