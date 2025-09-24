@@ -625,14 +625,14 @@ export default function KetXuatHsbaPage() {
         formatDate(denNgay)
       );
 
-      console.log(
-        "data ==== ",
-        data,
-        (data || []).map((item: IHoSoBenhAn) => ({
-          id: item.ID,
-          ...item,
-        }))
-      );
+      // console.log(
+      //   "data ==== ",
+      //   data,
+      //   (data || []).map((item: IHoSoBenhAn) => ({
+      //     id: item.ID,
+      //     ...item,
+      //   }))
+      // );
 
       setRows(
         (data || []).map((item: IHoSoBenhAn) => ({

@@ -279,7 +279,7 @@ const DialogPhanQuyenMenu: React.FC<DialogPhanQuyenMenuProps> = ({
       "1",
       selectedUser.ctaikhoan
     );
-    console.log("dsMenu phan quyen user", result);
+    // console.log("dsMenu phan quyen user", result);
     if (Array.isArray(result)) setDsMenu(result);
     else setDsMenu([]);
   }, [loginedUser, selectedUser]);

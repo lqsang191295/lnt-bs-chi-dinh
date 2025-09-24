@@ -117,7 +117,7 @@ export default function NhatKyNguoiDungPage() {
   const handleRefresh = () => {
     if (!hasAccess) return;
     
-    console.log("Refresh clicked!");
+    // console.log("Refresh clicked!");
     // Reset dữ liệu
     setRows([]);
   };

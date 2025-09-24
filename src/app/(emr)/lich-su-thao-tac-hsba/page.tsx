@@ -144,7 +144,7 @@ export default function LichSuThaoTacHsbaPage() {
         formatDate(searchDenNgay)
       );
 
-      console.log("Search results: -----------", data);
+      // console.log("Search results: -----------", data);
 
       setRows(
         (data || []).map((item: DataRow) => ({

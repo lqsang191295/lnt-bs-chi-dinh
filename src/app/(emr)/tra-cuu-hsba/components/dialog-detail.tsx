@@ -138,7 +138,7 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
     };
   }, [cleanup]); // Empty dependency array
 
-  console.log("Selected HSBA for Detail:", pdfUrl);
+  // console.log("Selected HSBA for Detail:", pdfUrl);
 
   return (
     <Dialog
