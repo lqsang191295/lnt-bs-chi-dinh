@@ -566,6 +566,15 @@ export default function KetXuatHsbaPage() {
         formatDate(denNgay)
       );
 
+      console.log(
+        "data ==== ",
+        data,
+        (data || []).map((item: IHoSoBenhAn) => ({
+          id: item.ID,
+          ...item,
+        }))
+      );
+
       setRows(
         (data || []).map((item: IHoSoBenhAn) => ({
           id: item.ID,
@@ -711,6 +720,78 @@ export default function KetXuatHsbaPage() {
 
         {/* Tab Kết xuất */}
         <CustomTabPanel value={value} index={0}>
+          <Box className="bg-white flex gap-2 p-2">
+            <Button
+              variant="contained"
+              startIcon={<NoteAdd />}
+              size="small"
+              onClick={handleKetXuat}
+              disabled={loading || pdfLoading}>
+              {loading ? `Kết xuất... ${progress.toFixed(0)}%` : "Kết xuất"}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Refresh />}
+              size="small"
+              onClick={handleSearch}
+              disabled={searchingData}>
+              Làm mới
+            </Button>
+          </Box>
+
+          {/* Progress indicator */}
+          {loading && (
+            <Box sx={{ width: "100%", mt: 1 }}>
+              <LinearProgress variant="determinate" value={progress} />
+              <Typography variant="caption" color="text.secondary">
+                Đang xử lý: {progress.toFixed(0)}%
+              </Typography>
+            </Box>
+          )}
+
+          {/* Error message */}
+          {error && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* DataGrid Danh sách kết xuất HSBA */}
+          <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
+            <DataGrid
+              rows={rows}
+              columns={columnsKetXuat}
+              loading={searchingData}
+              pagination
+              disableRowSelectionOnClick
+              density="compact"
+              sx={{
+                height: "100%",
+                "& .MuiDataGrid-columnHeaders": {
+                  backgroundColor: "#e8f5e8",
+                  fontWeight: "bold",
+                },
+                "& .MuiDataGrid-cell": {
+                  border: "1px solid #e0e0e0",
+                },
+                "& .MuiDataGrid-row:nth-of-type(odd)": {
+                  backgroundColor: "#f9fff9",
+                },
+                "& .MuiDataGrid-row:nth-of-type(even)": {
+                  backgroundColor: "white",
+                },
+                "& .MuiDataGrid-row:hover": {
+                  backgroundColor: "#e8f5e8 !important",
+                },
+                "& .MuiDataGrid-main": {
+                  overflow: "hidden",
+                },
+              }}
+            />
+          </Box>
+        </CustomTabPanel>
+
+        <CustomTabPanel value={value} index={1}>
           <Box className="bg-white flex gap-2 p-2">
             <Button
               variant="contained"
