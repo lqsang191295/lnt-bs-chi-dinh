@@ -9,7 +9,6 @@ import {DateWheelPickerPopup, useDateWheelPicker} from "@/components/date-wheel-
 import LoadingOverlay, { useLoading } from "@/components/LoadingOverlay"
 import { CURRENT_DATE, DateUtils } from "@/utils/dateUtils"
 import { useClickOutside } from "@/utils/useClickOutside"
-import "react-simple-keyboard/build/css/index.css";
 // Định nghĩa interface cho Speech Recognition API
 interface SpeechRecognition extends EventTarget {
   lang: string;
@@ -478,45 +477,57 @@ useEffect(() => {
   } 
   initalCamera();
 })
-
-  useEffect(() => {
-    console.log("Initializing camera and QR scanner...");  
-    const scanner = createQRScanner({
-      onStatus:(status) => console.log(status),
-      onConnect: (connected) => {if(connected) {setIsConnectPort(true)} else {setIsConnectPort(false)}},
-      onData: (data) => {
-        if(data !== null) {
-          console.log("QR Data:", data);          
-          // Set giá trị cho datePickerHook nếu có birthDate
-          if (data.birthDate) {
-            datePickerHookRef.current.setValue(data.birthDate);
-          }
-          
-          setPatientInfo({
-            id: "",
-            fullname: data.fullname.toUpperCase() || "",
-            gender: data.gender || "",
-            phone: data.phone || "",
-            address: data.address.toUpperCase() || "",
-            birthDateString: data.birthDate ? formatDateForInput(data.birthDate) : "",
-            idNumber: data.idNumber || "",
-            insuranceNumber: data.insuranceNumber?.toUpperCase() || "",
-            chiefComplaint: data.chiefComplaint || ""        
-          })
+useEffect(() => {
+  console.log("Initializing camera and QR scanner...");  
+  const scanner = createQRScanner({
+    onStatus: (status) => {
+      console.log('Scanner status:', status);
+      // You could also show this in UI - add a status display
+    },
+    onConnect: (connected) => {
+      if (connected) {
+        setIsConnectPort(true);
+      } else {
+        setIsConnectPort(false);
+      }
+    },
+    onData: (data) => {
+      if (data !== null) {
+        // Set giá trị cho datePickerHook nếu có birthDate
+        if (data.birthDate) {
+          datePickerHookRef.current.setValue(data.birthDate);
         }
+        
+        setPatientInfo({
+          id: "",
+          fullname: data.fullname.toUpperCase() || "",
+          gender: data.gender || "",
+          phone: data.phone || "",
+          address: data.address.toUpperCase() || "",
+          birthDateString: data.birthDate ? formatDateForInput(data.birthDate) : "",
+          idNumber: data.idNumber || "",
+          insuranceNumber: data.insuranceNumber?.toUpperCase() || "",
+          chiefComplaint: data.chiefComplaint || ""        
+        });
       }
-    });
-    scannerRef.current = scanner;
-    scannerRef.current?.autoConnect();
-    if (!scannerRef.current.onConnect){
-      setIsConnectPort(true)
     }
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.disconnect();
-      }
-    };
-  }, [formatDateForInput]);
+  });
+  
+  
+  scannerRef.current = scanner;
+  
+  // Add a delay before auto-connecting
+  setTimeout(() => {
+    scannerRef.current?.autoConnect();
+  }, 1000);
+  
+  return () => {
+    if (scannerRef.current) {
+      scannerRef.current.disconnect();
+    }
+  };
+}, [formatDateForInput]);
+
   const examTypes = [
     {
       id: "bhyt" as ExamType,
@@ -642,6 +653,7 @@ useEffect(() => {
         
           <Box>
           <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mr:2}}>
+        
           <Grid size={10} sx={{display: isConnectPort ? "none" : "block"}}>
           {/* <Grid size={12} sx={{display: "none"}}> */}
           <Button
