@@ -8,7 +8,7 @@ export const getPatientInfoByMaBN = async (
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      option: "",
+      optionId: "",
       funcName: "dbo.emr_pget_parientinfo_by_mabn",
       paraData: [
         { paraName: "popt", paraValue: 0 },
@@ -41,7 +41,7 @@ export const getPatientLichSuKhamByMaBN = async (
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      option: "",
+      optionId: "",
       funcName: "dbo.emr_pget_parientinfo_by_mabn",
       paraData: [
         { paraName: "popt", paraValue: 1 },
@@ -67,7 +67,7 @@ export const getPatientToaThuocByMaBN_SoVaoVien = async (
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      option: "",
+      optionId: "",
       funcName: "dbo.emr_pget_parientinfo_by_mabn",
       paraData: [
         { paraName: "popt", paraValue: 3 },
@@ -93,7 +93,7 @@ export const getPatientChiDinhByMaBN_SoVaoVien = async (
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      option: "",
+      optionId: "",
       funcName: "dbo.emr_pget_parientinfo_by_mabn",
       paraData: [
         { paraName: "popt", paraValue: 2 },
@@ -119,7 +119,7 @@ export const getPatientBangKeByMaBN_SoVaoVien = async (
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      option: "",
+      optionId: "",
       funcName: "dbo.emr_pget_parientinfo_by_mabn",
       paraData: [
         { paraName: "popt", paraValue: 4 },
@@ -145,7 +145,7 @@ export const getPatientPkBenhByMaBN_SoVaoVien = async (
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      option: "",
+      optionId: "",
       funcName: "dbo.emr_pget_parientinfo_by_mabn",
       paraData: [
         { paraName: "popt", paraValue: 5 },
@@ -170,7 +170,7 @@ export const getPatientBySoDienThoai = async (
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      option: "",
+      optionId: "",
       funcName: "dbo.emr_pget_parientinfo_by_mabn",
       paraData: [
         { paraName: "popt", paraValue: 6 },
