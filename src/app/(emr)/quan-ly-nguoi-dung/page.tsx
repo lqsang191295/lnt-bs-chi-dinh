@@ -188,10 +188,9 @@ export default function PageQuanLyNguoiDung() {
   const handleThem = async () => {
     if (!hasAccess) return;
     
-    setNewUserStatus(1);
-    setPassword("");
     setSelectedUser({
       cid: "0",
+      id: "0",
       ctaikhoan: "",
       cmatkhau: "",
       choten: "",
@@ -209,6 +208,9 @@ export default function PageQuanLyNguoiDung() {
       cngaytao: "",
       cnguoitao: loginedUser.ctaikhoan,
     } as IUserItem);
+    
+    setNewUserStatus(1);
+    setPassword("");
   };
 
   const handleLuu = async () => {
@@ -438,7 +440,7 @@ export default function PageQuanLyNguoiDung() {
             <Button
               variant="outlined"
               startIcon={<SaveAsOutlinedIcon />}
-              disabled={!selectedUser || newUserStatus === 1}
+              disabled={!selectedUser || (newUserStatus === 0 && selectedUser.cid === "0")  }
               color="primary"
               onClick={() => handleLuu()}
             >
@@ -491,6 +493,7 @@ export default function PageQuanLyNguoiDung() {
             <DataGrid
               rows={users}
               columns={columns}
+              getRowId={(row) => row.cid || row.id} // Ưu tiên cid, fallback id
               pagination
               density="compact"
               onRowClick={(params) => handleRowClick(params.row as IUserItem)}
