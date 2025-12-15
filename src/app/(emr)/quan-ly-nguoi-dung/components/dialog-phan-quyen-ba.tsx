@@ -279,6 +279,82 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
       ToastError("Lỗi khi export Excel");
     }
   };
+  const handleExportSampleExcel = () => {
+    
+    try {
+      // DỮ LIỆU MẪU
+      const sampleData = [
+        {
+          'Mã BA': 'E4EEF427-B507-4C30-A8BD-000597DB74D9',
+          'Số vào viện': '0123456',
+          'Họ tên': 'Nguyễn Văn A',
+          'Ngày sinh': '01/01/1990',
+          'Giới tính': 'Nam',
+          'Địa chỉ': 'Phường 1, Quận 1, TP.HCM',
+          'Ngày vào': '10/12/2025',
+          'Ngày ra': '15/12/2025',
+          'Khoa điều trị': 'Nội tổng hợp',
+          'Đã phân quyền': 'Có'
+        },
+        {
+          'Mã BA': 'F8D842CB-84D3-4556-8EAE-00021E140851',
+          'Số vào viện': '0123457',
+          'Họ tên': 'Trần Thị B',
+          'Ngày sinh': '15/05/1995',
+          'Giới tính': 'Nữ',
+          'Địa chỉ': 'Xã Bình Chánh, TP.HCM',
+          'Ngày vào': '11/12/2025',
+          'Ngày ra': '',
+          'Khoa điều trị': 'Sản',
+          'Đã phân quyền': 'Không'
+        },
+        {
+          'Mã BA': 'F8D842CB-84D3-4556-8EAE-00021E110851',
+          'Số vào viện': '0123458',
+          'Họ tên': 'Trần Thị C',
+          'Ngày sinh': '15/05/1995',
+          'Giới tính': 'Nữ',
+          'Địa chỉ': 'Xã Bình Chánh, TP.HCM',
+          'Ngày vào': '11/12/2025',
+          'Ngày ra': '',
+          'Khoa điều trị': 'Sản',
+          'Đã phân quyền': 'Không'
+        }
+      ];
+
+      // Tạo worksheet
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+
+      // Set độ rộng cột
+      ws['!cols'] = [
+        { wch: 10 }, // Mã BA
+        { wch: 15 }, // Số vào viện
+        { wch: 25 }, // Họ tên
+        { wch: 12 }, // Ngày sinh
+        { wch: 10 }, // Giới tính
+        { wch: 35 }, // Địa chỉ
+        { wch: 12 }, // Ngày vào
+        { wch: 12 }, // Ngày ra
+        { wch: 20 }, // Khoa điều trị
+        { wch: 15 }  // Đã phân quyền
+      ];
+
+      // Tạo workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "HSBA_MAU");
+
+      // Tên file
+      const fileName = "hsba_template.xlsx";
+
+      // Download
+      XLSX.writeFile(wb, fileName);
+
+      ToastSuccess("Đã tải file Excel mẫu");
+    } catch (error) {
+      console.error(error);
+      ToastError("Lỗi khi tạo file Excel mẫu");
+    }
+  };
 
   const handleImportSuccess = () => {
     // Reload data sau khi import thành công
@@ -517,6 +593,19 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
             <Box sx={{ display: "flex", gap: 1 }}>
               <Button
                 variant="outlined"
+                startIcon={<MuiIcons.Description />}
+                onClick={handleExportSampleExcel}
+                size="small"
+                disabled={isLoading}
+                sx={{
+                  fontSize: "0.8rem",
+                  px: 2,
+                }}
+              >
+                File mẫu
+              </Button>
+              <Button
+                variant="outlined"
                 startIcon={<MuiIcons.FileUpload />}
                 onClick={handleImportExcel}
                 size="small"
@@ -540,7 +629,6 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                 }}>
                 Export Excel
               </Button>
-              
               <Input
                 type="file"
                 inputRef={fileInputRef}
