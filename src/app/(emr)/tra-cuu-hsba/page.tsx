@@ -27,6 +27,7 @@ import {
   Radio,
   RadioGroup,
   Select,
+  TextField,
   Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -43,6 +44,8 @@ export default function TraCuuHsbaPage() {
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
+  const [filteredRows, setFilteredRows] = useState<IHoSoBenhAn[]>([]);
+  const [searchText, setSearchText] = useState("");
   const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   // State cho dialog chi tiết
@@ -115,7 +118,7 @@ export default function TraCuuHsbaPage() {
   // Cập nhật columns để sử dụng handleDownload mới
   const columns: GridColDef[] = useMemo(
     () => [
-      { field: "ID", headerName: "ID", width: 60 },
+      { field: "ID", headerName: "ID", width: 0 },
       {
         field: "TrangThaiBA",
         headerName: "Trạng thái",
@@ -209,11 +212,12 @@ export default function TraCuuHsbaPage() {
         ),
       },
       { field: "Hoten", headerName: "Họ và tên", width: 200 },
-      { field: "MaBN", headerName: "Mã BN", width: 130 },
-      { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-      { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-      { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-      { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
+      { field: "MaBN", headerName: "Mã BN", width: 90 },
+      { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
+      { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
+      { field: "SoBHYT", headerName: "Số BHYT", width: 150 },
+      { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
+      { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
       { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
       { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
       { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
@@ -309,12 +313,14 @@ export default function TraCuuHsbaPage() {
 
       console.log("Fetched HSBA data:", data);
 
-      setRows(
-        (data || []).map((item: IHoSoBenhAn) => ({
-          id: item.ID,
-          ...item,
-        }))
-      );
+      const mappedRows = (data || []).map((item: IHoSoBenhAn) => ({
+        id: item.ID,
+        ...item,
+      }));
+
+      setRows(mappedRows);
+      setFilteredRows(mappedRows);
+      setSearchText(""); // Reset search text khi tìm kiếm mới
     } catch (error) {
       console.error("Error fetching HSBA data:", error);
       ToastError("Lỗi khi tìm kiếm hồ sơ bệnh án!");
@@ -322,6 +328,37 @@ export default function TraCuuHsbaPage() {
       setSearchingData(false);
     }
   };
+
+  // Hàm lọc dữ liệu theo text search
+  const handleFilter = useCallback(() => {
+    if (!searchText.trim()) {
+      setFilteredRows(rows);
+      return;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    const filtered = rows.filter((row) => {
+      const maBN = (row.MaBN || "").toLowerCase();
+      const hoTen = (row.Hoten || "").toLowerCase();
+      const soVaoVien = (row.SoVaoVien || "").toLowerCase();
+      const soBHYT = (row.SoBHYT || "").toLowerCase();
+
+      return (
+        maBN.includes(searchLower) ||
+        hoTen.includes(searchLower) ||
+        soVaoVien.includes(searchLower) ||
+        soBHYT.includes(searchLower)
+      );
+    });
+
+    setFilteredRows(filtered);
+
+    if (filtered.length === 0) {
+      ToastWarning("Không tìm thấy kết quả phù hợp!");
+    } else {
+      ToastSuccess(`Tìm thấy ${filtered.length} kết quả`);
+    }
+  }, [searchText, rows]);
 
   // Hiển thị loading khi đang kiểm tra quyền truy cập
   if (isCheckingAccess) {
@@ -441,10 +478,36 @@ export default function TraCuuHsbaPage() {
           </Grid>
         </Grid>
 
+        <Box className="bg-white flex gap-2 p-2">
+          <Box className="flex-1" >
+              <TextField
+              fullWidth
+              size="small"
+              label="Mã BN, Họ tên, Số vào viện, Số BHYT..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleFilter();
+                }
+              }}
+              type="text" 
+            />
+            </Box>
+          <Button
+            startIcon={<Search />}
+            variant="contained"
+            color="success"
+            size="small"
+            onClick={handleFilter}
+            >
+            Tìm bệnh nhân
+          </Button>
+        </Box>
         {/* Main Content Area - DataGrid với height cố định */}
         <Box className="w-full h-full overflow-hidden">
           <DataGrid
-            rows={rows}
+            rows={filteredRows}
             columns={columns}
             pagination
             checkboxSelection

@@ -24,6 +24,7 @@ import {
   Typography,
   Checkbox,
   Input,
+  TextField,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import React, { useState, useRef } from "react";
@@ -44,6 +45,8 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
   const [toDate, setToDate] = useState<Date>(new Date());
   const [popt, setPopt] = useState("1");
   const [dsHSBA, setDsHSBA] = useState<IPhanQuyenHoSoBenhAn[]>([]);
+  const [filteredHSBA, setFilteredHSBA] = useState<IPhanQuyenHoSoBenhAn[]>([]);
+  const [searchText, setSearchText] = useState("");
   const [showGrantedOnly, setShowGrantedOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,17 +80,58 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
         formatDate(toDate)
       );
       setDsHSBA(result || []);
+      setFilteredHSBA(result || []);
+      setSearchText(""); // Reset search text khi tìm kiếm mới
     } catch (error) {
       console.error("Error fetching HSBA:", error);
       ToastError("Lỗi khi tải danh sách HSBA");
       setDsHSBA([]);
+      setFilteredHSBA([]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Hàm lọc dữ liệu theo text search
+  const handleFilter = () => {
+    if (!searchText.trim()) {
+      setFilteredHSBA(dsHSBA);
+      return;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    const filtered = dsHSBA.filter((row) => {
+      const MaBN = (row.MaBN || "").toLowerCase();
+      const hoTen = (row.Hoten || "").toLowerCase();
+      const soBHYT = (row.SoBHYT || "").toLowerCase();
+      const soVaoVien = (row.SoVaoVien || "").toLowerCase();
+
+      return (
+        MaBN.includes(searchLower) ||
+        hoTen.includes(searchLower) ||
+        soBHYT.includes(searchLower) ||
+        soVaoVien.includes(searchLower)
+      );
+    });
+
+    setFilteredHSBA(filtered);
+
+    if (filtered.length === 0) {
+      ToastError("Không tìm thấy kết quả phù hợp!");
+    } else {
+      ToastSuccess(`Tìm thấy ${filtered.length} kết quả`);
+    }
+  };
+
   const handleCheckHSBA = (ID: string) => {
     setDsHSBA((prev) =>
+      prev.map((row) =>
+        row.ID === ID
+          ? { ...row, ctrangthai: row.ctrangthai === 1 ? 0 : 1 }
+          : row
+      )
+    );
+    setFilteredHSBA((prev) =>
       prev.map((row) =>
         row.ID === ID
           ? { ...row, ctrangthai: row.ctrangthai === 1 ? 0 : 1 }
@@ -228,6 +272,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
       // Chuẩn bị dữ liệu cho Excel
       const exportData = dsHSBA.map(item => ({
         'Mã BA': item.ID,
+        'Số BHYT': item.SoBHYT,
         'Số vào viện': item.SoVaoVien,
         'Họ tên': item.Hoten,
         'Ngày sinh': item.Ngaysinh,
@@ -247,6 +292,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
       // Auto-size columns
       const colWidths = [
         { wch: 10 }, // Mã BA
+        { wch: 15 }, // Số BHYT
         { wch: 15 }, // Số vào viện
         { wch: 25 }, // Họ tên
         { wch: 12 }, // Ngày sinh
@@ -286,6 +332,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
       const sampleData = [
         {
           'Mã BA': 'E4EEF427-B507-4C30-A8BD-000597DB74D9',
+          'Số BHYT': 'GD4807221465361',
           'Số vào viện': '0123456',
           'Họ tên': 'Nguyễn Văn A',
           'Ngày sinh': '01/01/1990',
@@ -298,6 +345,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
         },
         {
           'Mã BA': 'F8D842CB-84D3-4556-8EAE-00021E140851',
+          'Số BHYT': 'GD4807221465362',
           'Số vào viện': '0123457',
           'Họ tên': 'Trần Thị B',
           'Ngày sinh': '15/05/1995',
@@ -310,6 +358,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
         },
         {
           'Mã BA': 'F8D842CB-84D3-4556-8EAE-00021E110851',
+          'Số BHYT': 'GD4807221465363',
           'Số vào viện': '0123458',
           'Họ tên': 'Trần Thị C',
           'Ngày sinh': '15/05/1995',
@@ -328,6 +377,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
       // Set độ rộng cột
       ws['!cols'] = [
         { wch: 10 }, // Mã BA
+        { wch: 15 }, // Số BHYT
         { wch: 15 }, // Số vào viện
         { wch: 25 }, // Họ tên
         { wch: 12 }, // Ngày sinh
@@ -370,10 +420,16 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
         ctrangthai: allChecked ? 0 : 1
       }))
     );
+    setFilteredHSBA(prev =>
+      prev.map(item => ({
+        ...item,
+        ctrangthai: allChecked ? 0 : 1
+      }))
+    );
   };
 
-  const isAllSelected = dsHSBA.length > 0 && dsHSBA.every(item => item.ctrangthai === 1);
-  const isIndeterminate = dsHSBA.some(item => item.ctrangthai === 1) && !isAllSelected;
+  const isAllSelected = filteredHSBA.length > 0 && filteredHSBA.every(item => item.ctrangthai === 1);
+  const isIndeterminate = filteredHSBA.some(item => item.ctrangthai === 1) && !isAllSelected;
 
   return (
     <>
@@ -640,6 +696,52 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
           </Box>
         </Box>
 
+        {/* Search Filter */}
+        <Box
+          sx={{
+            p: 2,
+            display: "flex",
+            gap: 2,
+            alignItems: "center",
+            flexShrink: 0,
+            borderBottom: "1px solid #eee",
+            bgcolor: "#fafafa",
+          }}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Tìm theo Mã BN, Họ tên, Số vào viện, Số BHYT..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleFilter();
+              }
+            }}
+            sx={{
+              bgcolor: "white",
+              "& .MuiInputBase-root": {
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+          <Button
+            variant="contained"
+            startIcon={<MuiIcons.Search />}
+            onClick={handleFilter}
+            size="small"
+            disabled={isLoading}
+            sx={{
+              height: 40,
+              fontSize: "0.8rem",
+              px: 3,
+              flexShrink: 0,
+              minWidth: "120px",
+            }}>
+            Lọc
+          </Button>
+        </Box>
+
         {/* Table */}
         <Box sx={{ flex: 1, overflow: "hidden" }}>
           <TableContainer sx={{ height: "100%" }}>
@@ -661,7 +763,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                       indeterminate={isIndeterminate}
                       onChange={handleSelectAll}
                       size="small"
-                      disabled={dsHSBA.length === 0}
+                      disabled={filteredHSBA.length === 0}
                     />
                   </TableCell>
                   <TableCell
@@ -684,9 +786,33 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                       fontWeight: "bold",
                       zIndex: 1,
                       whiteSpace: "nowrap",
+                      minWidth: 80,
+                    }}>
+                    Mã BN
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
                       minWidth: 100,
                     }}>
                     Số vào viện
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      background: "#fff",
+                      fontWeight: "bold",
+                      zIndex: 1,
+                      whiteSpace: "nowrap",
+                      minWidth: 150,
+                    }}>
+                    Thẻ BHYT
                   </TableCell>
                   <TableCell
                     sx={{
@@ -775,8 +901,8 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {Array.isArray(dsHSBA) && dsHSBA.length > 0 ? (
-                  dsHSBA.map((item) => (
+                {Array.isArray(filteredHSBA) && filteredHSBA.length > 0 ? (
+                  filteredHSBA.map((item) => (
                     <TableRow key={item.ID} sx={{ cursor: "pointer" }}>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
                         <Checkbox
@@ -789,7 +915,13 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                         {item.ID}
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.MaBN}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
                         {item.SoVaoVien}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {item.SoBHYT}
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
                         {item.Hoten}
@@ -847,9 +979,10 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
             borderTop: "1px solid #eee",
           }}>
           <Typography variant="body2" color="textSecondary">
-            {dsHSBA.length > 0 && (
+            {filteredHSBA.length > 0 && (
               <>
-                Đã chọn: {dsHSBA.filter(item => item.ctrangthai === 1).length} / {dsHSBA.length}
+                Đã chọn: {filteredHSBA.filter(item => item.ctrangthai === 1).length} / {filteredHSBA.length}
+                {searchText && ` (Lọc từ ${dsHSBA.length} HSBA)`}
               </>
             )}
           </Typography>

@@ -226,6 +226,9 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
                     Mã BA
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold", minWidth: 100 }}>
+                    Số BHYT
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold", minWidth: 100 }}>
                     Số vào viện
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold", minWidth: 150 }}>
