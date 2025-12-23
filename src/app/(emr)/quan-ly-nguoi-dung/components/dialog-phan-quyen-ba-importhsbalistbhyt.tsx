@@ -1,6 +1,6 @@
 "use client";
 
-import { getphanquyenbaDSSovaovien, luuphanquyenba } from "@/actions/act_tnguoidung";
+import { getphanquyenbaDSSoBHYT, luuphanquyenba } from "@/actions/act_tnguoidung";
 import { IPhanQuyenHoSoBenhAn } from "@/model/tphanquyen";
 import { IUserItem } from "@/model/tuser";
 import { useUserStore } from "@/store/user";
@@ -29,7 +29,7 @@ import React, { useState, useCallback } from "react";
 interface ImportedHSBAListProps {
   open: boolean;
   onClose: () => void;
-  importedSoVaoVienList: string[];
+  importedSoBHYTList: string;
   selectedUser: IUserItem | null;
   onSuccess: () => void;  
   popt: string;
@@ -37,10 +37,10 @@ interface ImportedHSBAListProps {
   toDate: Date;
 }
 
-const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
+const DialogPhanQuyenBaImportedHSBAListBHYT: React.FC<ImportedHSBAListProps> = ({
   open,
   onClose,
-  importedSoVaoVienList,
+  importedSoBHYTList,
   selectedUser,
   onSuccess,
   popt,
@@ -60,22 +60,22 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
     return `${year}-${month}-${day}`;
   }, []);
 
-  // Fetch HSBA từ danh sách số vào viện
-  const fetchHSBAFromSoVaoVien = useCallback(async () => {
-    if (!selectedUser || importedSoVaoVienList.length === 0 || !loginedUser) return;
+  // Fetch HSBA từ danh sách số BHYT
+  const fetchHSBAFromSoBHYT = useCallback(async () => {
+    if (!selectedUser || !importedSoBHYTList || importedSoBHYTList.trim() === '' || !loginedUser) return;
 
     setIsLoadingData(true);
     try {
-      // Chuyển mảng số vào viện thành chuỗi: "123,124,125,126"
-      const soVaoVienString = importedSoVaoVienList.join(',');
-      
+      // importedSoBHYTList đã là chuỗi định dạng: "bhyt1-ngayra1|bhyt2-ngayra2"
+      const soBHYTString = importedSoBHYTList;
+
       // Sử dụng popt từ component chính
       const searchPopt = popt;
 
-      const result = await getphanquyenbaDSSovaovien(
+      const result = await getphanquyenbaDSSoBHYT(
         loginedUser.ctaikhoan,
         searchPopt,
-        soVaoVienString,
+        soBHYTString,
         formatDate(fromDate), // Sử dụng fromDate từ component chính
         formatDate(toDate)    // Sử dụng toDate từ component chính
       );
@@ -88,20 +88,20 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
       
       setDsHSBAImported(hsbaWithPermission);
     } catch (error) {
-      console.error("Error fetching HSBA from SoVaoVien:", error);
-      ToastError("Lỗi khi tải danh sách HSBA từ số vào viện");
+      console.error("Error fetching HSBA from SoBHYT:", error);
+      ToastError("Lỗi khi tải danh sách HSBA từ số BHYT");
       setDsHSBAImported([]);
     } finally {
       setIsLoadingData(false);
     }
-  }, [selectedUser, importedSoVaoVienList, loginedUser, popt, fromDate, toDate, formatDate]);
+  }, [selectedUser, importedSoBHYTList, loginedUser, popt, fromDate, toDate, formatDate]);
 
   // Effect để fetch data khi dialog mở
   React.useEffect(() => {
-    if (open && importedSoVaoVienList.length > 0) {
-      fetchHSBAFromSoVaoVien();
+    if (open && importedSoBHYTList && importedSoBHYTList.trim() !== '') {
+      fetchHSBAFromSoBHYT();
     }
-  }, [open, fetchHSBAFromSoVaoVien, importedSoVaoVienList.length]);
+  }, [open, fetchHSBAFromSoBHYT, importedSoBHYTList]);
 
   const handleCheckHSBA = (ID: string) => {
     setDsHSBAImported((prev) =>
@@ -187,7 +187,7 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
       <DialogTitle sx={{ borderBottom: '1px solid #eee', pb: 2 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6" color="primary">
-            Danh sách HSBA từ file Excel ({importedSoVaoVienList.length} số vào viện)
+            Danh sách HSBA từ file Excel ({importedSoBHYTList ? importedSoBHYTList.split('|').length : 0} bản ghi BHYT)
           </Typography>
           <Typography variant="body2" color="textSecondary">
             Tìm kiếm theo: {popt === "1" ? "Ngày vào" : "Ngày ra"} từ {fromDate.toLocaleDateString()} đến {toDate.toLocaleDateString()}
@@ -337,4 +337,4 @@ const DialogPhanQuyenBaImportedHSBAList: React.FC<ImportedHSBAListProps> = ({
   );
 };
 
-export default React.memo(DialogPhanQuyenBaImportedHSBAList);
+export default React.memo(DialogPhanQuyenBaImportedHSBAListBHYT);

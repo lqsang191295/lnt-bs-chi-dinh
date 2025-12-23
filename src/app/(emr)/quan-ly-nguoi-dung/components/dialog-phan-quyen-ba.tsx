@@ -30,6 +30,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 import React, { useState, useRef } from "react";
 import * as XLSX from 'xlsx';
 import DialogPhanQuyenBaImportedHSBAList from "./dialog-phan-quyen-ba-importhsbalist";
+import DialogPhanQuyenBaImportedHSBAListBHYT from "./dialog-phan-quyen-ba-importhsbalistbhyt";
 
 interface DialogPhanQuyenBaProps {
   selectedUser: IUserItem | null;
@@ -54,6 +55,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
   // States cho dialog import
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importedSoVaoVienList, setImportedSoVaoVienList] = useState<string[]>([]);
+  const [showImportDialogBHYT, setShowImportDialogBHYT] = useState(false);
+  const [importedSoBHYTList, setImportedSoBHYTList] = useState<string>("");
+  const fileInputBHYTRef = useRef<HTMLInputElement>(null);
 
   const fetchHSBA = async () => {
     if (!selectedUser) return;
@@ -262,6 +266,131 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
     }
   };
 
+  const handleImportExcelBHYT = () => {
+    fileInputBHYTRef.current?.click();
+  };
+
+  const handleFileUploadBHYT = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsLoading(true);
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      
+      // Lấy sheet đầu tiên
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      // Chuyển đổi sang JSON với header mapping
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+        header: 1,
+        defval: ''
+      });
+      
+      if (jsonData.length < 2) {
+        ToastError("File Excel phải có ít nhất 2 hàng (header + data)");
+        return;
+      }
+
+      // Kiểm tra header - tìm cột "Số BHYT" và "Ngày ra"
+      const headers = jsonData[0] as string[];
+      const soBHYTColIndex = headers.findIndex(h => 
+        h && (h.toLowerCase().includes('số bhyt') || h.toLowerCase().includes('thẻ bhyt'))
+      );
+      const ngayRaColIndex = headers.findIndex(h => 
+        h && h.toLowerCase().includes('ngày ra')
+      );
+      
+      if (soBHYTColIndex === -1) {
+        ToastError("File Excel phải có cột 'Số BHYT' hoặc 'Thẻ BHYT'");
+        return;
+      }
+
+      if (ngayRaColIndex === -1) {
+        ToastError("File Excel phải có cột 'Ngày ra'");
+        return;
+      }
+
+      // Bỏ qua hàng tiêu đề (hàng đầu tiên)
+      const dataRows = jsonData.slice(1) as string[][];
+      
+      if (dataRows.length === 0) {
+        ToastError("File Excel không có dữ liệu");
+        return;
+      }
+
+      // Hàm chuyển đổi ngày từ dd/mm/yyyy hoặc Excel date sang yyyymmdd
+      const convertDateToYYYYMMDD = (dateValue: string | number): string => {
+        if (!dateValue) return '';
+        
+        // Nếu là số (Excel date serial)
+        if (typeof dateValue === 'number') {
+          const excelEpoch = new Date(1900, 0, 1);
+          const date = new Date(excelEpoch.getTime() + (dateValue - 2) * 86400000);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}${month}${day}`;
+        }
+        
+        // Nếu là chuỗi dd/mm/yyyy
+        const dateStr = dateValue.toString().trim();
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+          const [day, month, year] = parts;
+          return `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
+        }
+        
+        return '';
+      };
+
+      // Lấy danh sách BHYT và ngày ra theo format: "bhyt1-ngayra1|bhyt2-ngayra2"
+      const bhytList = dataRows
+        .map(row => {
+          const soBHYT = row[soBHYTColIndex];
+          const ngayRa = row[ngayRaColIndex];
+          
+          if (!soBHYT || soBHYT.toString().trim() === '') return null;
+          
+          const bhytStr = soBHYT.toString().trim();
+          const ngayRaStr = convertDateToYYYYMMDD(ngayRa);
+          
+          if (!ngayRaStr) {
+            console.warn(`Ngày ra không hợp lệ cho BHYT: ${bhytStr}`);
+            return null;
+          }
+          
+          return `${bhytStr}-${ngayRaStr}`;
+        })
+        .filter(item => item !== null)
+        .join('|');
+
+      if (!bhytList) {
+        ToastError("Không tìm thấy dữ liệu BHYT và ngày ra hợp lệ trong file Excel");
+        return;
+      }
+
+      // Lưu chuỗi BHYT và hiển thị dialog
+      setImportedSoBHYTList(bhytList);
+      setShowImportDialogBHYT(true);
+      
+      const count = bhytList.split('|').length;
+      ToastSuccess(`Đã đọc thành công ${count} bản ghi từ file Excel`);
+      
+    } catch (error) {
+      console.error("Error importing Excel BHYT:", error);
+      ToastError("Lỗi khi đọc file Excel");
+    } finally {
+      setIsLoading(false);
+      // Reset file input
+      if (fileInputBHYTRef.current) {
+        fileInputBHYTRef.current.value = '';
+      }
+    }
+  };
+
   const handleExportExcel = () => {
     if (dsHSBA.length === 0) {
       ToastError("Không có dữ liệu để export");
@@ -352,7 +481,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
           'Giới tính': 'Nữ',
           'Địa chỉ': 'Xã Bình Chánh, TP.HCM',
           'Ngày vào': '11/12/2025',
-          'Ngày ra': '',
+          'Ngày ra': '11/12/2025',
           'Khoa điều trị': 'Sản',
           'Đã phân quyền': 'Không'
         },
@@ -365,7 +494,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
           'Giới tính': 'Nữ',
           'Địa chỉ': 'Xã Bình Chánh, TP.HCM',
           'Ngày vào': '11/12/2025',
-          'Ngày ra': '',
+          'Ngày ra': '15/12/2025',
           'Khoa điều trị': 'Sản',
           'Đã phân quyền': 'Không'
         }
@@ -670,7 +799,20 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                   fontSize: "0.8rem",
                   px: 2,
                 }}>
-                Import Excel
+                Import (Số VV)
+              </Button>
+
+              <Button
+                variant="outlined"
+                startIcon={<MuiIcons.FileUpload />}
+                onClick={handleImportExcelBHYT}
+                size="small"
+                disabled={isLoading || !selectedUser}
+                sx={{
+                  fontSize: "0.8rem",
+                  px: 2,
+                }}>
+                Import (BHYT)
               </Button>
 
               <Button
@@ -689,6 +831,13 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                 type="file"
                 inputRef={fileInputRef}
                 onChange={handleFileUpload}
+                inputProps={{ accept: ".xlsx,.xls" }}
+                sx={{ display: "none" }}
+              />
+              <Input
+                type="file"
+                inputRef={fileInputBHYTRef}
+                onChange={handleFileUploadBHYT}
                 inputProps={{ accept: ".xlsx,.xls" }}
                 sx={{ display: "none" }}
               />
@@ -998,7 +1147,18 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
         </Box>
       </Box>
 
-      {/* Dialog hiển thị HSBA từ Excel */}
+      {/* Dialog hiển thị HSBA từ Excel theo BHYT */}
+      <DialogPhanQuyenBaImportedHSBAListBHYT
+        open={showImportDialogBHYT}
+        onClose={() => setShowImportDialogBHYT(false)}
+        importedSoBHYTList={importedSoBHYTList}
+        selectedUser={selectedUser}
+        onSuccess={handleImportSuccess}
+        popt={popt}
+        fromDate={fromDate}
+        toDate={toDate}
+      />
+      {/* Dialog hiển thị HSBA từ Excel theo Số vào viện */}
       <DialogPhanQuyenBaImportedHSBAList
         open={showImportDialog}
         onClose={() => setShowImportDialog(false)}

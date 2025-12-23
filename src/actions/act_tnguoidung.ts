@@ -342,6 +342,38 @@ export const getphanquyenba = async (
   }
 };
 
+export const getphanquyenbaDSSoBHYT = async (
+  pUser: string,
+  pOpt: string,
+  DSSoBHYT: string,
+  TuNgay: string,
+  DenNgay: string
+) => {
+  try {
+    //console.log("Fetching HoSoBenhAn...");
+    // Gọi API để lấy danh sách hồ sơ bệnh án
+    const response = await post(`/api/callService`, {
+      userId: "",
+      optionId: "1",
+      funcName: "dbo.emr_pget_tphanquyenba_dsbhytngaykham",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "DSBHYT", paraValue: DSSoBHYT},
+        { paraName: "TuNgay", paraValue: TuNgay },
+        { paraName: "DenNgay", paraValue: DenNgay },
+      ],
+    });
+
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
 export const getphanquyenbaDSSovaovien = async (
   pUser: string,
   pOpt: string,
