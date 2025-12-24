@@ -435,6 +435,9 @@ export default function LuuTruHsbaPage() {
             loading={searchingData}
             density="compact"
             onRowSelectionModelChange={handleRowSelectionChange}
+            columnVisibilityModel={{
+              ID: false,
+            }}
             sx={{
               height: "100%",
               "& .MuiDataGrid-columnHeaders": {

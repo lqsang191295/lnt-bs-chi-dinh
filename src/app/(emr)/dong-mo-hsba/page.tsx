@@ -443,6 +443,10 @@ export default function DongMoHsbaPage() {
             disableRowSelectionOnClick
             density="compact"
             onRowSelectionModelChange={handleRowSelectionChange}
+            columnVisibilityModel={{
+              ID: false,
+              MaBANoiTru: false,
+            }}
             sx={{
               height: "100%",
               "& .MuiDataGrid-columnHeaders": {

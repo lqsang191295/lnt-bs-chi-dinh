@@ -924,8 +924,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                       zIndex: 1,
                       whiteSpace: "nowrap",
                       minWidth: 0,
+                      display: "none",
                     }}>
-                   
+                   Mã BA
                   </TableCell>
                   <TableCell
                     sx={{
@@ -1060,7 +1061,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                           size="small"
                         />
                       </TableCell>
-                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      <TableCell sx={{ whiteSpace: "nowrap", display: "none" }}>
                         {item.ID}
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>

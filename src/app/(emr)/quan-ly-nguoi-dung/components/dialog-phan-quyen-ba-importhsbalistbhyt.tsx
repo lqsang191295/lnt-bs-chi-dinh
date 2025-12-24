@@ -222,7 +222,7 @@ const DialogPhanQuyenBaImportedHSBAListBHYT: React.FC<ImportedHSBAListProps> = (
                       disabled={dsHSBAImported.length === 0}
                     />
                   </TableCell>
-                  <TableCell sx={{ fontWeight: "bold", minWidth: 80 }}>
+                  <TableCell sx={{ fontWeight: "bold", minWidth: 80, display: "none" }}>
                     Mã BA
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold", minWidth: 100 }}>
@@ -265,7 +265,7 @@ const DialogPhanQuyenBaImportedHSBAListBHYT: React.FC<ImportedHSBAListProps> = (
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{item.ID}</TableCell>
+                      <TableCell sx={{ display: "none" }}>{item.ID}</TableCell>
                       <TableCell>{item.SoBHYT}</TableCell>
                       <TableCell>{item.SoVaoVien}</TableCell>
                       <TableCell>{item.Hoten}</TableCell>

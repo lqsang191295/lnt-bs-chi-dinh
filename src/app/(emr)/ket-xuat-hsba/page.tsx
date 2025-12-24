@@ -880,6 +880,9 @@ export default function KetXuatHsbaPage() {
               disableRowSelectionOnClick
               density="compact"
               onRowSelectionModelChange={handleRowSelectionChange}
+              columnVisibilityModel={{
+                ID: false,
+              }}
               sx={{
                 height: "100%",
                 "& .MuiDataGrid-columnHeaders": {

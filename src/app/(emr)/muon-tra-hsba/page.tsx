@@ -469,6 +469,9 @@ export default function MuonTraHsbaPage() {
             onRowSelectionModelChange={handleRowSelectionChange}
             onRowDoubleClick={handleRowDoubleClick}
             loading={searchingData}
+            columnVisibilityModel={{
+              ID: false,
+            }}
             sx={{
               height: "100%",
               "& .MuiDataGrid-columnHeaders": {

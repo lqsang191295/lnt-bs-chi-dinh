@@ -46,7 +46,7 @@ export default function TraCuuHsbaPage() {
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
   const [filteredRows, setFilteredRows] = useState<IHoSoBenhAn[]>([]);
   const [searchText, setSearchText] = useState("");
-  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
+  const [popt, setPopt] = useState("2"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   // State cho dialog chi tiết
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
@@ -514,6 +514,9 @@ export default function TraCuuHsbaPage() {
             disableRowSelectionOnClick
             density="compact"
             onRowDoubleClick={handleRowDoubleClick}
+            columnVisibilityModel={{
+              ID: false,
+            }}
             sx={{
               height: "100%",
               "& .MuiDataGrid-columnHeaders": {
