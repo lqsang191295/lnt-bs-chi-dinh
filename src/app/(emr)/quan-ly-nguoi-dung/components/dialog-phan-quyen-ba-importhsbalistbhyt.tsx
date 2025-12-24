@@ -70,22 +70,22 @@ const DialogPhanQuyenBaImportedHSBAListBHYT: React.FC<ImportedHSBAListProps> = (
       const soBHYTString = importedSoBHYTList;
 
       // Sử dụng popt từ component chính
-      const searchPopt = popt;
+      const searchPopt = parseInt(popt, 10) + 1; // Chuyển đổi sang số (1 hoặc 2)
 
       const result = await getphanquyenbaDSSoBHYT(
         loginedUser.ctaikhoan,
-        searchPopt,
+        searchPopt.toString(),
         soBHYTString,
         formatDate(fromDate), // Sử dụng fromDate từ component chính
         formatDate(toDate)    // Sử dụng toDate từ component chính
       );
-      
+      // console.log("Fetched getphanquyenbaDSSoBHYT result:", result);
       // Set trạng thái mặc định là phân quyền (ctrangthai = 1)
       const hsbaWithPermission = (result || []).map((item: IPhanQuyenHoSoBenhAn) => ({
         ...item,
         ctrangthai: 1
       }));
-      
+      // console.log("Fetched HSBA from SoBHYT:", hsbaWithPermission);
       setDsHSBAImported(hsbaWithPermission);
     } catch (error) {
       console.error("Error fetching HSBA from SoBHYT:", error);

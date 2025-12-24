@@ -11,6 +11,7 @@ import {
   Radio,
   RadioGroup,
   Select,
+  TextField,
   Typography,
 } from "@mui/material";
 
@@ -23,7 +24,7 @@ import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
 import { useMenuStore } from "@/store/menu";
 import { useUserStore } from "@/store/user";
-import { ToastError, ToastWarning } from "@/utils/toast";
+import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
@@ -100,7 +101,9 @@ export default function LuuTruHsbaPage() {
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
-  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
+  const [filteredRows, setFilteredRows] = useState<IHoSoBenhAn[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [popt, setPopt] = useState("2"); // 1: Ngày vào viện, 2: Ngày ra viện
   const { data: loginedUser } = useUserStore();
   const { data: menuData } = useMenuStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
@@ -221,12 +224,13 @@ export default function LuuTruHsbaPage() {
         formatDate(denNgay)
       );
 
-      setRows(
-        (data || []).map((item: IHoSoBenhAn) => ({
-          id: item.ID, // Use ID or index as row ID
-          ...item,
-        }))
-      );
+      const mappedRows = (data || []).map((item: IHoSoBenhAn) => ({
+        id: item.ID, // Use ID or index as row ID
+        ...item,
+      }));
+      setRows(mappedRows);
+      setFilteredRows(mappedRows);
+      setSearchText(""); // Reset search text khi tìm kiếm mới
       //console.log("Search results:", data);
     } catch (error) {
       console.error("Error fetching hồ sơ bệnh án:", error);
@@ -235,6 +239,37 @@ export default function LuuTruHsbaPage() {
       setSearchingData(false);
     }
   };
+
+  // Hàm lọc dữ liệu theo text search
+  const handleFilter = useCallback(() => {
+    if (!searchText.trim()) {
+      setFilteredRows(rows);
+      return;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    const filtered = rows.filter((row) => {
+      const maBN = (row.MaBN || "").toLowerCase();
+      const hoTen = (row.Hoten || "").toLowerCase();
+      const soVaoVien = (row.SoVaoVien || "").toLowerCase();
+      const soBHYT = (row.SoBHYT || "").toLowerCase();
+
+      return (
+        maBN.includes(searchLower) ||
+        hoTen.includes(searchLower) ||
+        soVaoVien.includes(searchLower) ||
+        soBHYT.includes(searchLower)
+      );
+    });
+
+    setFilteredRows(filtered);
+
+    if (filtered.length === 0) {
+      ToastWarning("Không tìm thấy kết quả phù hợp!");
+    } else {
+      ToastSuccess(`Tìm thấy ${filtered.length} kết quả`);
+    }
+  }, [searchText, rows]);
 
   // Hiển thị loading khi đang kiểm tra quyền truy cập
   if (isCheckingAccess) {
@@ -355,6 +390,30 @@ export default function LuuTruHsbaPage() {
 
         {/* Tab Navigation */}
         <Box className="bg-white flex gap-2 p-2">
+          {/* Search Filter */} 
+          <Box className="flex-1">
+            <TextField
+              fullWidth
+              size="small"
+              label="Mã BN, Họ tên, Số vào viện, Số BHYT..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleFilter();
+                }
+              }}
+              type="text"
+            />
+          </Box>
+          <Button
+            startIcon={<Search />}
+            variant="contained"
+            color="success"
+            size="small"
+            onClick={handleFilter}>
+            Lọc HSBA
+          </Button>
           <Button
             startIcon={<SaveAltIcon />}
             variant="contained"
@@ -366,10 +425,11 @@ export default function LuuTruHsbaPage() {
           </Button>
         </Box>
 
+
         {/* Main Content Area - DataGrid với height cố định */}
         <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
           <DataGrid
-            rows={rows}
+            rows={filteredRows}
             columns={columns}
             pagination
             loading={searchingData}

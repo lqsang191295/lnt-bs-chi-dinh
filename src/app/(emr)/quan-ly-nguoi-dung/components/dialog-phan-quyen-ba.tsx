@@ -44,7 +44,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
   const [selectedKhoaBA, setSelectedKhoaBA] = useState("all");
   const [fromDate, setFromDate] = useState<Date>(new Date());
   const [toDate, setToDate] = useState<Date>(new Date());
-  const [popt, setPopt] = useState("1");
+  const [popt, setPopt] = useState("2");
   const [dsHSBA, setDsHSBA] = useState<IPhanQuyenHoSoBenhAn[]>([]);
   const [filteredHSBA, setFilteredHSBA] = useState<IPhanQuyenHoSoBenhAn[]>([]);
   const [searchText, setSearchText] = useState("");
@@ -150,7 +150,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
     setIsLoading(true);
     try {
       // Lưu tất cả các HSBA đã được check
-      for (const item of dsHSBA.filter((row) => row.ctrangthai === 1)) {
+      for (const item of dsHSBA) {
         await luuphanquyenba(
           loginedUser.ctaikhoan,
           "1",
@@ -160,16 +160,16 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
         );
       }
       
-      // Xóa phân quyền cho các HSBA đã bỏ check
-      for (const item of dsHSBA.filter((row) => row.ctrangthai === 0)) {
-        await luuphanquyenba(
-          loginedUser.ctaikhoan,
-          "0", // opt = 0 để xóa phân quyền
-          selectedUser.ctaikhoan,
-          item.ID,
-          "0"
-        );
-      }
+      // // Xóa phân quyền cho các HSBA đã bỏ check
+      // for (const item of dsHSBA.filter((row) => row.ctrangthai === 0)) {
+      //   await luuphanquyenba(
+      //     loginedUser.ctaikhoan,
+      //     "1", 
+      //     selectedUser.ctaikhoan,
+      //     item.ID,
+      //     "0"//  ctrangthai = 0 để xóa phân quyền update ctrangthai
+      //   );
+      // }
       
       ToastSuccess("Lưu phân quyền BA thành công!");
       // Tải lại dữ liệu sau khi lưu
@@ -770,7 +770,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
               }
               label={
                 <Typography sx={{ fontSize: "0.875rem", color: "#1976d2" }}>
-                  Tất cả HSBA đã phân quyền
+                  Lọc HSBA đã phân quyền
                 </Typography>
               }
             />
@@ -887,7 +887,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
               flexShrink: 0,
               minWidth: "120px",
             }}>
-            Lọc
+            Lọc HSBA
           </Button>
         </Box>
 
@@ -923,9 +923,9 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                       fontWeight: "bold",
                       zIndex: 1,
                       whiteSpace: "nowrap",
-                      minWidth: 80,
+                      minWidth: 0,
                     }}>
-                    Mã BA
+                   
                   </TableCell>
                   <TableCell
                     sx={{

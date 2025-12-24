@@ -22,6 +22,7 @@ import {
   Radio,
   RadioGroup,
   Select,
+  TextField,
   Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
@@ -92,7 +93,9 @@ export default function DongMoHsbaPage() {
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
-  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
+  const [filteredRows, setFilteredRows] = useState<IHoSoBenhAn[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [popt, setPopt] = useState("2"); // 1: Ngày vào viện, 2: Ngày ra viện
   const { data: loginedUser } = useUserStore();
   const { data: menuData } = useMenuStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
@@ -217,12 +220,13 @@ export default function DongMoHsbaPage() {
         formatDate(denNgay)
       );
       //console.log("Fetched HSBA data:", data); // For debugging
-      setRows(
-        (data || []).map((item: IHoSoBenhAn) => ({
-          id: item.ID, // Use ID or index as row ID
-          ...item,
-        }))
-      );
+      const mappedRows = (data || []).map((item: IHoSoBenhAn) => ({
+        id: item.ID, // Use ID or index as row ID
+        ...item,
+      }));
+      setRows(mappedRows);
+      setFilteredRows(mappedRows);
+      setSearchText(""); // Reset search text khi tìm kiếm mới
       //console.log("Search results:", data);
     } catch (error) {
       console.error("Error fetching HSBA data:", error);
@@ -231,6 +235,37 @@ export default function DongMoHsbaPage() {
       setSearchingData(false);
     }
   };
+
+  // Hàm lọc dữ liệu theo text search
+  const handleFilter = useCallback(() => {
+    if (!searchText.trim()) {
+      setFilteredRows(rows);
+      return;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    const filtered = rows.filter((row) => {
+      const maBN = (row.MaBN || "").toLowerCase();
+      const hoTen = (row.Hoten || "").toLowerCase();
+      const soVaoVien = (row.SoVaoVien || "").toLowerCase();
+      const soBHYT = (row.SoBHYT || "").toLowerCase();
+
+      return (
+        maBN.includes(searchLower) ||
+        hoTen.includes(searchLower) ||
+        soVaoVien.includes(searchLower) ||
+        soBHYT.includes(searchLower)
+      );
+    });
+
+    setFilteredRows(filtered);
+
+    if (filtered.length === 0) {
+      ToastWarning("Không tìm thấy kết quả phù hợp!");
+    } else {
+      ToastSuccess(`Tìm thấy ${filtered.length} kết quả`);
+    }
+  }, [searchText, rows]);
 
   // Hiển thị loading khi đang kiểm tra quyền truy cập
   if (isCheckingAccess) {
@@ -351,6 +386,29 @@ export default function DongMoHsbaPage() {
         </Grid>
         {/* Tab Navigation */}
         <Box className="bg-white flex gap-2 p-2">
+          <Box className="flex-1">
+            <TextField
+              fullWidth
+              size="small"
+              label="Mã BN, Họ tên, Số vào viện, Số BHYT..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleFilter();
+                }
+              }}
+              type="text"
+            />
+          </Box>
+          <Button
+            startIcon={<Search />}
+            variant="contained"
+            color="success"
+            size="small"
+            onClick={handleFilter}>
+            Lọc HSBA
+          </Button>
           <Button
             startIcon={<LockOutlinedIcon />}
             variant="contained"
@@ -371,10 +429,13 @@ export default function DongMoHsbaPage() {
           </Button>
         </Box>
 
+        {/* Search Filter */}
+        
+
         {/* Main Content Area - DataGrid với height cố định */}
         <Box className="w-full h-full overflow-hidden">
           <DataGrid
-            rows={rows}
+            rows={filteredRows}
             columns={columns}
             loading={searchingData}
             pagination

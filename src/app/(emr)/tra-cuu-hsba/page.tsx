@@ -501,7 +501,7 @@ export default function TraCuuHsbaPage() {
             size="small"
             onClick={handleFilter}
             >
-            Tìm bệnh nhân
+            Lọc HSBA
           </Button>
         </Box>
         {/* Main Content Area - DataGrid với height cố định */}
