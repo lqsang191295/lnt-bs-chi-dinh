@@ -1,12 +1,14 @@
 // src/app/luu-tru-hsba/page.tsx
 "use client";
 import { Search } from "@mui/icons-material";
+import LaunchIcon from '@mui/icons-material/Launch';
 import {
   Box,
   Button,
   CircularProgress,
   FormControlLabel,
   Grid,
+  IconButton,
   MenuItem,
   Radio,
   RadioGroup,
@@ -15,10 +17,11 @@ import {
   Typography,
 } from "@mui/material";
 
-import { getHosobenhan } from "@/actions/act_thosobenhan";
+import { getHosobenhan, getChiTietHSBA } from "@/actions/act_thosobenhan";
 import AccessDeniedPage from "@/components/AccessDeniedPage";
 import HeadMetadata from "@/components/HeadMetadata";
 import { IHoSoBenhAn } from "@/model/thosobenhan";
+import { IHoSoBenhAnChiTiet } from "@/model/thosobenhan_chitiet";
 import { ILoaiLuuTru } from "@/model/tloailuutru";
 import { ISelectOption } from "@/model/ui";
 import { DataManager } from "@/services/DataManager";
@@ -33,65 +36,8 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import DialogDetail from "../tra-cuu-hsba/components/dialog-detail";
 import DialogCapNhatLuuTru from "./components/dialog-cap-nhat-luu-tru";
-
-const columns: GridColDef[] = [
-  { field: "ID", headerName: "ID", width: 60 },
-  {
-    field: "TrangThaiBA",
-    headerName: "Trạng thái",
-    width: 100,
-    renderCell: (params) => (
-      <Box
-        sx={{
-          backgroundColor: "transparent",
-          color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
-          padding: "4px 8px",
-          borderRadius: "4px",
-          fontSize: "12px",
-          fontWeight: "bold",
-          textAlign: "center",
-          minWidth: "60px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "4px",
-        }}>
-        {params.value === "MO" ? (
-          <>
-            <LockOpenIcon sx={{ fontSize: "14px" }} />
-            Mở
-          </>
-        ) : (
-          <>
-            <LockOutlinedIcon sx={{ fontSize: "14px" }} />
-            Đóng
-          </>
-        )}
-      </Box>
-    ),
-  },
-  // { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
-  { field: "Hoten", headerName: "Họ và tên", width: 200 },
-  { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
-  { field: "Gioitinh", headerName: "Giới tính", width: 70 },
-  { field: "MaBN", headerName: "Mã BN", width: 80 },
-  { field: "SoBHYT", headerName: "Số BHYT", width: 160 },
-  { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
-  { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
-  { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
-  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 0 },
-  { field: "KhoaDieuTri", headerName: "", width: 0 }, // Ẩn cột này
-  { field: "TenKhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
-  { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
-  { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
-  { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
-  { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
-  { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
-  { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
-  { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
-  { field: "LoaiLuuTru", headerName: "", width: 0 }, // Ẩn cột này
-];
 
 export default function LuuTruHsbaPage() {
   const router = useRouter();
@@ -111,6 +57,121 @@ export default function LuuTruHsbaPage() {
   const [searchingData, setSearchingData] = useState<boolean>(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+
+  // States for view HSBA detail dialog
+  const [openDetailDialog, setOpenDetailDialog] = useState(false);
+  const [selectedHsbaForView, setSelectedHsbaForView] = useState<IHoSoBenhAn | null>(null);
+  const [phieuList, setPhieuList] = useState<IHoSoBenhAnChiTiet[]>([]);
+
+  // Handle view HSBA detail
+  const handleViewHSBA = useCallback(async (hsba: IHoSoBenhAn) => {
+    if (!hasAccess) return;
+    
+    setSelectedHsbaForView(hsba);
+
+    try {
+      const chiTietData = await getChiTietHSBA(
+        loginedUser.ctaikhoan,
+        popt,
+        hsba.ID
+      );
+      const mappedData = (chiTietData || []).map(
+        (item: IHoSoBenhAnChiTiet, index: number) => ({
+          id: item.ID || index + 1,
+          ...item,
+        })
+      );
+
+      setPhieuList(mappedData);
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết HSBA:", error);
+      setPhieuList([]);
+      ToastError("Lỗi khi tải chi tiết hồ sơ bệnh án!");
+    }
+
+    setOpenDetailDialog(true);
+  }, [hasAccess, loginedUser.ctaikhoan, popt]);
+
+  // Handle close detail dialog
+  const handleCloseDetailDialog = () => {
+    setOpenDetailDialog(false);
+    setSelectedHsbaForView(null);
+    setPhieuList([]);
+  };
+
+  const columns: GridColDef[] = [
+    { field: "ID", headerName: "ID", width: 60 },
+    {
+      field: "ViewHSBA",
+      headerName: "Xem",
+      width: 60,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <IconButton
+          size="small"
+          color="primary"
+          onClick={() => handleViewHSBA(params.row)}
+          title="Xem chi tiết HSBA">
+          <LaunchIcon fontSize="small" />
+        </IconButton>
+      ),
+    },
+    {
+      field: "TrangThaiBA",
+      headerName: "Trạng thái",
+      width: 100,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            backgroundColor: "transparent",
+            color: params.value === "MO" ? "#8200fcff" : "#f44336", // Màu vàng cho MO, màu đỏ cho DONG,
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            fontWeight: "bold",
+            textAlign: "center",
+            minWidth: "60px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "4px",
+          }}>
+          {params.value === "MO" ? (
+            <>
+              <LockOpenIcon sx={{ fontSize: "14px" }} />
+              Mở
+            </>
+          ) : (
+            <>
+              <LockOutlinedIcon sx={{ fontSize: "14px" }} />
+              Đóng
+            </>
+          )}
+        </Box>
+      ),
+    },
+    // { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
+    { field: "Hoten", headerName: "Họ và tên", width: 200 },
+  { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
+  { field: "Gioitinh", headerName: "Giới tính", width: 70 },
+  { field: "MaBN", headerName: "Mã BN", width: 80 },
+  { field: "SoBHYT", headerName: "Số BHYT", width: 160 },
+  { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
+  { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
+  { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
+  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 0 },
+  { field: "KhoaDieuTri", headerName: "", width: 0 }, // Ẩn cột này
+  { field: "TenKhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+  { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
+  { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
+  { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
+  { field: "NgayLuuTru", headerName: "Ngày lưu trữ", width: 100 },
+  { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
+    { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
+    { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+    { field: "LoaiLuuTru", headerName: "", width: 0 }, // Ẩn cột này
+  ];
 
   // Kiểm tra quyền truy cập
   useEffect(() => {
@@ -476,6 +537,16 @@ export default function LuuTruHsbaPage() {
           loaiLuuTruList={loaiLuuTruList}
           onSuccess={handleUpdateSuccess}
         />
+
+        {/* Dialog xem chi tiết HSBA */}
+        {openDetailDialog && selectedHsbaForView && (
+          <DialogDetail
+            open={openDetailDialog}
+            onClose={handleCloseDetailDialog}
+            selectedHsbaForDetail={selectedHsbaForView}
+            phieuList={phieuList}
+          />
+        )}
       </Box>
     </LocalizationProvider>
   );

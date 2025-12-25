@@ -22,6 +22,7 @@ import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { Download, NoteAdd, Refresh, Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import LaunchIcon from '@mui/icons-material/Launch';
 import * as XLSX from 'xlsx';
 import {
   Alert,
@@ -46,6 +47,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import DialogDetail from "../tra-cuu-hsba/components/dialog-detail";
 
 // Cập nhật interface cho dữ liệu lịch sử kết xuất
 interface INhatKyKetXuat {
@@ -125,6 +127,12 @@ export default function KetXuatHsbaPage() {
   // Thêm state cho lịch sử kết xuất
   const [lichSuRows, setLichSuRows] = useState<INhatKyKetXuat[]>([]);
   const [popt, setPopt] = useState("2"); // 1: Ngày vào viện, 2: Ngày ra viện
+  
+  // State cho dialog chi tiết
+  const [openDetailDialog, setOpenDetailDialog] = useState(false);
+  const [selectedHsbaForDetail, setSelectedHsbaForDetail] = useState<IHoSoBenhAn | null>(null);
+  const [phieuList, setPhieuList] = useState<IHoSoBenhAnChiTiet[]>([]);
+  
   const { data: loginedUser } = useUserStore();
   const { data: menuData } = useMenuStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
@@ -165,6 +173,43 @@ export default function KetXuatHsbaPage() {
       []
     )
   );
+  
+  // Hàm xử lý xem chi tiết HSBA
+  const handleViewHSBA = useCallback(async (hsba: IHoSoBenhAn) => {
+    if (!hasAccess) return;
+
+    setSelectedHsbaForDetail(hsba);
+
+    try {
+      const chiTietData = await getChiTietHSBA(
+        loginedUser.ctaikhoan,
+        popt,
+        hsba.ID
+      );
+      const mappedData = (chiTietData || []).map(
+        (item: IHoSoBenhAnChiTiet, index: number) => ({
+          id: item.ID || index + 1,
+          ...item,
+        })
+      );
+
+      setPhieuList(mappedData);
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết HSBA:", error);
+      setPhieuList([]);
+      ToastError("Lỗi khi tải chi tiết hồ sơ bệnh án!");
+    }
+
+    setOpenDetailDialog(true);
+  }, [hasAccess, loginedUser.ctaikhoan, popt]);
+
+  // Hàm đóng dialog chi tiết
+  const handleCloseDetailDialog = () => {
+    setOpenDetailDialog(false);
+    setSelectedHsbaForDetail(null);
+    setPhieuList([]);
+  };
+  
   // Hàm xử lý export Excel cho tab Lịch sử
   const handleExportExcel = () => {
     if (lichSuRows.length === 0) {
@@ -267,6 +312,17 @@ export default function KetXuatHsbaPage() {
   const columnsKetXuat: GridColDef[] = useMemo(
     () => [
       { field: "ID", headerName: "ID", width: 60 },
+      { field: "ViewHSBA", headerName: "Xem", width: 60,
+        renderCell: (params) => (
+          <IconButton
+            onClick={() => handleViewHSBA(params.row)}
+            size="small"
+            color="primary"
+          >
+            <LaunchIcon fontSize="small" />
+          </IconButton>
+        ),
+      },
       {
         field: "TrangThaiKetXuat",
         headerName: "Trạng thái",
@@ -347,7 +403,7 @@ export default function KetXuatHsbaPage() {
       { field: "NguoiKetXuat", headerName: "Người kết xuất", width: 180 },
       { field: "NgayKetXuat", headerName: "Ngày kết xuất", width: 170 },
     ],
-    [handleDownload, pdfLoading]
+    [handleDownload, pdfLoading, handleViewHSBA]
   );
 
   // Columns cho tab Lịch sử
@@ -975,6 +1031,16 @@ export default function KetXuatHsbaPage() {
           </Box>
         </CustomTabPanel>
       </Box>
+
+      {/* Dialog Chi tiết HSBA */}
+      {openDetailDialog && (
+        <DialogDetail
+          open={openDetailDialog}
+          onClose={handleCloseDetailDialog}
+          selectedHsbaForDetail={selectedHsbaForDetail}
+          phieuList={phieuList}
+        />
+      )}
     </LocalizationProvider>
   );
 }

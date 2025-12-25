@@ -14,6 +14,7 @@ import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import LaunchIcon from '@mui/icons-material/Launch';
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {
@@ -78,6 +79,35 @@ export default function TraCuuHsbaPage() {
     }
   }, [menuData, loginedUser, router]);
 
+  // Handle view HSBA detail
+  const handleViewHSBA = useCallback(async (hsba: IHoSoBenhAn) => {
+    if (!hasAccess) return;
+    
+    setSelectedHsbaForDetail(hsba);
+
+    try {
+      const chiTietData = await getChiTietHSBA(
+        loginedUser.ctaikhoan,
+        popt,
+        hsba.ID
+      );
+      const mappedData = (chiTietData || []).map(
+        (item: IHoSoBenhAnChiTiet, index: number) => ({
+          id: item.ID || index + 1,
+          ...item,
+        })
+      );
+
+      setPhieuList(mappedData);
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết HSBA:", error);
+      setPhieuList([]);
+      ToastError("Lỗi khi tải chi tiết hồ sơ bệnh án!");
+    }
+
+    setOpenDetailDialog(true);
+  }, [hasAccess, loginedUser.ctaikhoan, popt]);
+
   // Sử dụng PdfComponents hook
   const { downloadPdf, isLoading } = PdfComponents(
     useMemo(
@@ -119,6 +149,22 @@ export default function TraCuuHsbaPage() {
   const columns: GridColDef[] = useMemo(
     () => [
       { field: "ID", headerName: "ID", width: 0 },
+      {
+        field: "ViewHSBA",
+        headerName: "Xem",
+        width: 60,
+        sortable: false,
+        filterable: false,
+        renderCell: (params) => (
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={() => handleViewHSBA(params.row)}
+            title="Xem chi tiết HSBA">
+            <LaunchIcon fontSize="small" />
+          </IconButton>
+        ),
+      },
       {
         field: "TrangThaiBA",
         headerName: "Trạng thái",
@@ -230,7 +276,7 @@ export default function TraCuuHsbaPage() {
       { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
       { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
     ],
-    [handleDownload, isLoading]
+    [handleDownload, isLoading, handleViewHSBA]
   );
 
   // Hàm xử lý double click trên lưới chính
