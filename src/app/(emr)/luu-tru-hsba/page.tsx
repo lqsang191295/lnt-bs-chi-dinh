@@ -71,14 +71,15 @@ const columns: GridColDef[] = [
       </Box>
     ),
   },
-  { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
+  // { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
   { field: "Hoten", headerName: "Họ và tên", width: 200 },
-  { field: "MaBN", headerName: "Mã BN", width: 130 },
-  { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-  { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-  { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-  { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+  { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
+  { field: "Gioitinh", headerName: "Giới tính", width: 70 },
+  { field: "MaBN", headerName: "Mã BN", width: 80 },
+  { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
+  { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
+  { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
+  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 0 },
   { field: "KhoaDieuTri", headerName: "", width: 0 }, // Ẩn cột này
   { field: "TenKhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
   { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
@@ -436,7 +437,7 @@ export default function LuuTruHsbaPage() {
             density="compact"
             onRowSelectionModelChange={handleRowSelectionChange}
             columnVisibilityModel={{
-              ID: false,
+              ID: false, KhoaVaoVien: false, KhoaDieuTri: false, LoaiLuuTru: false,
             }}
             sx={{
               height: "100%",

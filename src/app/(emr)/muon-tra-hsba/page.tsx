@@ -78,13 +78,15 @@ const columns: GridColDef[] = [
   },
   // { field: "MaBANoiTru", headerName: "Mã BA", width: 130 },
   { field: "Hoten", headerName: "Họ và tên", width: 200 },
-  { field: "MaBN", headerName: "Mã BN", width: 130 },
-  { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-  { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-  { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-  { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
-  { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+  { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
+  { field: "Gioitinh", headerName: "Giới tính", width: 70 },
+  { field: "MaBN", headerName: "Mã BN", width: 80 },
+  { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
+  { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
+  { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
+  { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 0 },
+  { field: "KhoaDieuTri", headerName: "", width: 0 }, // Ẩn cột này
+  { field: "TenKhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
   { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
   { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
   { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
@@ -92,6 +94,7 @@ const columns: GridColDef[] = [
   { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
   { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
   { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+  { field: "LoaiLuuTru", headerName: "", width: 0 }, // Ẩn cột này
 ];
 
 export default function MuonTraHsbaPage() {
@@ -470,7 +473,7 @@ export default function MuonTraHsbaPage() {
             onRowDoubleClick={handleRowDoubleClick}
             loading={searchingData}
             columnVisibilityModel={{
-              ID: false,
+              ID: false, KhoaVaoVien: false, KhoaDieuTri: false, LoaiLuuTru: false,
             }}
             sx={{
               height: "100%",

@@ -7,6 +7,7 @@ import { formatDisplayDate } from "@/utils/timer";
 import { ToastError } from "@/utils/toast";
 import { Clear, Search } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
+import { DatePicker } from "@mui/x-date-pickers";
 import {
   Box,
   Button,
@@ -50,21 +51,14 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
   const [ngayTra, setNgayTra] = useState("");
 
   // Date states
-  const [tuNgay, setTuNgay] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 30); // 30 ngày trước
-    return date.toISOString().split("T")[0];
-  });
 
-  const [denNgay, setDenNgay] = useState(() => {
-    const date = new Date();
-    return date.toISOString().split("T")[0];
-  });
+  const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
+  const [denNgay, setDenNgay] = useState<Date | null>(new Date());
 
   const { data: loginedUser } = useUserStore();
 
   // Hàm chuyển đổi date từ yyyy-mm-dd sang dd/MM/yyyy
-  const formatDateForAPI = (dateString: string) => {
+  const formatDateForAPI = (dateString?: string | null) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, "0");
@@ -99,8 +93,8 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
           loginedUser.ctaikhoan,
           "2",
           "",
-          formatDateForAPI(tuNgay),
-          formatDateForAPI(denNgay)
+          formatDateForAPI(tuNgay?.toISOString()),
+          formatDateForAPI(denNgay?.toISOString())
         )) as ITMuonTraHSBA[];
       }
 
@@ -137,10 +131,10 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
     setThaoTac("Tất cả");
     setNguoiMuon("");
     setNgayTra("");
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date();
     const lastMonth = new Date();
     lastMonth.setDate(lastMonth.getDate() - 30);
-    setTuNgay(lastMonth.toISOString().split("T")[0]);
+    setTuNgay(lastMonth);
     setDenNgay(today);
   };
 
@@ -201,24 +195,27 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                 alignItems: "center",
                 flexWrap: "wrap",
               }}>
-              <TextField
-                label="Từ ngày"
-                type="date"
-                value={tuNgay}
-                onChange={(e) => setTuNgay(e.target.value)}
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                sx={{ minWidth: 150 }}
-              />
-              <TextField
-                label="Đến ngày"
-                type="date"
-                value={denNgay}
-                onChange={(e) => setDenNgay(e.target.value)}
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                sx={{ minWidth: 150 }}
-              />
+               {/* DatePicker "Từ ngày" */}
+          <Box sx={{ xs: 6, sm: 4, md: 2 }}>
+            <DatePicker
+              label="Từ ngày"
+              value={tuNgay}
+              onChange={(value) => setTuNgay(value as Date)}
+              format="dd/MM/yyyy"
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
+            />
+          </Box>
+
+          {/* DatePicker "Đến ngày" */}
+          <Box sx={{ xs: 6, sm: 4, md: 2 }}>
+            <DatePicker
+              label="Đến ngày"
+              value={denNgay}
+              onChange={(value) => setDenNgay(value as Date)}
+              format="dd/MM/yyyy"
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
+            />
+          </Box>
               <Button
                 variant="contained"
                 onClick={handleSearch}
@@ -368,8 +365,8 @@ const LsMuonTraHsba: React.FC<LsMuonTraHsbaProps> = ({
                     <TableCell>{row.Ngaysinh || ""}</TableCell>
                     <TableCell>{row.Gioitinh || ""}</TableCell>
                     <TableCell>{row.SoVaoVien || ""}</TableCell>
-                    <TableCell>{formatDisplayDate(row.NgayVao)}</TableCell>
-                    <TableCell>{formatDisplayDate(row.NgayRa)}</TableCell>
+                    <TableCell>{row.NgayVao || ""}</TableCell>
+                    <TableCell>{row.NgayRa || ""}</TableCell>
                     <TableCell>{row.TenKhoaDieuTri || ""}</TableCell>
                   </TableRow>
                 ))

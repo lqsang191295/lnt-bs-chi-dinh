@@ -72,7 +72,7 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
     };
 
     // Tăng popt lên 1 nếu chỉ hiển thị HSBA đã phân quyền
-    const searchPopt = showGrantedOnly ? (parseInt(popt) + 2).toString() : popt;
+    const searchPopt = showGrantedOnly ? (parseInt(popt) + 1).toString() : popt;
 
     try {
       const result = await getphanquyenba(
@@ -182,12 +182,24 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
     }
   };
 
-  const handleShowGrantedOnlyChange = async (checked: boolean) => {
+  const handleShowGrantedOnlyChange = (checked: boolean) => {
     setShowGrantedOnly(checked);
-    // Tự động tìm kiếm lại khi thay đổi checkbox
-    setTimeout(() => {
-      fetchHSBA();
-    }, 100);
+    
+    // Filter lại grid theo ctrangthai
+    if (checked) {
+      // Chỉ hiển thị những HSBA đã phân quyền (ctrangthai = 1)
+      const filtered = dsHSBA.filter(item => item.ctrangthai === 1);
+      setFilteredHSBA(filtered);
+      
+      if (filtered.length === 0) {
+        ToastError("Không có HSBA nào đã được phân quyền!");
+      } else {
+        ToastSuccess(`Đã lọc ${filtered.length} HSBA đã phân quyền`);
+      }
+    } else {
+      // Hiển thị tất cả HSBA
+      setFilteredHSBA(dsHSBA);
+    }
   };
 
   const handleImportExcel = () => {
@@ -798,10 +810,10 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                 sx={{
                   fontSize: "0.8rem",
                   px: 2,
+                  display: 'none' // Ẩn nút import Số Vào Viện
                 }}>
                 Import (Số VV)
               </Button>
-
               <Button
                 variant="outlined"
                 startIcon={<MuiIcons.FileUpload />}
@@ -814,7 +826,6 @@ const DialogPhanQuyenBa: React.FC<DialogPhanQuyenBaProps> = ({
                 }}>
                 Import (BHYT)
               </Button>
-
               <Button
                 variant="outlined"
                 startIcon={<MuiIcons.FileDownload />}
