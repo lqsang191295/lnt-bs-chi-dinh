@@ -64,6 +64,7 @@ interface INhatKyKetXuat {
   Dienthoai: string;
   Diachi: string;
   SoCCCD: string;
+  SoBHYT: string;
   SoNhapVien: string;
   SoVaoVien: string;
   SoLuuTru: string;
@@ -328,6 +329,7 @@ export default function KetXuatHsbaPage() {
       { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
       { field: "Gioitinh", headerName: "Giới tính", width: 70 },
       { field: "MaBN", headerName: "Mã BN", width: 80 },
+      { field: "SoBHYT", headerName: "Số BHYT", width: 160 },
       { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
       { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
       { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
@@ -403,12 +405,13 @@ export default function KetXuatHsbaPage() {
         ),
       },
       { field: "cmabenhan", headerName: "Mã bệnh án", width: 300 },
-      { field: "Hoten", headerName: "Họ và tên BN", width: 200 },
+      { field: "Hoten", headerName: "Họ tên BN", width: 200 },
       { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
       { field: "Gioitinh", headerName: "Giới tính", width: 70 },
       { field: "MaBN", headerName: "Mã BN", width: 80 },
-      { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },  
-      { field: "ctaikhoan", headerName: "Người kết xuất", width: 150 }, 
+      { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
+      { field: "SoBHYT", headerName: "Số BHYT", width: 160 },
+      { field: "ctaikhoan", headerName: "Người kết xuất", width: 150 },
       { field: "tngayketxuat", headerName: "Ngày kết xuất", width: 170 },
     ],
     [handleDownloadLichSu, pdfLoading]

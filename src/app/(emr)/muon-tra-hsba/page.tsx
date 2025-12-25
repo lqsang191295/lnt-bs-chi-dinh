@@ -81,6 +81,7 @@ const columns: GridColDef[] = [
   { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
   { field: "Gioitinh", headerName: "Giới tính", width: 70 },
   { field: "MaBN", headerName: "Mã BN", width: 80 },
+  { field: "SoBHYT", headerName: "Số BHYT", width: 160 },
   { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
   { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
   { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
