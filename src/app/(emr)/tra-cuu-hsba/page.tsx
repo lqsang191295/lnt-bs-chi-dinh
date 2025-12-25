@@ -211,14 +211,15 @@ export default function TraCuuHsbaPage() {
           </Box>
         ),
       },
+
       { field: "Hoten", headerName: "Họ và tên", width: 200 },
-      { field: "MaBN", headerName: "Mã BN", width: 90 },
       { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
+      { field: "Gioitinh", headerName: "Giới tính", width: 70 },
+      { field: "MaBN", headerName: "Mã BN", width: 80 },
       { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
-      { field: "SoBHYT", headerName: "Số BHYT", width: 150 },
       { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
       { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
-      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 0 },
       { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
       { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
       { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
@@ -515,7 +516,7 @@ export default function TraCuuHsbaPage() {
             density="compact"
             onRowDoubleClick={handleRowDoubleClick}
             columnVisibilityModel={{
-              ID: false,
+              ID: false, KhoaVaoVien: false,
             }}
             sx={{
               height: "100%",
