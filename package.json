@@ -40,6 +40,7 @@
     "react-dom": "19.1.0",
     "react-draggable": "^4.5.0",
     "react-pdf": "^10.1.0",
+    "react-signature-canvas": "^1.1.0-alpha.2",
     "react-simple-keyboard": "^3.8.119",
     "react-spinners": "^0.17.0",
     "react-toastify": "^11.0.5",
