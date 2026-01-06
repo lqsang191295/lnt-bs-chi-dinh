@@ -188,3 +188,54 @@ export const getPatientBySoDienThoai = async (
     return null;
   }
 };
+
+export const searchPartient = async (
+  textSearch: string
+): Promise<IPatientInfo[] | null> => {
+  try {
+    const response = await post(`/his/call`, {
+      userId: "",
+      optionId: "2",
+      funcName: "dbo.emr_psearch_patient",
+      paraData: [
+        { paraName: "popt", paraValue: "0" },
+        { paraName: "puser", paraValue: "0" },
+        { paraName: "textSearch", paraValue: textSearch },
+      ],
+    });
+
+    if (response.status === "error") {
+      return null;
+    }
+
+    return response.message;
+  } catch {
+    return null;
+  }
+};
+
+export const saveChuKyPartient = async (
+  Ma: string,
+  ChuKy: string
+): Promise<void> => {
+  try {
+    const response = await post(`/his/call`, {
+      userId: "",
+      optionId: "2",
+      funcName: "dbo.sp_Act_BV_ChuKy",
+      paraData: [
+        { paraName: "popt", paraValue: 1 },
+        { paraName: "Ma", paraValue: Ma },
+        { paraName: "ChuKy", paraValue: ChuKy },
+      ],
+    });
+
+    if (response.status === "error") {
+      return;
+    }
+
+    return response.message;
+  } catch {
+    return;
+  }
+};
