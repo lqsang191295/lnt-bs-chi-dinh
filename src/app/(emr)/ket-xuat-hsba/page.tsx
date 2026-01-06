@@ -22,6 +22,7 @@ import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { Download, NoteAdd, Refresh, Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import LaunchIcon from '@mui/icons-material/Launch';
 import * as XLSX from 'xlsx';
 import {
   Alert,
@@ -38,6 +39,7 @@ import {
   Select,
   Tab,
   Tabs,
+  TextField,
   Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
@@ -45,6 +47,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import DialogDetail from "../tra-cuu-hsba/components/dialog-detail";
 
 // Cập nhật interface cho dữ liệu lịch sử kết xuất
 interface INhatKyKetXuat {
@@ -63,6 +66,7 @@ interface INhatKyKetXuat {
   Dienthoai: string;
   Diachi: string;
   SoCCCD: string;
+  SoBHYT: string;
   SoNhapVien: string;
   SoVaoVien: string;
   SoLuuTru: string;
@@ -118,9 +122,17 @@ export default function KetXuatHsbaPage() {
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
+  const [filteredRows, setFilteredRows] = useState<IHoSoBenhAn[]>([]);
+  const [searchText, setSearchText] = useState("");
   // Thêm state cho lịch sử kết xuất
   const [lichSuRows, setLichSuRows] = useState<INhatKyKetXuat[]>([]);
-  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
+  const [popt, setPopt] = useState("2"); // 1: Ngày vào viện, 2: Ngày ra viện
+  
+  // State cho dialog chi tiết
+  const [openDetailDialog, setOpenDetailDialog] = useState(false);
+  const [selectedHsbaForDetail, setSelectedHsbaForDetail] = useState<IHoSoBenhAn | null>(null);
+  const [phieuList, setPhieuList] = useState<IHoSoBenhAnChiTiet[]>([]);
+  
   const { data: loginedUser } = useUserStore();
   const { data: menuData } = useMenuStore();
   const [searchingData, setSearchingData] = useState<boolean>(false);
@@ -161,6 +173,43 @@ export default function KetXuatHsbaPage() {
       []
     )
   );
+  
+  // Hàm xử lý xem chi tiết HSBA
+  const handleViewHSBA = useCallback(async (hsba: IHoSoBenhAn) => {
+    if (!hasAccess) return;
+
+    setSelectedHsbaForDetail(hsba);
+
+    try {
+      const chiTietData = await getChiTietHSBA(
+        loginedUser.ctaikhoan,
+        popt,
+        hsba.ID
+      );
+      const mappedData = (chiTietData || []).map(
+        (item: IHoSoBenhAnChiTiet, index: number) => ({
+          id: item.ID || index + 1,
+          ...item,
+        })
+      );
+
+      setPhieuList(mappedData);
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết HSBA:", error);
+      setPhieuList([]);
+      ToastError("Lỗi khi tải chi tiết hồ sơ bệnh án!");
+    }
+
+    setOpenDetailDialog(true);
+  }, [hasAccess, loginedUser.ctaikhoan, popt]);
+
+  // Hàm đóng dialog chi tiết
+  const handleCloseDetailDialog = () => {
+    setOpenDetailDialog(false);
+    setSelectedHsbaForDetail(null);
+    setPhieuList([]);
+  };
+  
   // Hàm xử lý export Excel cho tab Lịch sử
   const handleExportExcel = () => {
     if (lichSuRows.length === 0) {
@@ -263,6 +312,17 @@ export default function KetXuatHsbaPage() {
   const columnsKetXuat: GridColDef[] = useMemo(
     () => [
       { field: "ID", headerName: "ID", width: 60 },
+      { field: "ViewHSBA", headerName: "Xem", width: 60,
+        renderCell: (params) => (
+          <IconButton
+            onClick={() => handleViewHSBA(params.row)}
+            size="small"
+            color="primary"
+          >
+            <LaunchIcon fontSize="small" />
+          </IconButton>
+        ),
+      },
       {
         field: "TrangThaiKetXuat",
         headerName: "Trạng thái",
@@ -322,13 +382,16 @@ export default function KetXuatHsbaPage() {
         ),
       },
       { field: "Hoten", headerName: "Họ và tên", width: 200 },
-      { field: "MaBN", headerName: "Mã BN", width: 130 },
-      { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-      { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-      { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-      { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
-      { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
+      { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
+      { field: "Gioitinh", headerName: "Giới tính", width: 70 },
+      { field: "MaBN", headerName: "Mã BN", width: 80 },
+      { field: "SoBHYT", headerName: "Số BHYT", width: 160 },
+      { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
+      { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
+      { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
+      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 0 },
+      { field: "KhoaDieuTri", headerName: "", width: 0 }, // Ẩn cột này
+      { field: "TenKhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
       { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
       { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
       { field: "SoLuuTru", headerName: "Số lưu trữ", width: 100 },
@@ -336,8 +399,11 @@ export default function KetXuatHsbaPage() {
       { field: "ViTriLuuTru", headerName: "Vị trí lưu trữ", width: 150 },
       { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
       { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
+      { field: "LoaiLuuTru", headerName: "", width: 0 }, // Ẩn cột này 
+      { field: "NguoiKetXuat", headerName: "Người kết xuất", width: 180 },
+      { field: "NgayKetXuat", headerName: "Ngày kết xuất", width: 170 },
     ],
-    [handleDownload, pdfLoading]
+    [handleDownload, pdfLoading, handleViewHSBA]
   );
 
   // Columns cho tab Lịch sử
@@ -394,16 +460,14 @@ export default function KetXuatHsbaPage() {
           </Box>
         ),
       },
-      { field: "cmabenhan", headerName: "Mã bệnh án", width: 130 },
-      { field: "Hoten", headerName: "Họ và tên BN", width: 200 },
-      { field: "MaBN", headerName: "Mã BN", width: 130 },
-      { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-      { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 150 },
-      { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 150 },
-      { field: "SoLuuTru", headerName: "Số lưu trữ", width: 130 },
-      { field: "ctaikhoan", headerName: "Người kết xuất", width: 130 },
-      { field: "choten", headerName: "Tên người kết xuất", width: 180 },
+      { field: "cmabenhan", headerName: "Mã bệnh án", width: 300 },
+      { field: "Hoten", headerName: "Họ tên BN", width: 200 },
+      { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
+      { field: "Gioitinh", headerName: "Giới tính", width: 70 },
+      { field: "MaBN", headerName: "Mã BN", width: 80 },
+      { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
+      { field: "SoBHYT", headerName: "Số BHYT", width: 160 },
+      { field: "ctaikhoan", headerName: "Người kết xuất", width: 150 },
       { field: "tngayketxuat", headerName: "Ngày kết xuất", width: 170 },
     ],
     [handleDownloadLichSu, pdfLoading]
@@ -634,12 +698,13 @@ export default function KetXuatHsbaPage() {
       //   }))
       // );
 
-      setRows(
-        (data || []).map((item: IHoSoBenhAn) => ({
-          id: item.ID,
-          ...item,
-        }))
-      );
+      const mappedRows = (data || []).map((item: IHoSoBenhAn) => ({
+        id: item.ID,
+        ...item,
+      }));
+      setRows(mappedRows);
+      setFilteredRows(mappedRows);
+      setSearchText(""); // Reset search text khi tìm kiếm mới
     } catch (error) {
       console.error("Error fetching HSBA data:", error);
       ToastError("Lỗi khi tìm kiếm hồ sơ bệnh án!");
@@ -647,6 +712,37 @@ export default function KetXuatHsbaPage() {
       setSearchingData(false);
     }
   };
+
+  // Hàm lọc dữ liệu theo text search
+  const handleFilter = useCallback(() => {
+    if (!searchText.trim()) {
+      setFilteredRows(rows);
+      return;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    const filtered = rows.filter((row) => {
+      const maBN = (row.MaBN || "").toLowerCase();
+      const hoTen = (row.Hoten || "").toLowerCase();
+      const soVaoVien = (row.SoVaoVien || "").toLowerCase();
+      const soBHYT = (row.SoBHYT || "").toLowerCase();
+
+      return (
+        maBN.includes(searchLower) ||
+        hoTen.includes(searchLower) ||
+        soVaoVien.includes(searchLower) ||
+        soBHYT.includes(searchLower)
+      );
+    });
+
+    setFilteredRows(filtered);
+
+    if (filtered.length === 0) {
+      ToastWarning("Không tìm thấy kết quả phù hợp!");
+    } else {
+      ToastSuccess(`Tìm thấy ${filtered.length} kết quả`);
+    }
+  }, [searchText, rows]);
 
   // Hiển thị loading khi đang kiểm tra quyền truy cập
   if (isCheckingAccess) {
@@ -780,6 +876,26 @@ export default function KetXuatHsbaPage() {
         {/* Tab Kết xuất */}
         <CustomTabPanel value={value} index={0}>
           <Box className="bg-white flex gap-2 p-2">
+            <TextField
+              label="Tìm kiếm theo Mã BN, Họ tên, Số vào viện, BHYT"
+              variant="outlined"
+              size="small"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleFilter();
+                }
+              }}
+              sx={{ flex: 1 }}
+            />
+            <Button
+              variant="contained"
+              startIcon={<Search />}
+              size="small"
+              onClick={handleFilter}>
+              Lọc HSBA
+            </Button>
             <Button
               variant="contained"
               startIcon={<NoteAdd />}
@@ -788,14 +904,7 @@ export default function KetXuatHsbaPage() {
               disabled={loading || pdfLoading}>
               {loading ? `Kết xuất... ${progress.toFixed(0)}%` : "Kết xuất"}
             </Button>
-            <Button
-              variant="contained"
-              startIcon={<Refresh />}
-              size="small"
-              onClick={handleSearch}
-              disabled={searchingData}>
-              Làm mới
-            </Button>
+           
           </Box>
 
           {/* Progress indicator */}
@@ -814,17 +923,20 @@ export default function KetXuatHsbaPage() {
               {error}
             </Alert>
           )}
-
+ 
           {/* DataGrid Danh sách kết xuất HSBA */}
           <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
             <DataGrid
-              rows={rows}
+              rows={filteredRows}
               columns={columnsKetXuat}
               loading={searchingData}
               checkboxSelection
               disableRowSelectionOnClick
               density="compact"
               onRowSelectionModelChange={handleRowSelectionChange}
+              columnVisibilityModel={{
+                ID: false, LoaiLuuTru : false, KhoaDieuTri: false, KhoaVaoVien: false
+              }}
               sx={{
                 height: "100%",
                 "& .MuiDataGrid-columnHeaders": {
@@ -883,7 +995,7 @@ export default function KetXuatHsbaPage() {
             </Alert>
           )}
 
-          {/* DataGrid Danh sách kết xuất HSBA */}
+          {/* DataGrid lịch sử kết xuất HSBA */}
           <Box className="flex-1 w-full h-full overflow-hidden" mt={1}>
             <DataGrid
               rows={lichSuRows}
@@ -891,6 +1003,7 @@ export default function KetXuatHsbaPage() {
               loading={searchingLichSu}
               pagination
               disableRowSelectionOnClick
+              
               density="compact"
               sx={{
                 height: "100%",
@@ -918,6 +1031,16 @@ export default function KetXuatHsbaPage() {
           </Box>
         </CustomTabPanel>
       </Box>
+
+      {/* Dialog Chi tiết HSBA */}
+      {openDetailDialog && (
+        <DialogDetail
+          open={openDetailDialog}
+          onClose={handleCloseDetailDialog}
+          selectedHsbaForDetail={selectedHsbaForDetail}
+          phieuList={phieuList}
+        />
+      )}
     </LocalizationProvider>
   );
 }

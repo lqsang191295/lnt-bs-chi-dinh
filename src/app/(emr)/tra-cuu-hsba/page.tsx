@@ -14,6 +14,7 @@ import { ToastError, ToastSuccess, ToastWarning } from "@/utils/toast";
 import { Search } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import LaunchIcon from '@mui/icons-material/Launch';
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {
@@ -27,6 +28,7 @@ import {
   Radio,
   RadioGroup,
   Select,
+  TextField,
   Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -43,7 +45,9 @@ export default function TraCuuHsbaPage() {
   const [tuNgay, setTuNgay] = useState<Date | null>(new Date());
   const [denNgay, setDenNgay] = useState<Date | null>(new Date());
   const [rows, setRows] = useState<IHoSoBenhAn[]>([]);
-  const [popt, setPopt] = useState("1"); // 1: Ngày vào viện, 2: Ngày ra viện
+  const [filteredRows, setFilteredRows] = useState<IHoSoBenhAn[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [popt, setPopt] = useState("2"); // 1: Ngày vào viện, 2: Ngày ra viện
 
   // State cho dialog chi tiết
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
@@ -74,6 +78,35 @@ export default function TraCuuHsbaPage() {
       checkAccess();
     }
   }, [menuData, loginedUser, router]);
+
+  // Handle view HSBA detail
+  const handleViewHSBA = useCallback(async (hsba: IHoSoBenhAn) => {
+    if (!hasAccess) return;
+    
+    setSelectedHsbaForDetail(hsba);
+
+    try {
+      const chiTietData = await getChiTietHSBA(
+        loginedUser.ctaikhoan,
+        popt,
+        hsba.ID
+      );
+      const mappedData = (chiTietData || []).map(
+        (item: IHoSoBenhAnChiTiet, index: number) => ({
+          id: item.ID || index + 1,
+          ...item,
+        })
+      );
+
+      setPhieuList(mappedData);
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết HSBA:", error);
+      setPhieuList([]);
+      ToastError("Lỗi khi tải chi tiết hồ sơ bệnh án!");
+    }
+
+    setOpenDetailDialog(true);
+  }, [hasAccess, loginedUser.ctaikhoan, popt]);
 
   // Sử dụng PdfComponents hook
   const { downloadPdf, isLoading } = PdfComponents(
@@ -115,7 +148,23 @@ export default function TraCuuHsbaPage() {
   // Cập nhật columns để sử dụng handleDownload mới
   const columns: GridColDef[] = useMemo(
     () => [
-      { field: "ID", headerName: "ID", width: 60 },
+      { field: "ID", headerName: "ID", width: 0 },
+      {
+        field: "ViewHSBA",
+        headerName: "Xem",
+        width: 60,
+        sortable: false,
+        filterable: false,
+        renderCell: (params) => (
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={() => handleViewHSBA(params.row)}
+            title="Xem chi tiết HSBA">
+            <LaunchIcon fontSize="small" />
+          </IconButton>
+        ),
+      },
       {
         field: "TrangThaiBA",
         headerName: "Trạng thái",
@@ -208,13 +257,16 @@ export default function TraCuuHsbaPage() {
           </Box>
         ),
       },
+
       { field: "Hoten", headerName: "Họ và tên", width: 200 },
-      { field: "MaBN", headerName: "Mã BN", width: 130 },
-      { field: "Ngaysinh", headerName: "Ngày sinh", width: 130 },
-      { field: "SoVaoVien", headerName: "Số vào viện", width: 130 },
-      { field: "NgayVao", headerName: "Ngày vào viện", width: 130 },
-      { field: "NgayRa", headerName: "Ngày ra viện", width: 130 },
-      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 100 },
+      { field: "Ngaysinh", headerName: "Ngày sinh", width: 100 },
+      { field: "Gioitinh", headerName: "Giới tính", width: 70 },
+      { field: "MaBN", headerName: "Mã BN", width: 80 },
+      { field: "SoBHYT", headerName: "Số BHYT", width: 160 },
+      { field: "SoVaoVien", headerName: "Số vào viện", width: 100 },
+      { field: "NgayVao", headerName: "Ngày vào viện", width: 150 },
+      { field: "NgayRa", headerName: "Ngày ra viện", width: 150 },
+      { field: "KhoaVaoVien", headerName: "Khoa nhập viện", width: 0 },
       { field: "KhoaDieuTri", headerName: "Khoa điều trị", width: 200 },
       { field: "LoaiBenhAn", headerName: "Loại BA", width: 130 },
       { field: "BsDieuTriKyTen", headerName: "Bác sĩ điều trị", width: 130 },
@@ -224,7 +276,7 @@ export default function TraCuuHsbaPage() {
       { field: "TenLoaiLuuTru", headerName: "Loại lưu trữ", width: 200 },
       { field: "SoNamLuuTru", headerName: "Số năm lưu trữ", width: 150 },
     ],
-    [handleDownload, isLoading]
+    [handleDownload, isLoading, handleViewHSBA]
   );
 
   // Hàm xử lý double click trên lưới chính
@@ -309,12 +361,14 @@ export default function TraCuuHsbaPage() {
 
       console.log("Fetched HSBA data:", data);
 
-      setRows(
-        (data || []).map((item: IHoSoBenhAn) => ({
-          id: item.ID,
-          ...item,
-        }))
-      );
+      const mappedRows = (data || []).map((item: IHoSoBenhAn) => ({
+        id: item.ID,
+        ...item,
+      }));
+
+      setRows(mappedRows);
+      setFilteredRows(mappedRows);
+      setSearchText(""); // Reset search text khi tìm kiếm mới
     } catch (error) {
       console.error("Error fetching HSBA data:", error);
       ToastError("Lỗi khi tìm kiếm hồ sơ bệnh án!");
@@ -322,6 +376,37 @@ export default function TraCuuHsbaPage() {
       setSearchingData(false);
     }
   };
+
+  // Hàm lọc dữ liệu theo text search
+  const handleFilter = useCallback(() => {
+    if (!searchText.trim()) {
+      setFilteredRows(rows);
+      return;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    const filtered = rows.filter((row) => {
+      const maBN = (row.MaBN || "").toLowerCase();
+      const hoTen = (row.Hoten || "").toLowerCase();
+      const soVaoVien = (row.SoVaoVien || "").toLowerCase();
+      const soBHYT = (row.SoBHYT || "").toLowerCase();
+
+      return (
+        maBN.includes(searchLower) ||
+        hoTen.includes(searchLower) ||
+        soVaoVien.includes(searchLower) ||
+        soBHYT.includes(searchLower)
+      );
+    });
+
+    setFilteredRows(filtered);
+
+    if (filtered.length === 0) {
+      ToastWarning("Không tìm thấy kết quả phù hợp!");
+    } else {
+      ToastSuccess(`Tìm thấy ${filtered.length} kết quả`);
+    }
+  }, [searchText, rows]);
 
   // Hiển thị loading khi đang kiểm tra quyền truy cập
   if (isCheckingAccess) {
@@ -441,16 +526,45 @@ export default function TraCuuHsbaPage() {
           </Grid>
         </Grid>
 
+        <Box className="bg-white flex gap-2 p-2">
+          <Box className="flex-1" >
+              <TextField
+              fullWidth
+              size="small"
+              label="Mã BN, Họ tên, Số vào viện, Số BHYT..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleFilter();
+                }
+              }}
+              type="text" 
+            />
+            </Box>
+          <Button
+            startIcon={<Search />}
+            variant="contained"
+            color="success"
+            size="small"
+            onClick={handleFilter}
+            >
+            Lọc HSBA
+          </Button>
+        </Box>
         {/* Main Content Area - DataGrid với height cố định */}
         <Box className="w-full h-full overflow-hidden">
           <DataGrid
-            rows={rows}
+            rows={filteredRows}
             columns={columns}
             pagination
             checkboxSelection
             disableRowSelectionOnClick
             density="compact"
             onRowDoubleClick={handleRowDoubleClick}
+            columnVisibilityModel={{
+              ID: false, KhoaVaoVien: false,
+            }}
             sx={{
               height: "100%",
               "& .MuiDataGrid-columnHeaders": {

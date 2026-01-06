@@ -257,7 +257,7 @@ export default function LichSuThaoTacHsbaPage() {
               </Button>
             </Box>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {/* <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Box flex={1}>
               <Button
                 fullWidth
@@ -267,7 +267,7 @@ export default function LichSuThaoTacHsbaPage() {
                 Làm mới
               </Button>
             </Box>
-          </Grid>
+          </Grid> */}
         </Grid>
 
         {/* Main Content Area (Padding around the table) */}

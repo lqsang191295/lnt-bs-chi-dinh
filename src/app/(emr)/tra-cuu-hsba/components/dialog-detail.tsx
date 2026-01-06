@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRowParams } from "@mui/x-data-grid";
-import React, { memo, useCallback, useEffect } from "react";
+import React, { memo, useCallback, useEffect, useRef  } from "react";
 
 // Columns cho lưới chi tiết phiếu
 const phieuColumns: GridColDef[] = [
@@ -44,6 +44,19 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
     onSuccess: (message) => alert(message),
     onError: (error) => alert(error),
   });
+
+  // Dùng ref để tránh dependency issues
+  const createPdfUrlRef = useRef(createPdfUrl);
+  const cleanupRef = useRef(cleanup);
+
+  // Update refs khi functions thay đổi
+  useEffect(() => {
+    createPdfUrlRef.current = createPdfUrl;
+  }, [createPdfUrl]);
+
+  useEffect(() => {
+    cleanupRef.current = cleanup;
+  }, [cleanup]);
 
   // Hàm in PDF từ selectedHsbaForDetail.NoiDungPdf
   const handlePrintHSBA = useCallback(async () => {
@@ -107,19 +120,20 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
     (params: GridRowParams) => {
       const base64Data = params.row.FilePdfKySo;
       if (base64Data) {
-        createPdfUrl(base64Data);
+        createPdfUrlRef.current(base64Data);
       }
     },
-    [createPdfUrl]
+    [] // Không có dependencies
   );
 
   // Hàm đóng dialog chi tiết
   const handleCloseDetailDialog = useCallback(() => {
-    cleanup(); // Clean up PDF URLs
+    cleanupRef.current(); // Sử dụng ref
     if (onClose) onClose();
-  }, [cleanup, onClose]);
+  }, [onClose]);
 
-  // Load PDF đầu tiên khi phieuList thay đổi
+  
+  // ✅ FIX: Load PDF đầu tiên khi phieuList thay đổi - KHÔNG có functions trong dependency
   useEffect(() => {
     if (!phieuList || phieuList.length === 0) {
       return;
@@ -127,16 +141,16 @@ const DialogDetail: React.FC<DsMuonHsbaProps> = ({
 
     const base64Data = phieuList[0].FilePdfKySo;
     if (base64Data) {
-      createPdfUrl(base64Data);
+      createPdfUrlRef.current(base64Data);
     }
-  }, [phieuList, createPdfUrl]); // Chỉ dependency phieuList, không có createPdfUrl
+  }, [phieuList]); // ✅ CHỈ có phieuList
 
-  // Cleanup khi component unmount
+  // ✅ FIX: Cleanup khi component unmount - KHÔNG có dependencies
   useEffect(() => {
     return () => {
-      cleanup();
+      cleanupRef.current();
     };
-  }, [cleanup]); // Empty dependency array
+  }, []); // ✅ Empty dependency array
 
   // console.log("Selected HSBA for Detail:", pdfUrl);
 

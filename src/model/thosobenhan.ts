@@ -36,4 +36,5 @@ export interface IHoSoBenhAn {
   TrangThaiKetXuat?: string | null;
   NgayKetXuat?: string | null;
   NguoiKetXuat?: string | null;
+  SoBHYT?: string | null;
 }

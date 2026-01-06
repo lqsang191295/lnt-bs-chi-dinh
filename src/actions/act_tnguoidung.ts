@@ -342,6 +342,45 @@ export const getphanquyenba = async (
   }
 };
 
+export const getphanquyenbaDSSoBHYT = async (
+  pUser: string,
+  pOpt: string,
+  DSSoBHYT: string,
+  TuNgay: string,
+  DenNgay: string
+) => {
+  try {
+    // console.log("Fetching getphanquyenbaDSSoBHYT...");
+    // Gọi API để lấy danh sách hồ sơ bệnh án
+    // console.log({
+    //   "pUser": pUser,
+    //   "pOpt": pOpt,
+    //   "DSSoBHYT": DSSoBHYT,
+    //   "TuNgay": TuNgay,
+    //   "DenNgay": DenNgay
+    // });
+    const response = await post(`/api/callService`, {
+      userId: "",
+      optionId: "1",
+      funcName: "dbo.emr_pget_tphanquyenba_dsbhytngaykham",
+      paraData: [
+        { paraName: "puser", paraValue: pUser },
+        { paraName: "popt", paraValue: pOpt },
+        { paraName: "DSBHYT", paraValue: DSSoBHYT},
+        { paraName: "TuNgay", paraValue: TuNgay },
+        { paraName: "DenNgay", paraValue: DenNgay },
+      ],
+    });
+    //console.log("getphanquyenbaDSSoBHYT response:", response);
+    if (response.status === "error") {
+      return [];
+    }
+
+    return response.message;
+  } catch {
+    return [];
+  }
+};
 export const getphanquyenbaDSSovaovien = async (
   pUser: string,
   pOpt: string,
@@ -382,13 +421,13 @@ export const luuphanquyenba = async (
   ctrangthai: string
 ) => {
   try {
-    // console.log("puser:", pUser);
-    // console.log("popt:", pOpt);
-    // console.log("ctaikhoan:", ctaikhoan);
-    // console.log("cmaba:", cmaba);
-    // console.log("ctrangthai:", ctrangthai);
-    // console.log("cnguoitao:", pUser);
-    // console.log("cnguoicapnhat:", pUser);
+    console.log({"puser": pUser,
+    "popt": pOpt,
+    "ctaikhoan": ctaikhoan,
+    "cmaba": cmaba,
+    "ctrangthai": ctrangthai,
+    "cnguoitao": pUser,
+    "cnguoicapnhat": pUser});
     const response = await post(`/api/callService`, {
       userId: "",
       optionId: "1",
@@ -441,7 +480,7 @@ export const luuanhnguoidung = async (
         { paraName: "cimg", paraValue: cimg },
       ],
     });
-    console.log("luuanhnguoidung response:", response);
+    //console.log("luuanhnguoidung response:", response);
     //console.log("luuanhnguoidung responselenght:[", response.message.length,"]");
     if (response.status === "error") {
       return [];

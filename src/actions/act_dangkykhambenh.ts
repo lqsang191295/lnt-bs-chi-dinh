@@ -14,6 +14,7 @@ import {ObBHXH} from "@/model/baohiemxahoimodel";
 export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
   try {
     const response = await post(`/his/call`, {
+      userId: "",
       optionId: "2",
       funcName: "dbo.sp_get_HT_DMQuayDangKy",
     });
@@ -30,6 +31,7 @@ export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
 export const fetchCurrentQueueNumbers = async (all: boolean, maQuay: string | null): Promise<IResponse<ICurrentQueueNumber[]>> => {
   try {
     const response = await post(`/his/call`, {
+      userId: "",
       optionId: "2",
       funcName: "dbo.sp_get_danhsachdangkyhientai_trangthai",
       paraData: [
@@ -137,6 +139,7 @@ export const CheckBHXHByPatientInfo = async (hoten: string, cccd: string, bhyt: 
 export const searchPatientInfoByType = async (params: string, type: number): Promise<BV_QlyCapThe[]> => {
   try {
     const response = await post(`/his/call`, {
+      userId: "",
       optionId: "2",
       funcName: "dbo.sp_get_benhnhan_search",
       paraData: [
@@ -158,6 +161,7 @@ export const searchPatientInfoByType = async (params: string, type: number): Pro
 export const searchPatientInfoByTypeV1 = async (params: PatientInfo): Promise<BV_QlyCapThe[]> => {
   try {
     const response = await post(`/his/call`, {
+      userId: "",
       optionId: "2",
       funcName: "dbo.sp_get_benhnhan_search_v1",
       paraData: [
@@ -182,6 +186,7 @@ export const searchPatientInfoByTypeV1 = async (params: PatientInfo): Promise<BV
 export const searchByBHYTCode = async (params: string): Promise<PatientInfo[]> => {
   try {
     const response = await post(`/his/call`, {
+      userId: "",
       optionId: "2",
       funcName: "dbo.sp_search_bhyt",
       paraData: [
@@ -203,6 +208,7 @@ export const searchByBHYTCode = async (params: string): Promise<PatientInfo[]> =
 export const dangKyKhamBenh = async (dangKy: PatientInfo): Promise<IResponse<IQueueNumber[]>> => {
   try {
     const response = await post(`/his/call`, {
+      userId: "",
       optionId: "2",
       funcName: "dbo.sp_BV_DangKyLaySo",
       paraData: [
