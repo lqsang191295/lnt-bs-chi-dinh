@@ -60,12 +60,6 @@ export default function PatientList({
     }
   };
 
-  //   const onSelectPatient = (patient: IPatientInfoCanKyTay | null) => {
-  //     console.log("Selected patient:", patient);
-
-  //     if (!patient) return;
-  //   };
-
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box className="w-full h-full flex flex-col">

@@ -40,24 +40,25 @@ export default function CustomIcons({
   ): TreeViewBaseItem[] => {
     const map = new Map<string, TreeViewBaseItem>();
 
-    data.forEach((item, index) => {
-      const patientId = `bn_${item.Ma}_${item.Sovaovien}`;
+    data.forEach((item) => {
+      // 🔑 KEY GROUP – TUYỆT ĐỐI KHÔNG GẮN item.ID
+      const groupId = `bn_${item.Ma}_${item.Sovaovien}`;
 
-      if (!map.has(patientId)) {
-        map.set(patientId, {
-          id: patientId,
+      if (!map.has(groupId)) {
+        map.set(groupId, {
+          id: groupId,
           label: `${item.Hoten} (${item.Gioitinh} - ${item.Namsinh})`,
           children: [],
         });
       }
 
-      const parent = map.get(patientId)!;
+      const parent = map.get(groupId)!;
 
+      // ✅ ID node con PHẢI DUY NHẤT
       parent.children!.push({
-        id: `${patientId}_phieu_${index}`,
+        id: `${groupId}_phieu_${item.ID}`, // 👈 dùng item.ID ở đây
         label: item.LoaiPhieu.replaceAll("_", " "),
-        // gắn full data để xử lý click
-        data: item,
+        data: item, // gắn full object
       } as TreeViewBaseItem);
     });
 
@@ -65,13 +66,12 @@ export default function CustomIcons({
   };
 
   const getRowByItemId = (itemId: string): IPatientInfoCanKyTay | null => {
-    for (const item of rows) {
-      const patientId = `bn_${item.Ma}_${item.Sovaovien}`;
-      if (itemId.startsWith(patientId)) {
-        return item;
-      }
-    }
-    return null;
+    const match = itemId.match(/_phieu_(.+)$/);
+    if (!match) return null;
+
+    const phieuId = match[1];
+
+    return rows.find((x) => String(x.ID) === phieuId) ?? null;
   };
 
   const handleSelect = (
@@ -84,6 +84,11 @@ export default function CustomIcons({
       if (onSelectPatient) onSelectPatient(null);
       return;
     }
+
+    console.log(
+      "Getting row for item ID getRowByItemId(itemId):",
+      getRowByItemId(itemId)
+    );
 
     if (onSelectPatient) onSelectPatient(getRowByItemId(itemId));
   };

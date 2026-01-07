@@ -1,6 +1,7 @@
 "use client";
 
 import { saveChuKyPartient } from "@/actions/act_patient";
+import BoxSignaturePad from "@/components/BoxSignaturePad";
 import HeadMetadata from "@/components/HeadMetadata";
 import { IPatientInfo, IPatientInfoCanKyTay } from "@/model/tpatient";
 import {
@@ -13,11 +14,19 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import PatientList from "./components/PatientList";
 import PatientSearch from "./components/PatientSearch";
+
+const ComponentPdfPreview = dynamic(
+  () => import("../../../components/PdfPreview"),
+  {
+    ssr: false, // Dòng này là mấu chốt: Tắt Server-Side Rendering cho component này
+  }
+);
 
 export default function Page() {
   const sigRef = useRef<SignatureCanvas>(null);
@@ -130,10 +139,27 @@ export default function Page() {
               variant="h6"
               gutterBottom
               sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
-              QUẢN LÝ LỊCH SỬ THAO TÁC BỆNH ÁN
+              {`${patientSelected?.Hoten} (${patientSelected?.Gioitinh} - ${
+                patientSelected?.Namsinh
+              }) - ${patientSelected?.LoaiPhieu.replaceAll("_", " ")}`}
             </Typography>
           </Box>
           <Box ref={wrapperRef} className="flex-1 h-full border border-red-500">
+            <Box className="w-full h-full">
+              {/* <ComponentPdfPreview
+                base64={
+                  patientSelected?.FilePdfKySo ||
+                  patientSelected?.TaiLieuKy ||
+                  ""
+                }
+                filename={patientSelected?.LoaiPhieu.replaceAll("_", " ")}
+                interactive={false}
+                onOpen={() => {}}
+              /> */}
+
+              <BoxSignaturePad patientSelected={patientSelected} />
+            </Box>
+
             {size.width > 0 && (
               <SignatureCanvas
                 ref={sigRef}
