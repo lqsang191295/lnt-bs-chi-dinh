@@ -129,11 +129,11 @@ export default function Page() {
         </Stack>
       </Box>
 
-      <Box className="w-full h-full flex flex-row">
+      <Box className="w-full h-full flex flex-row overflow-hidden">
         <Box className="w-2xs h-full ">
           <PatientList onSelectPatient={setPatientSelected} />
         </Box>
-        <Box className="flex-1 h-full">
+        <Box className="flex-1 flex flex-col overflow-hidden">
           <Box>
             <Typography
               variant="h6"
@@ -144,7 +144,7 @@ export default function Page() {
               }) - ${patientSelected?.LoaiPhieu.replaceAll("_", " ")}`}
             </Typography>
           </Box>
-          <Box ref={wrapperRef} className="flex-1 h-full border border-red-500">
+          <Box className="flex-1 border border-red-500 overflow-hidden">
             <Box className="w-full h-full">
               {/* <ComponentPdfPreview
                 base64={
@@ -157,20 +157,10 @@ export default function Page() {
                 onOpen={() => {}}
               /> */}
 
-              <BoxSignaturePad patientSelected={patientSelected} />
+              {patientSelected && (
+                <BoxSignaturePad patientSelected={patientSelected} />
+              )}
             </Box>
-
-            {size.width > 0 && (
-              <SignatureCanvas
-                ref={sigRef}
-                backgroundColor="rgba(0,0,0,0)" // hoặc bỏ luôn
-                penColor="#2196f3"
-                canvasProps={{
-                  width: size.width,
-                  height: size.height,
-                }}
-              />
-            )}
           </Box>
         </Box>
       </Box>

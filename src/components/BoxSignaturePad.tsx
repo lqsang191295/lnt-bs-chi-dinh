@@ -1,6 +1,6 @@
 "use client";
 
-import PdfSignViewer from "@/components/PdfSignViewer";
+import PdfSignViewer, { iSignPoint } from "@/components/PdfSignViewer";
 import SignaturePad from "@/components/SignaturePad";
 import { IPatientInfoCanKyTay } from "@/model/tpatient";
 import { signPdf } from "@/utils/signPdf";
@@ -13,7 +13,7 @@ export default function BoxSignaturePad({
   patientSelected: IPatientInfoCanKyTay;
 }) {
   const [openPad, setOpenPad] = useState(false);
-  const [signPoint, setSignPoint] = useState<any>(null);
+  const [signPoint, setSignPoint] = useState<iSignPoint | null>(null);
 
   // 🔥 PDF đang hiển thị
   const [pdfBase64, setPdfBase64] = useState<string>("");
