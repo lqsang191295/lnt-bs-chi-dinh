@@ -25,6 +25,8 @@ export const getHosobenhan = async (
       ],
     });
 
+    console.log("API Response:", response);
+
     if (response.status === "error") {
       return [];
     }
@@ -76,7 +78,7 @@ export const capnhathosobenhan = async (
   hsba: IHoSoBenhAn
 ) => {
   try {
-    //console.log("Fetching HoSoBenhAn...");  
+    //console.log("Fetching HoSoBenhAn...");
     // console.log(`'${pUser}'
     // , '${pOpt}'
     // , '${hsba.ID}'
@@ -169,11 +171,11 @@ export const ketxuathosobenhan = async (
   hsba: IHoSoBenhAn
 ) => {
   try {
-    //console.log("Fetching HoSoBenhAn...");  
+    //console.log("Fetching HoSoBenhAn...");
     // console.log(`'${pUser}'
     // , '${pOpt}'
-    // , '${hsba.ID}'  
-    // , '${hsba.NoiDungPdf?.substring(0, 50)}...' 
+    // , '${hsba.ID}'
+    // , '${hsba.NoiDungPdf?.substring(0, 50)}...'
     // , '${hsba.NguoiKetXuat}'`);
     // Gọi API để lấy danh sách hồ sơ bệnh án
     const response = await post(`/api/callService`, {
@@ -183,7 +185,7 @@ export const ketxuathosobenhan = async (
       paraData: [
         { paraName: "puser", paraValue: pUser },
         { paraName: "popt", paraValue: pOpt },
-        { paraName: "ID", paraValue: hsba.ID }, 
+        { paraName: "ID", paraValue: hsba.ID },
         { paraName: "NoiDungPdf", paraValue: hsba.NoiDungPdf },
         { paraName: "NguoiKetXuat", paraValue: hsba.NguoiKetXuat },
       ],

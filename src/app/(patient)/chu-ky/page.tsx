@@ -2,7 +2,7 @@
 
 import { saveChuKyPartient } from "@/actions/act_patient";
 import HeadMetadata from "@/components/HeadMetadata";
-import { IPatientInfo } from "@/model/tpatient";
+import { IPatientInfo, IPatientInfoCanKyTay } from "@/model/tpatient";
 import {
   Box,
   Button,
@@ -16,6 +16,7 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
+import PatientList from "./components/PatientList";
 import PatientSearch from "./components/PatientSearch";
 
 export default function Page() {
@@ -25,6 +26,8 @@ export default function Page() {
   const [openPreview, setOpenPreview] = useState(false);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [patientInfo, setPatientInfo] = useState<IPatientInfo | null>(null);
+  const [patientSelected, setPatientSelected] =
+    useState<IPatientInfoCanKyTay | null>(null);
 
   const handleClear = () => {
     sigRef.current?.clear();
@@ -86,6 +89,8 @@ export default function Page() {
     return () => window.removeEventListener("resize", resize);
   }, []);
 
+  console.log("Selected patient:", patientSelected);
+
   return (
     <Box className="w-screen h-screen overflow-hidden flex flex-col bg-white">
       <HeadMetadata title="Chữ ký" />
@@ -115,20 +120,33 @@ export default function Page() {
         </Stack>
       </Box>
 
-      <Box
-        ref={wrapperRef}
-        className="w-full h-full flex-1 border border-red-500">
-        {size.width > 0 && (
-          <SignatureCanvas
-            ref={sigRef}
-            backgroundColor="rgba(0,0,0,0)" // hoặc bỏ luôn
-            penColor="#2196f3"
-            canvasProps={{
-              width: size.width,
-              height: size.height,
-            }}
-          />
-        )}
+      <Box className="w-full h-full flex flex-row">
+        <Box className="w-2xs h-full ">
+          <PatientList onSelectPatient={setPatientSelected} />
+        </Box>
+        <Box className="flex-1 h-full">
+          <Box>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
+              QUẢN LÝ LỊCH SỬ THAO TÁC BỆNH ÁN
+            </Typography>
+          </Box>
+          <Box ref={wrapperRef} className="flex-1 h-full border border-red-500">
+            {size.width > 0 && (
+              <SignatureCanvas
+                ref={sigRef}
+                backgroundColor="rgba(0,0,0,0)" // hoặc bỏ luôn
+                penColor="#2196f3"
+                canvasProps={{
+                  width: size.width,
+                  height: size.height,
+                }}
+              />
+            )}
+          </Box>
+        </Box>
       </Box>
 
       <Dialog

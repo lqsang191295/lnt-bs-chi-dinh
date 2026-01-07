@@ -1,5 +1,9 @@
 import { post } from "@/api/client";
-import { IPatientInfo, IPatientLichSuKham } from "@/model/tpatient";
+import {
+  IPatientInfo,
+  IPatientInfoCanKyTay,
+  IPatientLichSuKham,
+} from "@/model/tpatient";
 
 export const getPatientInfoByMaBN = async (
   mabn: string,
@@ -237,5 +241,32 @@ export const saveChuKyPartient = async (
     return response.message;
   } catch {
     return;
+  }
+};
+
+export const getPatientCanKyTay = async (
+  sTuNgay: string,
+  sDenNgay: string
+): Promise<IPatientInfoCanKyTay[] | null> => {
+  try {
+    const response = await post(`/his/call`, {
+      userId: "",
+      optionId: "3",
+      funcName: "dbo.emr_get_patient_can_ky_tay",
+      paraData: [
+        { paraName: "TuNgay", paraValue: sTuNgay },
+        { paraName: "DenNgay", paraValue: sDenNgay },
+      ],
+    });
+
+    console.log("API Response:", response);
+
+    if (response.status === "error") {
+      return null;
+    }
+
+    return response.message;
+  } catch {
+    return null;
   }
 };
