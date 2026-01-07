@@ -16,10 +16,17 @@ export default function SignaturePad({ onConfirm, onCancel }: Props) {
     <Box>
       <SignatureCanvas
         ref={sigRef}
+        penColor="#0B3C8A" // 🔵 xanh bút bi
+        minWidth={1} // nét mảnh
+        maxWidth={1.2} // không bị phình
+        throttle={60} // mượt
         canvasProps={{
           width: 400,
           height: 200,
-          style: { border: "1px dashed #aaa" },
+          style: {
+            border: "1px dashed #aaa",
+            background: "transparent",
+          },
         }}
       />
 

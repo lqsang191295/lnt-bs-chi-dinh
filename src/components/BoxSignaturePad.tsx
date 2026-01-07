@@ -53,7 +53,8 @@ export default function BoxSignaturePad({
               page: signPoint.page,
               pdfX: signPoint.pdfX,
               pdfY: signPoint.pdfY,
-              width: 60,
+              scale: 1.5,
+              baseWidth: 60,
             });
 
             // 🔥 UPDATE PDF HIỂN THỊ

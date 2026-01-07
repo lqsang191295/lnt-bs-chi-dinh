@@ -43,11 +43,11 @@ export default function PdfSignViewer({ base64, onSelectPoint }: Props) {
       if (renderId !== renderIdRef.current) return;
 
       const page = await pdf.getPage(pageNumber);
-      const viewport = page.getViewport({ scale: 1 });
+      const viewport = page.getViewport({ scale: 1.5 });
 
       const canvas = document.createElement("canvas");
       canvas.style.display = "block";
-      canvas.style.margin = "0 auto";
+      canvas.style.margin = "16px auto";
       canvas.style.cursor = "crosshair";
       const ctx = canvas.getContext("2d")!;
       canvas.width = viewport.width;

@@ -17,14 +17,16 @@ export async function signPdf({
   page,
   pdfX,
   pdfY,
-  width = 140,
+  scale,
+  baseWidth = 60,
 }: {
   pdfBase64: string;
   signatureBase64: string;
   page: number;
   pdfX: number;
   pdfY: number;
-  width?: number;
+  scale: number;
+  baseWidth?: number;
 }) {
   const pdfDoc = await PDFDocument.load(
     Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0))
@@ -35,9 +37,10 @@ export async function signPdf({
   );
 
   const pngSize = pngImage.scale(1);
-  const ratio = width / pngSize.width;
 
-  const drawWidth = width;
+  // 🔥 WIDTH THEO PDF COORDINATE
+  const drawWidth = baseWidth / scale;
+  const ratio = drawWidth / pngSize.width;
   const drawHeight = pngSize.height * ratio;
 
   const pdfPage = pdfDoc.getPage(page - 1);
@@ -50,6 +53,5 @@ export async function signPdf({
   });
 
   const signedPdfBytes = await pdfDoc.save();
-
   return uint8ToBase64(signedPdfBytes);
 }
