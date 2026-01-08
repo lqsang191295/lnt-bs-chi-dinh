@@ -144,7 +144,7 @@ const DraggableSignature = forwardRef<
             backgroundColor: "#0B3C8A",
           },
         }}>
-        {/* <SignatureCanvas
+        <SignatureCanvas
           ref={sigRef}
           penColor="#0B3C8A"
           minWidth={1}
@@ -157,7 +157,7 @@ const DraggableSignature = forwardRef<
               cursor: "crosshair",
             },
           }}
-        /> */}
+        />
       </Box>
 
       <Button

@@ -1,8 +1,13 @@
 "use client";
 
-import PdfSignViewer from "@/components/PdfSignViewer";
 import { IPatientInfoCanKyTay } from "@/model/tpatient";
 import { Box } from "@mui/material";
+import dynamic from "next/dynamic";
+
+const PdfSignViewerNoSSR = dynamic(
+  () => import("../components/PdfSignViewer"),
+  { ssr: false }
+);
 
 export default function BoxSignaturePad({
   patientSelected,
@@ -11,7 +16,9 @@ export default function BoxSignaturePad({
 }) {
   return (
     <Box className="w-full h-full">
-      {patientSelected && <PdfSignViewer patientSelected={patientSelected} />}
+      {patientSelected && (
+        <PdfSignViewerNoSSR patientSelected={patientSelected} />
+      )}
     </Box>
   );
 }
