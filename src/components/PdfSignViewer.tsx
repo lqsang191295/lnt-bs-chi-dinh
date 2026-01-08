@@ -98,60 +98,69 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
 
   const handleSave = async () => {
     if (!base64) return;
-    // 1. Load PDF gốc
+
     const existingPdfBytes = Uint8Array.from(atob(base64), (c) =>
       c.charCodeAt(0)
     );
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const pages = pdfDoc.getPages();
 
-    // 2. Lặp qua các chữ ký để vẽ
     for (const sig of signatures) {
       const pageIndex = sig.page - 1;
       const pdfPage = pages[pageIndex];
-      const { width, height } = pdfPage.getSize();
 
-      // Lấy canvas hiện tại từ ref
+      // Lấy kích thước thực tế của trang trong PDF (đơn vị points)
+      const { width: pdfPageWidth, height: pdfPageHeight } = pdfPage.getSize();
+
       const sigRef = sigComponentRefs.current.get(sig.id);
       if (!sigRef) continue;
 
       const canvas = sigRef.getCanvas();
       if (!canvas) continue;
 
-      // Chuyển canvas thành ảnh để chèn vào PDF
+      // Chuyển canvas thành ảnh
       const pngImageBytes = await fetch(canvas.toDataURL()).then((res) =>
         res.arrayBuffer()
       );
       const pngImage = await pdfDoc.embedPng(pngImageBytes);
 
-      // QUAN TRỌNG: Tính toán tọa độ
-      // Tọa độ PDF bắt đầu từ GÓC DƯỚI BÊN TRÁI (0,0)
-      // Tọa độ Web bắt đầu từ GÓC TRÊN BÊN TRÁI
-      // Scale: 1.5 là scale khi render PDF.js
-      const scale = 1.5;
-      const sigWidth = canvas.width / scale;
-      const sigHeight = canvas.height / scale;
+      // --- LOGIC TÍNH TOÁN TỌA ĐỘ CHÍNH XÁC ---
 
-      // Chuyển đổi tọa độ từ Web sang PDF
-      const pdfX = sig.x / scale - sigWidth / 2;
-      const pdfY = height - sig.y / scale - sigHeight / 2;
+      // 1. Tỷ lệ scale khi render bằng PDF.js (bạn đang dùng 1.5)
+      const renderScale = 1.5;
+
+      // 2. Kích thước hiển thị của chữ ký trên trình duyệt (pixel)
+      // Canvas của react-signature-canvas có width/height là kích thước thực tế của nó
+      const sigDisplayWidth = canvas.width;
+      const sigDisplayHeight = canvas.height;
+
+      // 3. Chuyển đổi kích thước từ Pixel sang PDF Point
+      // Công thức: PDF_Point = Pixel / renderScale
+      const sigPdfWidth = sigDisplayWidth / renderScale;
+      const sigPdfHeight = sigDisplayHeight / renderScale;
+
+      // 4. Chuyển đổi tọa độ (x, y)
+      // pdfX: Giữ nguyên tỷ lệ scale
+      const pdfX = sig.x / renderScale;
+
+      // pdfY: Đảo ngược trục Y vì PDF gốc tọa độ ở dưới cùng
+      // Công thức: PDF_Y = Chiều_cao_trang - Y_trình_duyệt - Chiều_cao_vật_thể
+      const pdfY = pdfPageHeight - sig.y / renderScale - sigPdfHeight;
 
       pdfPage.drawImage(pngImage, {
         x: pdfX,
         y: pdfY,
-        width: sigWidth,
-        height: sigHeight,
+        width: sigPdfWidth,
+        height: sigPdfHeight,
       });
     }
 
-    // 3. Xuất file base64
     const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: true });
-    console.log("File đã ký (Base64):", pdfBase64);
 
-    // Tải về máy (Tùy chọn)
+    // Tự động tải file
     const link = document.createElement("a");
     link.href = pdfBase64;
-    link.download = "signed_document.pdf";
+    link.download = `signed_document_${Date.now()}.pdf`;
     link.click();
   };
 
