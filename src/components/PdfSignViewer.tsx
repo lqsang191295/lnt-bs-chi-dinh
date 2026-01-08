@@ -4,6 +4,7 @@ import { Box, Button } from "@mui/material";
 import { PDFDocument } from "pdf-lib";
 import * as pdfjsLib from "pdfjs-dist";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { v4 as uuid } from "uuid";
 import DraggableSignature, {
   DraggableSignatureRef,
@@ -22,9 +23,11 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const renderIdRef = useRef(0);
   const [signatures, setSignatures] = useState<SignatureItem[]>([]);
-  const [pagesRendered, setPagesRendered] = useState<number[]>([]);
-  const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const sigComponentRefs = useRef<Map<string, DraggableSignatureRef>>(
+    new Map()
+  );
+  // Quan trọng: Lưu trữ element của từng trang để Portal chèn vào
+  const [pageElements, setPageElements] = useState<Map<number, HTMLDivElement>>(
     new Map()
   );
 
@@ -37,8 +40,7 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
   async function renderPdf(renderId: number) {
     const container = containerRef.current!;
     container.innerHTML = "";
-    pageRefs.current.clear();
-    setPagesRendered([]);
+    const newPageElements = new Map<number, HTMLDivElement>();
 
     const pdfData = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
@@ -51,7 +53,7 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
 
       const pageWrapper = document.createElement("div");
       pageWrapper.className = "pdf-page-wrapper";
-      pageWrapper.style.position = "relative";
+      pageWrapper.style.position = "relative"; // Gốc tọa độ cho chữ ký
       pageWrapper.style.width = `${viewport.width}px`;
       pageWrapper.style.margin = "16px auto";
       pageWrapper.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
@@ -59,14 +61,13 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
       const canvas = document.createElement("canvas");
       canvas.width = viewport.width;
       canvas.height = viewport.height;
-      canvas.style.display = "block";
-      canvas.style.cursor = "crosshair";
 
       const ctx = canvas.getContext("2d")!;
       await page.render({ canvasContext: ctx, viewport }).promise;
 
       canvas.onclick = (e) => {
         const rect = canvas.getBoundingClientRect();
+        // Lấy tọa độ tương đối trong nội bộ 1 trang
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
@@ -79,9 +80,10 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
       pageWrapper.appendChild(canvas);
       container.appendChild(pageWrapper);
 
-      pageRefs.current.set(pageNumber, pageWrapper);
-      setPagesRendered((prev) => [...prev, pageNumber]);
+      // Lưu element vào state để trigger re-render cho Portal
+      newPageElements.set(pageNumber, pageWrapper);
     }
+    setPageElements(newPageElements);
   }
 
   const updateSigPos = (id: string, x: number, y: number) => {
@@ -96,9 +98,6 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
 
   const handleSave = async () => {
     if (!base64) return;
-
-    debugger;
-
     // 1. Load PDF gốc
     const existingPdfBytes = Uint8Array.from(atob(base64), (c) =>
       c.charCodeAt(0)
@@ -171,18 +170,25 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
           background: "#f5f5f5",
           position: "relative",
         }}>
-        {signatures.map((sig) => (
-          <DraggableSignature
-            key={sig.id}
-            ref={(el) => {
-              if (el) sigComponentRefs.current.set(sig.id, el);
-              else sigComponentRefs.current.delete(sig.id);
-            }}
-            sig={sig}
-            onUpdatePos={updateSigPos}
-            onDelete={deleteSig}
-          />
-        ))}
+        {/* Render chữ ký vào đúng Page Wrapper bằng Portal */}
+        {signatures.map((sig) => {
+          const targetPageSlot = pageElements.get(sig.page);
+          if (!targetPageSlot) return null;
+
+          return createPortal(
+            <DraggableSignature
+              key={sig.id}
+              ref={(el) => {
+                if (el) sigComponentRefs.current.set(sig.id, el);
+                else sigComponentRefs.current.delete(sig.id);
+              }}
+              sig={sig}
+              onUpdatePos={updateSigPos}
+              onDelete={deleteSig}
+            />,
+            targetPageSlot // Chèn component vào div của trang tương ứng
+          );
+        })}
       </Box>
     </Box>
   );
