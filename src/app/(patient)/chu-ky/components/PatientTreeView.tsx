@@ -47,7 +47,7 @@ export default function CustomIcons({
       if (!map.has(groupId)) {
         map.set(groupId, {
           id: groupId,
-          label: `${item.Hoten} (${item.Gioitinh} - ${item.Namsinh})`,
+          label: `${item.Ma} - ${item.Sovaovien} - ${item.Hoten} (${item.Gioitinh} - ${item.Namsinh})`,
           children: [],
         });
       }
