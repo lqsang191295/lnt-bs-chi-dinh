@@ -63,7 +63,7 @@ export default function PatientList({
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box className="w-full h-full flex flex-col">
-        <Box className="flex flex-col px-0.5 mb-0.5" gap={1}>
+        <Box className="flex flex-col px-0.5 mb-0.5 mt-2" gap={1}>
           <DatePicker
             label="Từ ngày"
             format="dd/MM/yyyy"

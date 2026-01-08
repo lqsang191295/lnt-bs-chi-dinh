@@ -3,7 +3,7 @@
 import {
   ClearAll as ClearIcon,
   Close as CloseIcon,
-  DragIndicatorOutlined,
+  PanTool,
 } from "@mui/icons-material";
 import { Box, Button, IconButton } from "@mui/material";
 import {
@@ -100,7 +100,7 @@ const DraggableSignature = forwardRef<
           transition: "opacity 0.2s",
           "&:hover": { backgroundColor: "#d9363e" },
         }}>
-        <DragIndicatorOutlined sx={{ fontSize: 14 }} />
+        <PanTool sx={{ fontSize: 14 }} />
       </IconButton>
 
       <IconButton

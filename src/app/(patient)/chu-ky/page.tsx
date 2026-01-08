@@ -11,15 +11,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Stack,
-  Typography,
 } from "@mui/material";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import PatientList from "./components/PatientList";
-import PatientSearch from "./components/PatientSearch";
 
 const ComponentPdfPreview = dynamic(
   () => import("../../../components/PdfPreview"),
@@ -103,7 +100,7 @@ export default function Page() {
   return (
     <Box className="w-screen h-screen overflow-hidden flex flex-col bg-white">
       <HeadMetadata title="Chữ ký" />
-      <Box className="bg-white flex justify-between gap-2 p-2 w-full">
+      {/* <Box className="bg-white flex justify-between gap-2 p-2 w-full">
         <Stack direction="row" spacing={1}>
           <Typography
             variant="h6"
@@ -127,40 +124,17 @@ export default function Page() {
             Preview chữ ký
           </Button>
         </Stack>
-      </Box>
+      </Box> */}
 
       <Box className="w-full h-full flex flex-row overflow-hidden">
         <Box className="w-2xs h-full ">
           <PatientList onSelectPatient={setPatientSelected} />
         </Box>
-        <Box className="flex-1 flex flex-col overflow-hidden">
-          <Box>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{ color: "#1976d2", fontWeight: "bold", letterSpacing: 1 }}>
-              {`${patientSelected?.Hoten} (${patientSelected?.Gioitinh} - ${
-                patientSelected?.Namsinh
-              }) - ${patientSelected?.LoaiPhieu.replaceAll("_", " ")}`}
-            </Typography>
-          </Box>
-          <Box className="flex-1 border border-red-500 overflow-hidden">
-            <Box className="w-full h-full">
-              {/* <ComponentPdfPreview
-                base64={
-                  patientSelected?.FilePdfKySo ||
-                  patientSelected?.TaiLieuKy ||
-                  ""
-                }
-                filename={patientSelected?.LoaiPhieu.replaceAll("_", " ")}
-                interactive={false}
-                onOpen={() => {}}
-              /> */}
-
-              {patientSelected && (
-                <BoxSignaturePad patientSelected={patientSelected} />
-              )}
-            </Box>
+        <Box className="flex-1 border border-dashed border-red-500 overflow-hidden">
+          <Box className="w-full h-full">
+            {patientSelected && (
+              <BoxSignaturePad patientSelected={patientSelected} />
+            )}
           </Box>
         </Box>
       </Box>

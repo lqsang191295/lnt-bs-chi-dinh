@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, Button } from "@mui/material";
+import { IPatientInfoCanKyTay } from "@/model/tpatient";
+import { Box, Button, Typography } from "@mui/material";
 import { PDFDocument } from "pdf-lib";
 import * as pdfjsLib from "pdfjs-dist";
 import { useEffect, useRef, useState } from "react";
@@ -19,7 +20,11 @@ interface SignatureItem {
   y: number;
 }
 
-export default function PdfSignViewer({ base64 }: { base64: string }) {
+export default function PdfSignViewer({
+  patientSelected,
+}: {
+  patientSelected: IPatientInfoCanKyTay;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const renderIdRef = useRef(0);
   const [signatures, setSignatures] = useState<SignatureItem[]>([]);
@@ -32,17 +37,20 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
   );
 
   useEffect(() => {
-    if (!base64) return;
+    if (!patientSelected) return;
     renderIdRef.current++;
     renderPdf(renderIdRef.current);
-  }, [base64]);
+  }, [patientSelected]);
 
   async function renderPdf(renderId: number) {
     const container = containerRef.current!;
     container.innerHTML = "";
     const newPageElements = new Map<number, HTMLDivElement>();
 
-    const pdfData = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const pdfData = Uint8Array.from(
+      atob(patientSelected?.FilePdfKySo || ""),
+      (c) => c.charCodeAt(0)
+    );
     const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
@@ -97,10 +105,11 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
   };
 
   const handleSave = async () => {
-    if (!base64) return;
+    if (!patientSelected) return;
 
-    const existingPdfBytes = Uint8Array.from(atob(base64), (c) =>
-      c.charCodeAt(0)
+    const existingPdfBytes = Uint8Array.from(
+      atob(patientSelected?.FilePdfKySo || ""),
+      (c) => c.charCodeAt(0)
     );
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const pages = pdfDoc.getPages();
@@ -166,7 +175,14 @@ export default function PdfSignViewer({ base64 }: { base64: string }) {
 
   return (
     <Box className="h-full flex flex-col overflow-hidden">
-      <Box sx={{ p: 2, background: "#fff", borderBottom: "1px solid #ddd" }}>
+      <Box
+        className="flex flex-row justify-between items-center"
+        sx={{ p: 1, background: "#fff", borderBottom: "1px solid #ddd" }}>
+        <Typography variant="h6" sx={{ color: "#1976d2", fontWeight: "bold" }}>
+          {`${patientSelected?.Hoten} (${patientSelected?.Gioitinh} - ${
+            patientSelected?.Namsinh
+          }) - ${patientSelected?.LoaiPhieu.replaceAll("_", " ")}`}
+        </Typography>
         <Button variant="contained" color="primary" onClick={handleSave}>
           Save & Download PDF
         </Button>
