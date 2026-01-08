@@ -130,7 +130,7 @@ export default function Page() {
         <Box className="w-2xs h-full ">
           <PatientList onSelectPatient={setPatientSelected} />
         </Box>
-        <Box className="flex-1 border border-dashed border-red-500 overflow-hidden">
+        <Box className="flex-1 border-l border-dashed border-gray-500 overflow-hidden">
           <Box className="w-full h-full">
             {patientSelected && (
               <BoxSignaturePad patientSelected={patientSelected} />

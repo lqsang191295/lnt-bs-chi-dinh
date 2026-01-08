@@ -183,8 +183,12 @@ export default function PdfSignViewer({
             patientSelected?.Namsinh
           }) - ${patientSelected?.LoaiPhieu.replaceAll("_", " ")}`}
         </Typography>
-        <Button variant="contained" color="primary" onClick={handleSave}>
-          Save & Download PDF
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSave}
+          size="small">
+          Hoàn thành ký số
         </Button>
       </Box>
       <Box
