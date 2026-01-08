@@ -11,7 +11,7 @@ import DraggableSignature, {
   DraggableSignatureRef,
 } from "./DraggableSignature";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = "/worker/pdf.worker.min.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc = "/worker/pdf.worker.min.js";
 
 interface SignatureItem {
   id: string;
