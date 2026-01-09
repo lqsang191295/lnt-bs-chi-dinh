@@ -1,5 +1,6 @@
 "use client";
 
+import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
 import { IPatientInfoCanKyTay } from "@/model/tpatient";
 import { Box, Button, Typography } from "@mui/material";
 import { PDFDocument } from "pdf-lib";
@@ -10,6 +11,7 @@ import { v4 as uuid } from "uuid";
 import DraggableSignature, {
   DraggableSignatureRef,
 } from "./DraggableSignature";
+import DraggableSignatureMobile from "./DraggableSignatureMobile";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "/worker/pdf.worker.min.js";
 
@@ -25,6 +27,7 @@ export default function PdfSignViewer({
 }: {
   patientSelected: IPatientInfoCanKyTay;
 }) {
+  const isTouchDevice = useIsTouchDevice();
   const containerRef = useRef<HTMLDivElement>(null);
   const renderIdRef = useRef(0);
   const [signatures, setSignatures] = useState<SignatureItem[]>([]);
@@ -57,7 +60,7 @@ export default function PdfSignViewer({
       if (renderId !== renderIdRef.current) return;
 
       const page = await pdf.getPage(pageNumber);
-      const viewport = page.getViewport({ scale: 1.5 });
+      const viewport = page.getViewport({ scale: 1 });
 
       const pageWrapper = document.createElement("div");
       pageWrapper.className = "pdf-page-wrapper";
@@ -205,17 +208,30 @@ export default function PdfSignViewer({
           if (!targetPageSlot) return null;
 
           return createPortal(
-            <DraggableSignature
-              key={sig.id}
-              ref={(el) => {
-                if (el) sigComponentRefs.current.set(sig.id, el);
-                else sigComponentRefs.current.delete(sig.id);
-              }}
-              sig={sig}
-              onUpdatePos={updateSigPos}
-              onDelete={deleteSig}
-            />,
-            targetPageSlot // Chèn component vào div của trang tương ứng
+            isTouchDevice ? (
+              <DraggableSignatureMobile
+                key={sig.id}
+                ref={(el) => {
+                  if (el) sigComponentRefs.current.set(sig.id, el);
+                  else sigComponentRefs.current.delete(sig.id);
+                }}
+                sig={sig}
+                onUpdatePos={updateSigPos}
+                onDelete={deleteSig}
+              />
+            ) : (
+              <DraggableSignature
+                key={sig.id}
+                ref={(el) => {
+                  if (el) sigComponentRefs.current.set(sig.id, el);
+                  else sigComponentRefs.current.delete(sig.id);
+                }}
+                sig={sig}
+                onUpdatePos={updateSigPos}
+                onDelete={deleteSig}
+              />
+            ),
+            targetPageSlot
           );
         })}
       </Box>
