@@ -17,7 +17,7 @@ import DraggableSignatureMobile from "./DraggableSignatureMobile";
 // import FullscreenIcon from '@mui/icons-material/Fullscreen';
 // import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = "/worker/pdf.worker.min.js";
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 interface SignatureItem {
   id: string;
