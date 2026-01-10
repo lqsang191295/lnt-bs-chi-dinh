@@ -139,48 +139,47 @@ export default function PdfSignViewer({
     try {
       if (!patientSelected) return;
 
-      const existingPdfBytes = Uint8Array.from(
-        atob(patientSelected?.FilePdfKySo || ""),
-        (c) => c.charCodeAt(0)
+      const base64Data = patientSelected.FilePdfKySo.replace(/\s/g, "");
+      const existingPdfBytes = Uint8Array.from(atob(base64Data), (c) =>
+        c.charCodeAt(0)
       );
 
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
-
-      // 2. Đăng ký fontkit để xử lý font tùy chỉnh
       pdfDoc.registerFontkit(fontkit);
 
-      // 3. Load file font từ thư mục public
-      // Đảm bảo bạn đã để file font vào: public/fonts/Roboto-Regular.ttf
-      const fontBytes = await fetch("/fonts/Roboto-Regular.ttf").then((res) =>
-        res.arrayBuffer()
-      );
+      // Nạp Font từ thư mục public - Dùng URL tuyệt đối cho iOS
+      const fontUrl = `${window.location.origin}/fonts/Roboto-Regular.ttf`;
+      const fontResponse = await fetch(fontUrl);
+      if (!fontResponse.ok)
+        throw new Error("Không thể tải font Roboto-Regular.ttf");
+      const fontBytes = await fontResponse.arrayBuffer();
       const customFont = await pdfDoc.embedFont(fontBytes);
 
       const pages = pdfDoc.getPages();
 
       for (const sig of signatures) {
-        const pageIndex = sig.page - 1;
-        const pdfPage = pages[pageIndex];
-        const { height: pdfPageHeight } = pdfPage.getSize();
-
         const sigRef = sigComponentRefs.current.get(sig.id);
         if (!sigRef) continue;
 
         const canvas = sigRef.getCanvas();
-        const fullName = sigRef.getFullName?.() || "";
+        const fullName = sigRef.getFullName();
         if (!canvas) continue;
 
-        // Vẽ ảnh chữ ký (giữ nguyên logic cũ của bạn)
-        const pngImageBytes = await fetch(canvas.toDataURL()).then((res) =>
-          res.arrayBuffer()
+        const pngImageBytes = await fetch(canvas.toDataURL("image/png")).then(
+          (res) => res.arrayBuffer()
         );
         const pngImage = await pdfDoc.embedPng(pngImageBytes);
+
+        const pdfPage = pages[sig.page - 1];
+        const { height: pdfPageHeight } = pdfPage.getSize();
         const renderScale = 1.5;
+
         const sigPdfWidth = canvas.width / renderScale;
         const sigPdfHeight = canvas.height / renderScale;
         const pdfX = sig.x / renderScale;
         const pdfY = pdfPageHeight - sig.y / renderScale - sigPdfHeight;
 
+        // 1. Vẽ chữ ký
         pdfPage.drawImage(pngImage, {
           x: pdfX,
           y: pdfY,
@@ -188,18 +187,16 @@ export default function PdfSignViewer({
           height: sigPdfHeight,
         });
 
-        // 4. Vẽ Họ tên với Font đã nhúng
+        // 2. Vẽ họ tên tiếng Việt
         if (fullName) {
-          // Tính toán độ rộng thực tế của text để căn giữa chuẩn hơn
-          const textSize = 11;
-          const textWidth = customFont.widthOfTextAtSize(fullName, textSize);
-
+          const fontSize = 11;
+          const textWidth = customFont.widthOfTextAtSize(fullName, fontSize);
           pdfPage.drawText(fullName, {
-            x: pdfX + sigPdfWidth / 2 - textWidth / 2, // Căn giữa theo khung chữ ký
+            x: pdfX + sigPdfWidth / 2 - textWidth / 2,
             y: pdfY - 15,
-            size: textSize,
-            font: customFont, // <--- CỰC KỲ QUAN TRỌNG: Dùng font đã embed
-            color: rgb(0.043, 0.235, 0.541), // Màu #0B3C8A
+            size: fontSize,
+            font: customFont,
+            color: rgb(0.043, 0.235, 0.541), // #0B3C8A
           });
         }
       }
@@ -207,10 +204,16 @@ export default function PdfSignViewer({
       const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: false });
       await updateFilePatientKyTay(patientSelected.ID, pdfBase64);
       ToastSuccess("Ký thành công");
-    } catch (error) {
+    } catch (error: unknown) {
+      // Đổi any thành unknown
       console.error("Lỗi khi ký tài liệu:", error);
-      // Thông báo lỗi cụ thể cho người dùng nếu thiếu font
-      alert("Lỗi font tiếng Việt hoặc file PDF. Vui lòng kiểm tra lại.");
+
+      // Kiểm tra nếu error là một instance của Error để lấy message an toàn
+      if (error instanceof Error) {
+        alert("Lỗi: " + error.message);
+      } else {
+        alert("Đã xảy ra lỗi không xác định.");
+      }
     }
   };
 
