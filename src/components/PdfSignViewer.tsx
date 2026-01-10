@@ -3,8 +3,9 @@
 import { updateFilePatientKyTay } from "@/actions/act_patient";
 import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
 import { IPatientInfoCanKyTay } from "@/model/tpatient";
-import { ToastError, ToastSuccess } from "@/utils/toast";
+import { ToastSuccess } from "@/utils/toast";
 import { Box, Button, Typography } from "@mui/material";
+import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import * as pdfjsLib from "pdfjs-dist";
 import { useEffect, useRef, useState } from "react";
@@ -142,7 +143,19 @@ export default function PdfSignViewer({
         atob(patientSelected?.FilePdfKySo || ""),
         (c) => c.charCodeAt(0)
       );
+
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+      // 2. Đăng ký fontkit để xử lý font tùy chỉnh
+      pdfDoc.registerFontkit(fontkit);
+
+      // 3. Load file font từ thư mục public
+      // Đảm bảo bạn đã để file font vào: public/fonts/Roboto-Regular.ttf
+      const fontBytes = await fetch("/fonts/Roboto-Regular.ttf").then((res) =>
+        res.arrayBuffer()
+      );
+      const customFont = await pdfDoc.embedFont(fontBytes);
+
       const pages = pdfDoc.getPages();
 
       for (const sig of signatures) {
@@ -153,24 +166,21 @@ export default function PdfSignViewer({
         const sigRef = sigComponentRefs.current.get(sig.id);
         if (!sigRef) continue;
 
-        // 1. Lấy Canvas chữ ký và Họ tên từ Ref
         const canvas = sigRef.getCanvas();
-        const fullName = sigRef.getFullName?.() || ""; // Hàm này chúng ta đã thêm ở bước trước
+        const fullName = sigRef.getFullName?.() || "";
         if (!canvas) continue;
 
-        // 2. Nhúng hình ảnh chữ ký
+        // Vẽ ảnh chữ ký (giữ nguyên logic cũ của bạn)
         const pngImageBytes = await fetch(canvas.toDataURL()).then((res) =>
           res.arrayBuffer()
         );
         const pngImage = await pdfDoc.embedPng(pngImageBytes);
-
         const renderScale = 1.5;
         const sigPdfWidth = canvas.width / renderScale;
         const sigPdfHeight = canvas.height / renderScale;
         const pdfX = sig.x / renderScale;
         const pdfY = pdfPageHeight - sig.y / renderScale - sigPdfHeight;
 
-        // Vẽ chữ ký lên PDF
         pdfPage.drawImage(pngImage, {
           x: pdfX,
           y: pdfY,
@@ -178,25 +188,29 @@ export default function PdfSignViewer({
           height: sigPdfHeight,
         });
 
-        // 3. VẼ HỌ TÊN VÀO PDF (Nằm dưới chữ ký)
+        // 4. Vẽ Họ tên với Font đã nhúng
         if (fullName) {
+          // Tính toán độ rộng thực tế của text để căn giữa chuẩn hơn
+          const textSize = 11;
+          const textWidth = customFont.widthOfTextAtSize(fullName, textSize);
+
           pdfPage.drawText(fullName, {
-            x: pdfX + sigPdfWidth / 2 - fullName.length * 2.5, // Căn giữa tương đối
-            y: pdfY - 15, // Đặt bên dưới chữ ký 15 đơn vị
-            size: 10, // Cỡ chữ
-            // font: ... bạn có thể nhúng font tiếng Việt nếu cần (xem lưu ý dưới)
-            color: rgb(0.043, 0.235, 0.541),
+            x: pdfX + sigPdfWidth / 2 - textWidth / 2, // Căn giữa theo khung chữ ký
+            y: pdfY - 15,
+            size: textSize,
+            font: customFont, // <--- CỰC KỲ QUAN TRỌNG: Dùng font đã embed
+            color: rgb(0.043, 0.235, 0.541), // Màu #0B3C8A
           });
         }
       }
 
       const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: false });
       await updateFilePatientKyTay(patientSelected.ID, pdfBase64);
-
-      ToastSuccess("Ký thành công!");
+      ToastSuccess("Ký thành công");
     } catch (error) {
       console.error("Lỗi khi ký tài liệu:", error);
-      ToastError("Lỗi khi ký tài liệu!");
+      // Thông báo lỗi cụ thể cho người dùng nếu thiếu font
+      alert("Lỗi font tiếng Việt hoặc file PDF. Vui lòng kiểm tra lại.");
     }
   };
 
