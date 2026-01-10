@@ -1,7 +1,9 @@
 "use client";
 
+import { updateFilePatientKyTay } from "@/actions/act_patient";
 import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
 import { IPatientInfoCanKyTay } from "@/model/tpatient";
+import { ToastSuccess } from "@/utils/toast";
 import { Box, Button, Typography } from "@mui/material";
 import { PDFDocument } from "pdf-lib";
 import * as pdfjsLib from "pdfjs-dist";
@@ -133,54 +135,67 @@ export default function PdfSignViewer({
   };
 
   const handleSave = async () => {
-    if (!patientSelected) return;
+    try {
+      if (!patientSelected) return;
 
-    const existingPdfBytes = Uint8Array.from(
-      atob(patientSelected?.FilePdfKySo || ""),
-      (c) => c.charCodeAt(0)
-    );
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    const pages = pdfDoc.getPages();
-
-    for (const sig of signatures) {
-      const pageIndex = sig.page - 1;
-      const pdfPage = pages[pageIndex];
-      const { height: pdfPageHeight } = pdfPage.getSize();
-
-      const sigRef = sigComponentRefs.current.get(sig.id);
-      if (!sigRef) continue;
-
-      const canvas = sigRef.getCanvas();
-      if (!canvas) continue;
-
-      const pngImageBytes = await fetch(canvas.toDataURL()).then((res) =>
-        res.arrayBuffer()
+      const existingPdfBytes = Uint8Array.from(
+        atob(patientSelected?.FilePdfKySo || ""),
+        (c) => c.charCodeAt(0)
       );
-      const pngImage = await pdfDoc.embedPng(pngImageBytes);
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const pages = pdfDoc.getPages();
 
-      const renderScale = 1.5;
-      const sigDisplayWidth = canvas.width;
-      const sigDisplayHeight = canvas.height;
+      for (const sig of signatures) {
+        const pageIndex = sig.page - 1;
+        const pdfPage = pages[pageIndex];
+        const { height: pdfPageHeight } = pdfPage.getSize();
 
-      const sigPdfWidth = sigDisplayWidth / renderScale;
-      const sigPdfHeight = sigDisplayHeight / renderScale;
+        const sigRef = sigComponentRefs.current.get(sig.id);
+        if (!sigRef) continue;
 
-      const pdfX = sig.x / renderScale;
-      const pdfY = pdfPageHeight - sig.y / renderScale - sigPdfHeight;
+        const canvas = sigRef.getCanvas();
+        if (!canvas) continue;
 
-      pdfPage.drawImage(pngImage, {
-        x: pdfX,
-        y: pdfY,
-        width: sigPdfWidth,
-        height: sigPdfHeight,
-      });
+        const pngImageBytes = await fetch(canvas.toDataURL()).then((res) =>
+          res.arrayBuffer()
+        );
+        const pngImage = await pdfDoc.embedPng(pngImageBytes);
+
+        const renderScale = 1.5;
+        const sigDisplayWidth = canvas.width;
+        const sigDisplayHeight = canvas.height;
+
+        const sigPdfWidth = sigDisplayWidth / renderScale;
+        const sigPdfHeight = sigDisplayHeight / renderScale;
+
+        const pdfX = sig.x / renderScale;
+        const pdfY = pdfPageHeight - sig.y / renderScale - sigPdfHeight;
+
+        pdfPage.drawImage(pngImage, {
+          x: pdfX,
+          y: pdfY,
+          width: sigPdfWidth,
+          height: sigPdfHeight,
+        });
+      }
+
+      const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: true });
+      // const link = document.createElement("a");
+      // link.href = pdfBase64;
+      // link.download = `signed_${patientSelected.Hoten}_${Date.now()}.pdf`;
+      // link.click();
+
+      const data = await updateFilePatientKyTay(
+        patientSelected.ID,
+        pdfBase64.split(",")[1] || ""
+      );
+
+      console.log("Ký thành công:", data);
+      ToastSuccess("Ký thành công");
+    } catch (error) {
+      console.error("Lỗi khi ký tài liệu:", error);
+      ToastSuccess("Lỗi ký tài liệu");
     }
-
-    const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: true });
-    const link = document.createElement("a");
-    link.href = pdfBase64;
-    link.download = `signed_${patientSelected.Hoten}_${Date.now()}.pdf`;
-    link.click();
   };
 
   return (

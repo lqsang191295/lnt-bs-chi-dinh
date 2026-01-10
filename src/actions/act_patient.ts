@@ -270,3 +270,30 @@ export const getPatientCanKyTay = async (
     return null;
   }
 };
+
+export const updateFilePatientKyTay = async (
+  id: number,
+  File: string
+): Promise<IPatientInfoCanKyTay[] | null> => {
+  try {
+    const response = await post(`/his/call`, {
+      userId: "",
+      optionId: "3",
+      funcName: "dbo.emr_update_patient_file_ky_tay",
+      paraData: [
+        { paraName: "ID", paraValue: id },
+        { paraName: "File", paraValue: File },
+      ],
+    });
+
+    console.log("API Response:", response);
+
+    if (response.status === "error") {
+      return null;
+    }
+
+    return response.message;
+  } catch {
+    return null;
+  }
+};
