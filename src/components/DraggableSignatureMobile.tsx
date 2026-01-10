@@ -5,7 +5,7 @@ import {
   Close as CloseIcon,
   PanTool,
 } from "@mui/icons-material";
-import { Box, Button, IconButton } from "@mui/material";
+import { Box, Button, IconButton, TextField } from "@mui/material";
 import {
   forwardRef,
   useEffect,
@@ -23,6 +23,7 @@ interface DraggableSignatureProps {
 
 export interface DraggableSignatureRef {
   getCanvas: () => HTMLCanvasElement | null;
+  getFullName: () => string; // Thêm hàm lấy tên
   id: string;
 }
 
@@ -36,11 +37,12 @@ const DraggableSignatureTouch = forwardRef<
   const [dragging, setDragging] = useState(false);
   const startPos = useRef({ x: 0, y: 0 });
   const startOffset = useRef({ x: sig.x, y: sig.y });
-
+  const [fullName, setFullName] = useState(""); // State lưu họ tên
   const [dimensions, setDimensions] = useState({ width: 180, height: 80 });
 
   useImperativeHandle(ref, () => ({
     getCanvas: () => sigRef.current?.getCanvas() || null,
+    getFullName: () => fullName,
     id: sig.id,
   }));
 
@@ -57,9 +59,14 @@ const DraggableSignatureTouch = forwardRef<
   }, []);
 
   const onPointerDown = (e: React.PointerEvent) => {
-    // chỉ kéo khi chạm ngoài canvas
+    // 1. Nếu chạm vào Canvas để ký -> Thoát
     if ((e.target as HTMLElement).tagName === "CANVAS") return;
 
+    // 2. Nếu chạm vào INPUT hoặc TEXTAREA để nhập liệu -> Thoát, KHÔNG dùng preventDefault
+    const tagName = (e.target as HTMLElement).tagName;
+    if (tagName === "INPUT" || tagName === "TEXTAREA") return;
+
+    // 3. Chỉ thực hiện logic kéo thả cho các vùng còn lại (handle, khung viền...)
     e.preventDefault();
     setDragging(true);
     startPos.current = { x: e.clientX, y: e.clientY };
@@ -93,6 +100,10 @@ const DraggableSignatureTouch = forwardRef<
         left: sig.x,
         top: sig.y,
         zIndex: 100,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 0.5, // Tạo khoảng cách nhỏ giữa các thành phần
         touchAction: "none",
       }}>
       {/* Drag handle */}
@@ -107,7 +118,7 @@ const DraggableSignatureTouch = forwardRef<
           zIndex: 102,
           "&:hover": { backgroundColor: "#006aff" },
         }}>
-        <PanTool sx={{ fontSize: 16 }} />
+        <PanTool sx={{ fontSize: 12 }} />
       </IconButton>
 
       {/* Delete */}
@@ -116,13 +127,15 @@ const DraggableSignatureTouch = forwardRef<
         onClick={() => onDelete(sig.id)}
         size="small"
         sx={{
+          width: 18,
+          height: 18,
           position: "absolute",
           top: -12,
           right: -12,
           backgroundColor: "#ff4d4f",
           color: "#fff",
         }}>
-        <CloseIcon fontSize="small" />
+        <CloseIcon sx={{ fontSize: 14 }} />
       </IconButton>
 
       {/* Signature box */}
@@ -162,19 +175,39 @@ const DraggableSignatureTouch = forwardRef<
           }}
         />
       </Box>
-
+      {/* TextField Nhập Họ Tên - Đặt ở dưới canvas */}
+      <TextField
+        size="small"
+        placeholder="Họ tên..."
+        variant="outlined"
+        value={fullName}
+        onChange={(e) => setFullName(e.target.value)}
+        sx={{
+          width: "100%",
+          backgroundColor: "white",
+          "& .MuiInputBase-input": {
+            fontSize: "12px",
+            padding: "4px 8px",
+            textAlign: "center",
+          },
+          "& input": {
+            userSelect: "text",
+            WebkitUserSelect: "text",
+          },
+        }}
+      />
       <Button
-        className="!bg-green-500 !text-white !mt-0.5"
+        variant="contained"
         size="small"
         onClick={() => sigRef.current?.clear()}
         startIcon={<ClearIcon sx={{ fontSize: 12 }} />}
         sx={{
-          mt: 1,
           fontSize: "10px",
           textTransform: "none",
           backgroundColor: "#52c41a",
+          "&:hover": { backgroundColor: "#389e0d" },
         }}>
-        Clear
+        Xóa chữ ký
       </Button>
     </Box>
   );

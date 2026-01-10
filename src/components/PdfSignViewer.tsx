@@ -3,9 +3,9 @@
 import { updateFilePatientKyTay } from "@/actions/act_patient";
 import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
 import { IPatientInfoCanKyTay } from "@/model/tpatient";
-import { ToastSuccess } from "@/utils/toast";
+import { ToastError, ToastSuccess } from "@/utils/toast";
 import { Box, Button, Typography } from "@mui/material";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
 import * as pdfjsLib from "pdfjs-dist";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -153,48 +153,50 @@ export default function PdfSignViewer({
         const sigRef = sigComponentRefs.current.get(sig.id);
         if (!sigRef) continue;
 
+        // 1. Lấy Canvas chữ ký và Họ tên từ Ref
         const canvas = sigRef.getCanvas();
+        const fullName = sigRef.getFullName?.() || ""; // Hàm này chúng ta đã thêm ở bước trước
         if (!canvas) continue;
 
+        // 2. Nhúng hình ảnh chữ ký
         const pngImageBytes = await fetch(canvas.toDataURL()).then((res) =>
           res.arrayBuffer()
         );
         const pngImage = await pdfDoc.embedPng(pngImageBytes);
 
         const renderScale = 1.5;
-        const sigDisplayWidth = canvas.width;
-        const sigDisplayHeight = canvas.height;
-
-        const sigPdfWidth = sigDisplayWidth / renderScale;
-        const sigPdfHeight = sigDisplayHeight / renderScale;
-
+        const sigPdfWidth = canvas.width / renderScale;
+        const sigPdfHeight = canvas.height / renderScale;
         const pdfX = sig.x / renderScale;
         const pdfY = pdfPageHeight - sig.y / renderScale - sigPdfHeight;
 
+        // Vẽ chữ ký lên PDF
         pdfPage.drawImage(pngImage, {
           x: pdfX,
           y: pdfY,
           width: sigPdfWidth,
           height: sigPdfHeight,
         });
+
+        // 3. VẼ HỌ TÊN VÀO PDF (Nằm dưới chữ ký)
+        if (fullName) {
+          pdfPage.drawText(fullName, {
+            x: pdfX + sigPdfWidth / 2 - fullName.length * 2.5, // Căn giữa tương đối
+            y: pdfY - 15, // Đặt bên dưới chữ ký 15 đơn vị
+            size: 10, // Cỡ chữ
+            // font: ... bạn có thể nhúng font tiếng Việt nếu cần (xem lưu ý dưới)
+            color: rgb(0.043, 0.235, 0.541),
+          });
+        }
       }
 
-      const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: true });
-      // const link = document.createElement("a");
-      // link.href = pdfBase64;
-      // link.download = `signed_${patientSelected.Hoten}_${Date.now()}.pdf`;
-      // link.click();
+      const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: false });
+      await updateFilePatientKyTay(patientSelected.ID, pdfBase64);
 
-      const data = await updateFilePatientKyTay(
-        patientSelected.ID,
-        pdfBase64.split(",")[1] || ""
-      );
-
-      console.log("Ký thành công:", data);
-      ToastSuccess("Ký thành công");
+      ToastSuccess("Ký thành công!");
     } catch (error) {
       console.error("Lỗi khi ký tài liệu:", error);
-      ToastSuccess("Lỗi ký tài liệu");
+      ToastError("Lỗi khi ký tài liệu!");
     }
   };
 

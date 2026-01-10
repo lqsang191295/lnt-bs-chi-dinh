@@ -5,7 +5,7 @@ import {
   Close as CloseIcon,
   PanTool,
 } from "@mui/icons-material";
-import { Box, Button, IconButton } from "@mui/material";
+import { Box, Button, IconButton, TextField } from "@mui/material";
 import {
   forwardRef,
   useEffect,
@@ -23,6 +23,7 @@ interface DraggableSignatureProps {
 
 export interface DraggableSignatureRef {
   getCanvas: () => HTMLCanvasElement | null;
+  getFullName: () => string; // Thêm hàm lấy tên
   id: string;
 }
 
@@ -34,9 +35,11 @@ const DraggableSignature = forwardRef<
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDraggable, setIsDraggable] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 180, height: 80 });
+  const [fullName, setFullName] = useState(""); // State lưu họ tên
 
   useImperativeHandle(ref, () => ({
     getCanvas: () => sigRef.current?.getCanvas() || null,
+    getFullName: () => fullName, // Cho phép component cha lấy tên
     id: sig.id,
   }));
 
@@ -74,11 +77,11 @@ const DraggableSignature = forwardRef<
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "0", // Tăng padding để dễ chạm
+        gap: 0.5, // Tạo khoảng cách nhỏ giữa các thành phần
       }}
       draggable={isDraggable}
       onDragEnd={handleDragEnd}>
-      {/* Drag handle */}
+      {/* Nút kéo */}
       <IconButton
         size="small"
         sx={{
@@ -90,13 +93,16 @@ const DraggableSignature = forwardRef<
           zIndex: 102,
           "&:hover": { backgroundColor: "#006aff" },
         }}>
-        <PanTool sx={{ fontSize: 16 }} />
+        <PanTool sx={{ fontSize: 10 }} />
       </IconButton>
-      {/* Nút Xóa - LUÔN HIỆN */}
+
+      {/* Nút Xóa */}
       <IconButton
         onClick={() => onDelete(sig.id)}
         size="small"
         sx={{
+          width: 18,
+          height: 18,
           position: "absolute",
           top: -12,
           right: -12,
@@ -105,9 +111,10 @@ const DraggableSignature = forwardRef<
           zIndex: 102,
           "&:hover": { backgroundColor: "#d9363e" },
         }}>
-        <CloseIcon sx={{ fontSize: 16 }} />
+        <CloseIcon sx={{ fontSize: 14 }} />
       </IconButton>
 
+      {/* Vùng Vẽ Chữ Ký */}
       <Box
         ref={containerRef}
         onMouseDown={() => setIsDraggable(false)}
@@ -120,9 +127,9 @@ const DraggableSignature = forwardRef<
           backgroundColor: "rgba(255, 255, 255, 0.7)",
           borderRadius: "4px",
           position: "relative",
-          touchAction: "none", // Quan trọng cho signature trên mobile
+          touchAction: "none",
           overflow: "hidden",
-          resize: "both", // Kích hoạt tính năng kéo giãn của trình duyệt
+          resize: "both",
           "&::after": {
             content: '""',
             position: "absolute",
@@ -142,32 +149,46 @@ const DraggableSignature = forwardRef<
           canvasProps={{
             width: dimensions.width,
             height: dimensions.height,
-            style: {
-              display: "block",
-              touchAction: "none", // QUAN TRỌNG cho iOS
-            },
           }}
         />
       </Box>
 
+      {/* TextField Nhập Họ Tên - Đặt ở dưới canvas */}
+      <TextField
+        size="small"
+        placeholder="Họ tên..."
+        variant="outlined"
+        value={fullName}
+        onChange={(e) => setFullName(e.target.value)}
+        onFocus={() => setIsDraggable(false)} // Tắt drag khi đang gõ
+        onBlur={() => setIsDraggable(true)} // Bật lại drag khi gõ xong
+        sx={{
+          width: "100%",
+          backgroundColor: "white",
+          "& .MuiInputBase-input": {
+            fontSize: "12px",
+            padding: "4px 8px",
+            textAlign: "center",
+          },
+        }}
+      />
+
       <Button
-        className="!bg-green-500 !text-white !mt-0.5"
+        variant="contained"
         size="small"
         onClick={() => sigRef.current?.clear()}
         startIcon={<ClearIcon sx={{ fontSize: 12 }} />}
         sx={{
-          mt: 1,
           fontSize: "10px",
           textTransform: "none",
           backgroundColor: "#52c41a",
+          "&:hover": { backgroundColor: "#389e0d" },
         }}>
-        Clear
+        Xóa chữ ký
       </Button>
     </Box>
   );
 });
 
-// Gán displayName để fix lỗi ESLint
 DraggableSignature.displayName = "DraggableSignature";
-
 export default DraggableSignature;
