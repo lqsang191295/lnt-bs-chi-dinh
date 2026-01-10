@@ -97,16 +97,17 @@ const DraggableSignatureTouch = forwardRef<
       }}>
       {/* Drag handle */}
       <IconButton
-        className="actions"
         size="small"
         sx={{
           position: "absolute",
-          top: -6,
-          left: -6,
+          top: -12,
+          left: -12,
           backgroundColor: "#1677ff",
-          color: "#fff",
+          color: "white",
+          zIndex: 102,
+          "&:hover": { backgroundColor: "#006aff" },
         }}>
-        <PanTool fontSize="small" />
+        <PanTool sx={{ fontSize: 16 }} />
       </IconButton>
 
       {/* Delete */}
@@ -116,8 +117,8 @@ const DraggableSignatureTouch = forwardRef<
         size="small"
         sx={{
           position: "absolute",
-          top: -6,
-          right: -6,
+          top: -12,
+          right: -12,
           backgroundColor: "#ff4d4f",
           color: "#fff",
         }}>
@@ -132,9 +133,19 @@ const DraggableSignatureTouch = forwardRef<
           height: 80,
           resize: "both",
           overflow: "hidden",
-          border: "1px dashed #0B3C8A",
+          border: "2px dashed #0B3C8A",
           borderRadius: 1,
           backgroundColor: "rgba(255,255,255,0.8)",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            width: "20px",
+            height: "20px",
+            cursor: "nwse-resize", // Con trỏ chuột kéo giãn chéo
+            zIndex: 10,
+          },
         }}>
         <SignatureCanvas
           ref={sigRef}
@@ -153,14 +164,15 @@ const DraggableSignatureTouch = forwardRef<
       </Box>
 
       <Button
-        className="actions"
+        className="!bg-green-500 !text-white !mt-0.5"
         size="small"
         onClick={() => sigRef.current?.clear()}
         startIcon={<ClearIcon sx={{ fontSize: 12 }} />}
         sx={{
-          mt: 0.5,
-          fontSize: 10,
+          mt: 1,
+          fontSize: "10px",
           textTransform: "none",
+          backgroundColor: "#52c41a",
         }}>
         Clear
       </Button>

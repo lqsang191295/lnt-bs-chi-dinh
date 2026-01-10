@@ -1,6 +1,10 @@
 "use client";
 
-import { ClearAll as ClearIcon, Close as CloseIcon } from "@mui/icons-material";
+import {
+  ClearAll as ClearIcon,
+  Close as CloseIcon,
+  PanTool,
+} from "@mui/icons-material";
 import { Box, Button, IconButton } from "@mui/material";
 import {
   forwardRef,
@@ -70,18 +74,32 @@ const DraggableSignature = forwardRef<
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "15px", // Tăng padding để dễ chạm
+        padding: "0", // Tăng padding để dễ chạm
       }}
       draggable={isDraggable}
       onDragEnd={handleDragEnd}>
+      {/* Drag handle */}
+      <IconButton
+        size="small"
+        sx={{
+          position: "absolute",
+          top: -12,
+          left: -12,
+          backgroundColor: "#1677ff",
+          color: "white",
+          zIndex: 102,
+          "&:hover": { backgroundColor: "#006aff" },
+        }}>
+        <PanTool sx={{ fontSize: 16 }} />
+      </IconButton>
       {/* Nút Xóa - LUÔN HIỆN */}
       <IconButton
         onClick={() => onDelete(sig.id)}
         size="small"
         sx={{
           position: "absolute",
-          top: 0,
-          right: 0,
+          top: -12,
+          right: -12,
           backgroundColor: "#ff4d4f",
           color: "white",
           zIndex: 102,
@@ -98,25 +116,42 @@ const DraggableSignature = forwardRef<
         sx={{
           width: 180,
           height: 80,
-          border: "1px dashed #0B3C8A",
+          border: "2px dashed #0B3C8A",
           backgroundColor: "rgba(255, 255, 255, 0.7)",
           borderRadius: "4px",
           position: "relative",
           touchAction: "none", // Quan trọng cho signature trên mobile
+          overflow: "hidden",
+          resize: "both", // Kích hoạt tính năng kéo giãn của trình duyệt
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            width: "20px",
+            height: "20px",
+            cursor: "nwse-resize", // Con trỏ chuột kéo giãn chéo
+            zIndex: 10,
+          },
         }}>
         <SignatureCanvas
           ref={sigRef}
           penColor="#0B3C8A"
+          minWidth={1}
+          maxWidth={1.2}
           canvasProps={{
             width: dimensions.width,
             height: dimensions.height,
-            style: { display: "block", cursor: "crosshair" },
+            style: {
+              display: "block",
+              touchAction: "none", // QUAN TRỌNG cho iOS
+            },
           }}
         />
       </Box>
 
       <Button
-        variant="contained"
+        className="!bg-green-500 !text-white !mt-0.5"
         size="small"
         onClick={() => sigRef.current?.clear()}
         startIcon={<ClearIcon sx={{ fontSize: 12 }} />}
