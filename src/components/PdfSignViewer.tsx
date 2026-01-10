@@ -40,10 +40,9 @@ export default function PdfSignViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   const renderIdRef = useRef(0);
 
-  // State quản lý loading và dữ liệu
   const [signatures, setSignatures] = useState<SignatureItem[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Quản lý loading
   const [pageElements, setPageElements] = useState<Map<number, HTMLDivElement>>(
     new Map()
   );
@@ -52,7 +51,6 @@ export default function PdfSignViewer({
     new Map()
   );
 
-  // Theo dõi sự kiện thay đổi fullscreen
   useEffect(() => {
     const handleFsChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -62,10 +60,10 @@ export default function PdfSignViewer({
       document.removeEventListener("fullscreenchange", handleFsChange);
   }, []);
 
-  // Load PDF khi bệnh nhân thay đổi
+  // Tự động load PDF khi đổi bệnh nhân
   useEffect(() => {
     if (!patientSelected) return;
-    setSignatures([]); // Reset chữ ký khi đổi bệnh nhân
+    setSignatures([]); // Xóa chữ ký cũ
     renderIdRef.current++;
     renderPdf(renderIdRef.current);
   }, [patientSelected]);
@@ -73,11 +71,8 @@ export default function PdfSignViewer({
   const toggleFullscreen = () => {
     const element = document.getElementById("box-ky-tay");
     if (!element) return;
-
     if (!document.fullscreenElement) {
-      element.requestFullscreen().catch((err) => {
-        console.error(`Lỗi khi mở toàn màn hình: ${err.message}`);
-      });
+      element.requestFullscreen().catch(() => {});
     } else {
       document.exitFullscreen();
     }
@@ -97,14 +92,12 @@ export default function PdfSignViewer({
       const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-        // Kiểm tra nếu có lượt render mới thì dừng lượt cũ
         if (renderId !== renderIdRef.current) return;
 
         const page = await pdf.getPage(pageNumber);
         const viewport = page.getViewport({ scale: 1.5 });
 
         const pageWrapper = document.createElement("div");
-        pageWrapper.className = "pdf-page-wrapper";
         pageWrapper.style.position = "relative";
         pageWrapper.style.width = `${viewport.width}px`;
         pageWrapper.style.margin = "16px auto";
@@ -122,7 +115,6 @@ export default function PdfSignViewer({
           const rect = canvas.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
-
           setSignatures((prev) => [
             ...prev,
             { id: uuid(), page: pageNumber, x, y },
@@ -135,75 +127,41 @@ export default function PdfSignViewer({
       }
       setPageElements(newPageElements);
     } catch (error) {
-      console.error("Lỗi khi render PDF:", error);
+      console.error("Render PDF Error:", error);
     } finally {
-      // Chỉ tắt loading nếu đây vẫn là yêu cầu render mới nhất
-      if (renderId === renderIdRef.current) {
-        setIsLoading(false);
-      }
+      if (renderId === renderIdRef.current) setIsLoading(false);
     }
   }
 
-  const updateSigPos = (id: string, x: number, y: number) => {
-    setSignatures((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, x, y } : s))
-    );
-  };
-
-  const deleteSig = (id: string) => {
-    setSignatures((prev) => prev.filter((s) => s.id !== id));
-  };
-
   const handleSave = async () => {
     if (signatures.length === 0) {
-      alert("Vui lòng click vào văn bản để tạo chữ ký trước khi hoàn thành.");
+      alert("Vui lòng click vào văn bản để tạo chữ ký.");
       return;
     }
 
     setIsLoading(true);
     try {
-      if (!patientSelected) return;
-
-      // 1. Load PDF
       const base64Data = patientSelected.FilePdfKySo.replace(/\s/g, "");
       const existingPdfBytes = Uint8Array.from(atob(base64Data), (c) =>
         c.charCodeAt(0)
       );
+
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       pdfDoc.registerFontkit(fontkit);
 
-      // 2. Load Font với cơ chế chống cache lỗi trên iPad
+      // --- SỬA LỖI FONT CHO IPAD TẠI ĐÂY ---
       const fontUrl = `${
         window.location.origin
       }/fonts/Roboto-Regular.ttf?v=${new Date().getTime()}`;
-      const fontResponse = await fetch(fontUrl, {
-        method: "GET",
-        headers: {
-          "Cache-Control": "no-cache",
-        },
-      });
-
+      const fontResponse = await fetch(fontUrl, { cache: "no-cache" });
       if (!fontResponse.ok)
-        throw new Error("Không thể tải font Roboto-Regular.ttf");
+        throw new Error("Không thể tải file font từ server.");
 
-      // Đảm bảo lấy ArrayBuffer chuẩn
-      const fontBytes = await fontResponse.arrayBuffer();
-
-      // KIỂM TRA QUAN TRỌNG: Thử nạp font, nếu lỗi dùng font mặc định StandardFonts
-      let customFont;
-      try {
-        customFont = await pdfDoc.embedFont(fontBytes);
-      } catch (fontError) {
-        console.error(
-          "Font embedding failed, falling back to Helvetica:",
-          fontError
-        );
-        // Nếu font ttf lỗi trên iPad, dùng font mặc định (không hỗ trợ tiếng Việt có dấu tốt bằng ttf)
-        // customFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-        throw new Error(
-          "Định dạng Font không hỗ trợ trên thiết bị này. Vui lòng kiểm tra lại file .ttf"
-        );
-      }
+      // Quan trọng: Phải ép kiểu sang Uint8Array để Safari/iPad nhận diện đúng format
+      const fontArrayBuffer = await fontResponse.arrayBuffer();
+      const fontBytes = new Uint8Array(fontArrayBuffer);
+      const customFont = await pdfDoc.embedFont(fontBytes);
+      // --------------------------------------
 
       const pages = pdfDoc.getPages();
 
@@ -215,10 +173,8 @@ export default function PdfSignViewer({
         const fullName = sigRef.getFullName();
         if (!canvas) continue;
 
-        // Chuyển canvas sang Image Bytes
-        const dataUrl = canvas.toDataURL("image/png");
-        const pngImageBytes = await fetch(dataUrl).then((res) =>
-          res.arrayBuffer()
+        const pngImageBytes = await fetch(canvas.toDataURL("image/png")).then(
+          (res) => res.arrayBuffer()
         );
         const pngImage = await pdfDoc.embedPng(pngImageBytes);
 
@@ -269,57 +225,54 @@ export default function PdfSignViewer({
       id="box-ky-tay"
       className="h-full flex flex-col overflow-hidden"
       sx={{
-        position: "relative", // Quan trọng để Backdrop phủ đúng vị trí
+        position: "relative", // Bắt buộc để Backdrop phủ đúng vị trí
         background: "#fff",
         "&:fullscreen": {
           backgroundColor: "#f5f5f5",
           width: "100vw",
           height: "100vh",
-          padding: "10px",
+          p: 1,
         },
       }}>
-      {/* Loading Overlay */}
+      {/* Màn hình chờ khi đang Render hoặc đang Lưu */}
       <Backdrop
         sx={{
           color: "#fff",
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          position: "absolute", // Phủ trong giới hạn của Box cha
-          display: "flex",
+          zIndex: 9999,
+          position: "absolute",
           flexDirection: "column",
           gap: 2,
         }}
         open={isLoading}>
         <CircularProgress color="inherit" />
-        <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-          Đang xử lý dữ liệu...
-        </Typography>
+        <Typography>Đang xử lý tài liệu...</Typography>
       </Backdrop>
 
       <Box
-        className="flex flex-row justify-between items-center"
-        sx={{ p: 1, background: "#fff", borderBottom: "1px solid #ddd" }}>
-        <Typography variant="h6" sx={{ color: "#1976d2", fontWeight: "bold" }}>
-          {`${patientSelected?.Hoten} (${patientSelected?.Gioitinh} - ${
-            patientSelected?.Namsinh
-          }) - ${patientSelected?.LoaiPhieu.replaceAll("_", " ")}`}
+        sx={{
+          p: 1,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: "1px solid #ddd",
+        }}>
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: "bold", color: "#1976d2" }}>
+          {patientSelected?.Hoten} -{" "}
+          {patientSelected?.LoaiPhieu.replaceAll("_", " ")}
         </Typography>
 
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={toggleFullscreen}
-            disabled={isLoading}
-            size="small">
-            {isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+          <Button variant="outlined" size="small" onClick={toggleFullscreen}>
+            {isFullscreen ? "Thoát" : "Toàn màn hình"}
           </Button>
           <Button
             variant="contained"
-            color="primary"
+            size="small"
             onClick={handleSave}
-            disabled={isLoading || signatures.length === 0}
-            size="small">
-            Hoàn thành ký số
+            disabled={isLoading}>
+            Hoàn thành
           </Button>
         </Box>
       </Box>
@@ -336,7 +289,6 @@ export default function PdfSignViewer({
         {signatures.map((sig) => {
           const targetPageSlot = pageElements.get(sig.page);
           if (!targetPageSlot) return null;
-
           const SigComponent = isTouchDevice
             ? DraggableSignatureMobile
             : DraggableSignature;
@@ -349,8 +301,14 @@ export default function PdfSignViewer({
                 else sigComponentRefs.current.delete(sig.id);
               }}
               sig={sig}
-              onUpdatePos={updateSigPos}
-              onDelete={deleteSig}
+              onUpdatePos={(id, x, y) =>
+                setSignatures((prev) =>
+                  prev.map((s) => (s.id === id ? { ...s, x, y } : s))
+                )
+              }
+              onDelete={(id) =>
+                setSignatures((prev) => prev.filter((s) => s.id !== id))
+              }
             />,
             targetPageSlot
           );
