@@ -170,7 +170,7 @@ export default function PatientList({
 
             {!loading &&
               //&& filteredRows.length === 0
-              rows.length > 0 && (
+              rows.length <= 0 && (
                 <Typography
                   align="center"
                   sx={{ mt: 4, color: "text.disabled", fontSize: "0.875rem" }}>
