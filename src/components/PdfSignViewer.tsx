@@ -242,6 +242,7 @@ export default function PdfSignViewer({
         body: JSON.stringify({
           fileBase64: pdfBase64,
           fileName: patientSelected?.LoaiPhieu.replaceAll("_", " "),
+          position: "b-m",
         }),
       });
 

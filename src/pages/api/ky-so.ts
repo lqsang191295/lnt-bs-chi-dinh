@@ -26,6 +26,7 @@ export default async function handler(
     return res.status(400).json({ message: "Missing fileBase64 parameter" });
   }
 
+  const position = req.body.position;
   try {
     const strMa =
       "client_id_VNPTCA;client_secret_VNPTCA;password_VNPTCA;uid_VNPTCA;user_secret_VNPTCA";
@@ -84,6 +85,7 @@ export default async function handler(
         password: mapThamSo.get("password_VNPTCA"),
         fileName: fileName,
         fileBase64: fileBase64,
+        position: position,
       }),
     });
     const resKySoJson = await resKySo.json();
