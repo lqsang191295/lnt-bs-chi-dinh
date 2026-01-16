@@ -246,37 +246,24 @@ export const saveChuKyPartient = async (
 
 export const getPatientCanKyTay = async (
   sTuNgay: string,
-  sDenNgay: string
+  sDenNgay: string,
+  sTextSearch: string
 ): Promise<IPatientInfoCanKyTay[] | null> => {
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.emr_get_patient_can_ky_tay",
       paraData: [
         { paraName: "TuNgay", paraValue: sTuNgay },
         { paraName: "DenNgay", paraValue: sDenNgay },
+        { paraName: "TextSearch", paraValue: sTextSearch },
       ],
     });
 
     console.log("API Response:", response);
 
     if (response.status === "error") {
-      return [
-        {
-          MaBN: "123",
-          HoTen: "Testtttt",
-          NgaySinh: "",
-          GioiTinh: "",
-          SoVaoVien: "",
-          NgayKham: "",
-          ChanDoan: "",
-          File: "",
-          Diachi: "",
-          LoaiPhieu: "Test_aaa",
-        },
-      ] as IPatientInfoCanKyTay[];
-
       return null;
     }
 
@@ -293,7 +280,7 @@ export const updateFilePatientKyTay = async (
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.emr_update_patient_file_ky_tay",
       paraData: [
         { paraName: "ID", paraValue: id },

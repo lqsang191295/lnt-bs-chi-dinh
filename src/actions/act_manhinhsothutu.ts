@@ -4,7 +4,7 @@ export const getCurrentSTTQuay = async (): Promise<IThuTuHienTai[]> => {
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.sp_get_current_sothutu_byquay",
     });
 
@@ -22,7 +22,7 @@ export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
   try {
     const response = await post(`/his/call`, {
       userId: "",
-      optionId: "3",
+      optionId: "2",
       funcName: "dbo.sp_get_HT_DMQuayDangKy",
     });
 

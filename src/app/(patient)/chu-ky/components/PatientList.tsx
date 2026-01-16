@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import PatientTreeView from "./PatientTreeView";
 
 // Interface đã được tách riêng hoặc để cuối file
@@ -49,6 +49,11 @@ export default function PatientList({
     try {
       if (!searchTuNgay || !searchDenNgay) return;
 
+      if (!searchText.trim()) {
+        ToastError("Vui lòng nhập từ khóa tìm kiếm!");
+        return;
+      }
+
       setLoading(true);
 
       const formatDate = (date: Date) => {
@@ -60,7 +65,8 @@ export default function PatientList({
 
       const data = await getPatientCanKyTay(
         formatDate(searchTuNgay),
-        formatDate(searchDenNgay)
+        formatDate(searchDenNgay),
+        searchText
       );
 
       setRows(
@@ -78,23 +84,37 @@ export default function PatientList({
   };
 
   // Logic lọc dữ liệu theo Ma, Sovaovien, Hoten (Client-side filtering)
-  const filteredRows = useMemo(() => {
-    if (!searchText.trim()) return rows;
+  // const filteredRows = useMemo(() => {
+  //   if (!searchText.trim()) return rows;
 
-    const searchLower = searchText.toLowerCase();
-    return rows.filter(
-      (p) =>
-        p.Ma?.toLowerCase().includes(searchLower) ||
-        p.Sovaovien?.toLowerCase().includes(searchLower) ||
-        p.Hoten?.toLowerCase().includes(searchLower)
-    );
-  }, [rows, searchText]);
+  //   const searchLower = searchText.toLowerCase();
+  //   return rows.filter(
+  //     (p) =>
+  //       p.Ma?.toLowerCase().includes(searchLower) ||
+  //       p.Sovaovien?.toLowerCase().includes(searchLower) ||
+  //       p.Hoten?.toLowerCase().includes(searchLower)
+  //   );
+  // }, [rows, searchText]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box className="w-full h-full flex flex-col bg-white">
         {/* Section: Filters */}
         <Box className="flex flex-col p-2 border-b" gap={1}>
+          {/* Thanh search nhanh theo tên/mã */}
+          <TextField
+            size="small"
+            placeholder="Tìm theo Mã, Số vào viện, Họ tên..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonSearch fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
           <Box className="flex flex-col gap-2">
             <DatePicker
               label="Từ ngày"
@@ -127,23 +147,6 @@ export default function PatientList({
             sx={{ fontWeight: "bold" }}>
             {loading ? "Đang tải..." : "Lấy danh sách"}
           </Button>
-
-          <hr className="my-1 border-gray-100" />
-
-          {/* Thanh search nhanh theo tên/mã */}
-          <TextField
-            size="small"
-            placeholder="Tìm theo Mã, Số vào viện, Họ tên..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonSearch fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
         </Box>
 
         {/* Section: Result List */}
@@ -160,17 +163,20 @@ export default function PatientList({
 
           <Box className="h-full overflow-auto">
             <PatientTreeView
-              rows={filteredRows}
+              // rows={filteredRows}
+              rows={rows}
               onSelectPatient={onSelectPatient}
             />
 
-            {!loading && filteredRows.length === 0 && rows.length > 0 && (
-              <Typography
-                align="center"
-                sx={{ mt: 4, color: "text.disabled", fontSize: "0.875rem" }}>
-                Không tìm thấy bệnh nhân phù hợp
-              </Typography>
-            )}
+            {!loading &&
+              //&& filteredRows.length === 0
+              rows.length > 0 && (
+                <Typography
+                  align="center"
+                  sx={{ mt: 4, color: "text.disabled", fontSize: "0.875rem" }}>
+                  Không tìm thấy bệnh nhân phù hợp
+                </Typography>
+              )}
           </Box>
         </Box>
       </Box>
