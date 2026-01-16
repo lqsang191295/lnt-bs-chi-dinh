@@ -1,11 +1,11 @@
 import { post } from "@/api/client";
-import { IThuTuHienTai, IDMQuayDangKy } from "@/model/tsothutuhientai";
+import { IDMQuayDangKy, IThuTuHienTai } from "@/model/tsothutuhientai";
 export const getCurrentSTTQuay = async (): Promise<IThuTuHienTai[]> => {
   try {
     const response = await post(`/his/call`, {
       userId: "",
       optionId: "3",
-      funcName: "dbo.sp_get_current_sothutu_byquay"
+      funcName: "dbo.sp_get_current_sothutu_byquay",
     });
 
     if (response.status === "error") {
@@ -23,7 +23,7 @@ export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
     const response = await post(`/his/call`, {
       userId: "",
       optionId: "3",
-      funcName: "dbo.sp_get_HT_DMQuayDangKy"
+      funcName: "dbo.sp_get_HT_DMQuayDangKy",
     });
 
     if (response.status === "error") {
@@ -35,4 +35,3 @@ export const getDM_QuayDangKy = async (): Promise<IDMQuayDangKy[]> => {
     return [];
   }
 };
-

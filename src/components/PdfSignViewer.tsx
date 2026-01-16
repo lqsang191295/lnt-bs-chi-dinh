@@ -208,8 +208,20 @@ export default function PdfSignViewer({
       }
 
       const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: false });
-      await updateFilePatientKyTay(patientSelected.ID, pdfBase64);
+      const fileKySo = await KySoBenhVien(pdfBase64);
+
+      if (!fileKySo) {
+        throw new Error("Ký số thất bại.");
+      }
+
+      await updateFilePatientKyTay(patientSelected.ID, fileKySo);
+
       ToastSuccess("Ký thành công");
+
+      setSignatures([]);
+      patientSelected.FilePdfKySo = fileKySo;
+      renderIdRef.current++;
+      await renderPdf(renderIdRef.current);
     } catch (error) {
       console.error("Lỗi khi ký tài liệu:", error);
       alert(
@@ -217,6 +229,34 @@ export default function PdfSignViewer({
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const KySoBenhVien = async (pdfBase64: string): Promise<string | null> => {
+    try {
+      const res = await fetch("/api/ky-so", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileBase64: pdfBase64,
+          fileName: patientSelected?.LoaiPhieu.replaceAll("_", " "),
+        }),
+      });
+
+      const fileKySo = await res.json();
+
+      console.log("Access Token:", fileKySo);
+
+      return fileKySo;
+    } catch (error) {
+      console.error("Lỗi khi ký tài liệu:", error);
+      alert(
+        error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định."
+      );
+
+      return null;
     }
   };
 
@@ -309,6 +349,7 @@ export default function PdfSignViewer({
               onDelete={(id) =>
                 setSignatures((prev) => prev.filter((s) => s.id !== id))
               }
+              patientSelected={patientSelected}
             />,
             targetPageSlot
           );

@@ -1,5 +1,6 @@
 "use client";
 
+import { IPatientInfoCanKyTay } from "@/model/tpatient";
 import {
   ClearAll as ClearIcon,
   Close as CloseIcon,
@@ -19,6 +20,7 @@ interface DraggableSignatureProps {
   sig: { id: string; x: number; y: number };
   onUpdatePos: (id: string, x: number, y: number) => void;
   onDelete: (id: string) => void;
+  patientSelected: IPatientInfoCanKyTay;
 }
 
 export interface DraggableSignatureRef {
@@ -30,12 +32,12 @@ export interface DraggableSignatureRef {
 const DraggableSignature = forwardRef<
   DraggableSignatureRef,
   DraggableSignatureProps
->(({ sig, onUpdatePos, onDelete }, ref) => {
+>(({ sig, onUpdatePos, onDelete, patientSelected }, ref) => {
   const sigRef = useRef<SignatureCanvas>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDraggable, setIsDraggable] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 180, height: 80 });
-  const [fullName, setFullName] = useState(""); // State lưu họ tên
+  const [fullName, setFullName] = useState(patientSelected?.Hoten); // State lưu họ tên
 
   useImperativeHandle(ref, () => ({
     getCanvas: () => sigRef.current?.getCanvas() || null,

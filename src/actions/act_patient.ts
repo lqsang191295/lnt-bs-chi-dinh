@@ -262,6 +262,21 @@ export const getPatientCanKyTay = async (
     console.log("API Response:", response);
 
     if (response.status === "error") {
+      return [
+        {
+          MaBN: "123",
+          HoTen: "Testtttt",
+          NgaySinh: "",
+          GioiTinh: "",
+          SoVaoVien: "",
+          NgayKham: "",
+          ChanDoan: "",
+          File: "",
+          Diachi: "",
+          LoaiPhieu: "Test_aaa",
+        },
+      ] as IPatientInfoCanKyTay[];
+
       return null;
     }
 
