@@ -151,15 +151,19 @@ const DraggableSignatureTouch = forwardRef<
           border: "2px dashed #0B3C8A",
           borderRadius: 1,
           backgroundColor: "rgba(255,255,255,0.8)",
+          position: "relative",
           "&::after": {
             content: '""',
             position: "absolute",
             bottom: 0,
             right: 0,
-            width: "20px",
-            height: "20px",
+            width: "24px",
+            height: "24px",
             cursor: "nwse-resize", // Con trỏ chuột kéo giãn chéo
-            zIndex: 10,
+            zIndex: 100,
+            // Tạo hình tam giác sọc ở góc dưới bên phải để dễ nhận diện
+            background: `linear-gradient(135deg, transparent 50%, #0B3C8A 50%, #0B3C8A 60%, transparent 60%, transparent 70%, #0B3C8A 70%)`,
+            opacity: 0.5,
           },
         }}>
         <SignatureCanvas
