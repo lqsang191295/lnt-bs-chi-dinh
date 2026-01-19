@@ -7,13 +7,7 @@ import {
   PanTool,
 } from "@mui/icons-material";
 import { Box, Button, IconButton, TextField } from "@mui/material";
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 
 interface DraggableSignatureProps {
@@ -25,7 +19,7 @@ interface DraggableSignatureProps {
 
 export interface DraggableSignatureRef {
   getCanvas: () => HTMLCanvasElement | null;
-  getFullName: () => string; // Thêm hàm lấy tên
+  getFullName: () => string;
   id: string;
 }
 
@@ -34,13 +28,17 @@ const DraggableSignatureTouch = forwardRef<
   DraggableSignatureProps
 >(({ sig, onUpdatePos, onDelete, patientSelected }, ref) => {
   const sigRef = useRef<SignatureCanvas>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
+  // State quản lý trạng thái
   const [dragging, setDragging] = useState(false);
+  const [resizing, setResizing] = useState(false);
+  const [fullName, setFullName] = useState(patientSelected?.Hoten || "");
+  const [dimensions, setDimensions] = useState({ width: 200, height: 100 });
+
+  // Ref lưu vị trí bắt đầu để tính toán khoảng cách di chuyển
   const startPos = useRef({ x: 0, y: 0 });
   const startOffset = useRef({ x: sig.x, y: sig.y });
-  const [fullName, setFullName] = useState(patientSelected?.Hoten); // State lưu họ tên
-  const [dimensions, setDimensions] = useState({ width: 180, height: 80 });
+  const startSize = useRef({ width: 200, height: 100 });
 
   useImperativeHandle(ref, () => ({
     getCanvas: () => sigRef.current?.getCanvas() || null,
@@ -48,55 +46,64 @@ const DraggableSignatureTouch = forwardRef<
     id: sig.id,
   }));
 
-  useEffect(() => {
-    if (!containerRef.current) return;
+  // --- XỬ LÝ DI CHUYỂN (MOVE) ---
+  const handleMoveDown = (e: React.PointerEvent) => {
+    // Không cho phép kéo khi đang tương tác với Input hoặc Canvas
+    if (
+      (e.target as HTMLElement).tagName === "INPUT" ||
+      (e.target as HTMLElement).tagName === "CANVAS"
+    )
+      return;
 
-    const ro = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      setDimensions({ width, height });
-    });
-
-    ro.observe(containerRef.current);
-    return () => ro.disconnect();
-  }, []);
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    // 1. Nếu chạm vào Canvas để ký -> Thoát
-    if ((e.target as HTMLElement).tagName === "CANVAS") return;
-
-    // 2. Nếu chạm vào INPUT hoặc TEXTAREA để nhập liệu -> Thoát, KHÔNG dùng preventDefault
-    const tagName = (e.target as HTMLElement).tagName;
-    if (tagName === "INPUT" || tagName === "TEXTAREA") return;
-
-    // 3. Chỉ thực hiện logic kéo thả cho các vùng còn lại (handle, khung viền...)
     e.preventDefault();
     setDragging(true);
     startPos.current = { x: e.clientX, y: e.clientY };
     startOffset.current = { x: sig.x, y: sig.y };
-
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragging) return;
-
-    const dx = e.clientX - startPos.current.x;
-    const dy = e.clientY - startPos.current.y;
-
-    onUpdatePos(sig.id, startOffset.current.x + dx, startOffset.current.y + dy);
+  // --- XỬ LÝ KÉO RỘNG (RESIZE) ---
+  const handleResizeDown = (e: React.PointerEvent) => {
+    e.stopPropagation(); // Ngừng sự kiện kéo di chuyển của Box cha
+    setResizing(true);
+    startPos.current = { x: e.clientX, y: e.clientY };
+    startSize.current = { width: dimensions.width, height: dimensions.height };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  const onPointerUp = (e: React.PointerEvent) => {
+  // --- XỬ LÝ KHI DI CHUYỂN CHUỘT/NGÓN TAY ---
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (dragging) {
+      const dx = e.clientX - startPos.current.x;
+      const dy = e.clientY - startPos.current.y;
+      onUpdatePos(
+        sig.id,
+        startOffset.current.x + dx,
+        startOffset.current.y + dy
+      );
+    }
+
+    if (resizing) {
+      const dx = e.clientX - startPos.current.x;
+      const dy = e.clientY - startPos.current.y;
+      setDimensions({
+        width: Math.max(120, startSize.current.width + dx), // Min width 120
+        height: Math.max(60, startSize.current.height + dy), // Min height 60
+      });
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
     setDragging(false);
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    setResizing(false);
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
   };
 
   return (
     <Box
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       sx={{
         position: "absolute",
         left: sig.x,
@@ -105,66 +112,56 @@ const DraggableSignatureTouch = forwardRef<
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 0.5, // Tạo khoảng cách nhỏ giữa các thành phần
+        gap: 0.5,
         touchAction: "none",
       }}>
-      {/* Drag handle */}
+      {/* Nút kéo di chuyển */}
       <IconButton
+        onPointerDown={handleMoveDown}
         size="small"
         sx={{
+          width: 24,
+          height: 24,
           position: "absolute",
           top: -12,
           left: -12,
           backgroundColor: "#1677ff",
           color: "white",
-          zIndex: 102,
+          zIndex: 110,
           "&:hover": { backgroundColor: "#006aff" },
+          cursor: "move",
         }}>
-        <PanTool sx={{ fontSize: 12 }} />
+        <PanTool sx={{ fontSize: 14 }} />
       </IconButton>
 
-      {/* Delete */}
+      {/* Nút xóa khung */}
       <IconButton
-        className="actions"
         onClick={() => onDelete(sig.id)}
         size="small"
         sx={{
-          width: 18,
-          height: 18,
+          width: 24,
+          height: 24,
           position: "absolute",
           top: -12,
           right: -12,
           backgroundColor: "#ff4d4f",
           color: "#fff",
+          zIndex: 110,
         }}>
-        <CloseIcon sx={{ fontSize: 14 }} />
+        <CloseIcon sx={{ fontSize: 16 }} />
       </IconButton>
 
-      {/* Signature box */}
+      {/* Khung ký tên */}
       <Box
-        ref={containerRef}
         sx={{
-          width: 180,
-          height: 80,
-          resize: "both",
-          overflow: "hidden",
+          width: dimensions.width,
+          height: dimensions.height,
+          position: "relative", // Quan trọng để đặt handle resize
           border: "2px dashed #0B3C8A",
           borderRadius: 1,
-          backgroundColor: "rgba(255,255,255,0.8)",
-          position: "relative",
-          "&::after": {
-            content: '""',
-            position: "absolute",
-            bottom: 0,
-            right: 0,
-            width: "24px",
-            height: "24px",
-            cursor: "nwse-resize", // Con trỏ chuột kéo giãn chéo
-            zIndex: 100,
-            // Tạo hình tam giác sọc ở góc dưới bên phải để dễ nhận diện
-            background: `linear-gradient(135deg, transparent 50%, #0B3C8A 50%, #0B3C8A 60%, transparent 60%, transparent 70%, #0B3C8A 70%)`,
-            opacity: 0.5,
-          },
+          backgroundColor: "rgba(255,255,255,0.9)",
+          boxShadow: dragging ? "0 8px 20px rgba(0,0,0,0.2)" : "none",
+          transition: "box-shadow 0.2s",
         }}>
         <SignatureCanvas
           ref={sigRef}
@@ -176,29 +173,55 @@ const DraggableSignatureTouch = forwardRef<
             height: dimensions.height,
             style: {
               display: "block",
-              touchAction: "none", // QUAN TRỌNG cho iOS
+              touchAction: "none",
+            },
+          }}
+        />
+
+        {/* VÙNG KÉO RỘNG SIÊU NHẠY */}
+        <Box
+          onPointerDown={handleResizeDown}
+          sx={{
+            position: "absolute",
+            bottom: -10,
+            right: -10,
+            width: 45, // Vùng chạm rất lớn cho mobile
+            height: 45,
+            cursor: "nwse-resize",
+            zIndex: 120,
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "flex-end",
+            padding: "8px",
+            // Chỉ thị hình ảnh cho người dùng biết chỗ kéo
+            "&::after": {
+              content: '""',
+              width: 0,
+              height: 0,
+              borderStyle: "solid",
+              borderWidth: "0 0 15px 15px",
+              borderColor: "transparent transparent #0B3C8A transparent",
+              opacity: 0.7,
             },
           }}
         />
       </Box>
-      {/* TextField Nhập Họ Tên - Đặt ở dưới canvas */}
+
+      {/* Nhập Họ Tên */}
       <TextField
         size="small"
-        placeholder="Họ tên..."
+        placeholder="Họ tên người ký..."
         variant="outlined"
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
         sx={{
-          width: "100%",
+          width: dimensions.width,
           backgroundColor: "white",
           "& .MuiInputBase-input": {
-            fontSize: "12px",
-            padding: "4px 8px",
+            fontSize: "13px",
+            padding: "6px",
             textAlign: "center",
-          },
-          "& input": {
-            userSelect: "text",
-            WebkitUserSelect: "text",
+            fontWeight: "bold",
           },
         }}
       />

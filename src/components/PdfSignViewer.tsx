@@ -84,11 +84,19 @@ export default function PdfSignViewer({
       const container = containerRef.current!;
       container.innerHTML = "";
       const newPageElements = new Map<number, HTMLDivElement>();
+      let pdfData;
 
-      const pdfData = Uint8Array.from(
-        atob(patientSelected?.FilePdfKySo || ""),
-        (c) => c.charCodeAt(0)
-      );
+      if (patientSelected?.FilePdfKySo) {
+        pdfData = Uint8Array.from(
+          atob(patientSelected?.FilePdfKySo || ""),
+          (c) => c.charCodeAt(0)
+        );
+      } else if (patientSelected?.TaiLieuKy) {
+        pdfData = Uint8Array.from(atob(patientSelected?.TaiLieuKy || ""), (c) =>
+          c.charCodeAt(0)
+        );
+      }
+
       const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
@@ -141,7 +149,12 @@ export default function PdfSignViewer({
 
     setIsLoading(true);
     try {
-      const base64Data = patientSelected.FilePdfKySo.replace(/\s/g, "");
+      let base64Data = patientSelected.FilePdfKySo.replace(/\s/g, "");
+      if (patientSelected?.FilePdfKySo) {
+        base64Data = patientSelected.FilePdfKySo.replace(/\s/g, "");
+      } else if (patientSelected?.TaiLieuKy) {
+        base64Data = patientSelected.TaiLieuKy.replace(/\s/g, "");
+      }
       const existingPdfBytes = Uint8Array.from(atob(base64Data), (c) =>
         c.charCodeAt(0)
       );
