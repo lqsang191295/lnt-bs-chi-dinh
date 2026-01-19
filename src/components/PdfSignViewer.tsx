@@ -44,11 +44,11 @@ export default function PdfSignViewer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Quản lý loading
   const [pageElements, setPageElements] = useState<Map<number, HTMLDivElement>>(
-    new Map()
+    new Map(),
   );
 
   const sigComponentRefs = useRef<Map<string, DraggableSignatureRef>>(
-    new Map()
+    new Map(),
   );
 
   useEffect(() => {
@@ -89,11 +89,11 @@ export default function PdfSignViewer({
       if (patientSelected?.FilePdfKySo) {
         pdfData = Uint8Array.from(
           atob(patientSelected?.FilePdfKySo || ""),
-          (c) => c.charCodeAt(0)
+          (c) => c.charCodeAt(0),
         );
       } else if (patientSelected?.TaiLieuKy) {
         pdfData = Uint8Array.from(atob(patientSelected?.TaiLieuKy || ""), (c) =>
-          c.charCodeAt(0)
+          c.charCodeAt(0),
         );
       }
 
@@ -149,14 +149,14 @@ export default function PdfSignViewer({
 
     setIsLoading(true);
     try {
-      let base64Data;
+      let base64Data = "";
       if (patientSelected?.FilePdfKySo) {
         base64Data = patientSelected.FilePdfKySo.replace(/\s/g, "");
       } else if (patientSelected?.TaiLieuKy) {
         base64Data = patientSelected.TaiLieuKy.replace(/\s/g, "");
       }
       const existingPdfBytes = Uint8Array.from(atob(base64Data), (c) =>
-        c.charCodeAt(0)
+        c.charCodeAt(0),
       );
 
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
@@ -187,7 +187,7 @@ export default function PdfSignViewer({
         if (!canvas) continue;
 
         const pngImageBytes = await fetch(canvas.toDataURL("image/png")).then(
-          (res) => res.arrayBuffer()
+          (res) => res.arrayBuffer(),
         );
         const pngImage = await pdfDoc.embedPng(pngImageBytes);
 
@@ -238,7 +238,9 @@ export default function PdfSignViewer({
     } catch (error) {
       console.error("Lỗi khi ký tài liệu:", error);
       alert(
-        error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định."
+        error instanceof Error
+          ? error.message
+          : "Đã xảy ra lỗi không xác định.",
       );
     } finally {
       setIsLoading(false);
@@ -267,7 +269,9 @@ export default function PdfSignViewer({
     } catch (error) {
       console.error("Lỗi khi ký tài liệu:", error);
       alert(
-        error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định."
+        error instanceof Error
+          ? error.message
+          : "Đã xảy ra lỗi không xác định.",
       );
 
       return null;
@@ -357,7 +361,7 @@ export default function PdfSignViewer({
               sig={sig}
               onUpdatePos={(id, x, y) =>
                 setSignatures((prev) =>
-                  prev.map((s) => (s.id === id ? { ...s, x, y } : s))
+                  prev.map((s) => (s.id === id ? { ...s, x, y } : s)),
                 )
               }
               onDelete={(id) =>
@@ -365,7 +369,7 @@ export default function PdfSignViewer({
               }
               patientSelected={patientSelected}
             />,
-            targetPageSlot
+            targetPageSlot,
           );
         })}
       </Box>
