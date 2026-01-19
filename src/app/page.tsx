@@ -25,8 +25,7 @@ export default function Page() {
         setHasAccess(false);
         return;
       }
-      setHasAccess(true);
-      //router.push(menu[0].clink);
+      router.push(menu[0].clink);
     } catch {
       // Handle error silently
     }
