@@ -1,23 +1,15 @@
-import React from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Container,
-  Paper,
-} from '@mui/material';
-import {
-  Lock,
-  Home,
-  ArrowBack,
-} from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
+import { ArrowBack, Home, Lock, Logout } from "@mui/icons-material";
+import { Box, Button, Container, Paper, Typography } from "@mui/material";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import React from "react";
 
 interface AccessDeniedPageProps {
   title?: string;
   message?: string;
   showBackButton?: boolean;
   showHomeButton?: boolean;
+  showLogoutButton?: boolean;
   onBackClick?: () => void;
 }
 
@@ -26,6 +18,7 @@ const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
   message = "Bạn không có quyền truy cập trang này. Vui lòng liên hệ quản trị viên để được cấp quyền.",
   showBackButton = true,
   showHomeButton = true,
+  showLogoutButton = true,
   onBackClick,
 }) => {
   const router = useRouter();
@@ -39,55 +32,56 @@ const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
   };
 
   const handleHomeClick = () => {
-    router.push('/');
+    router.push("/");
+  };
+
+  const handleLogoutClick = () => {
+    Cookies.remove("authToken");
+    router.push("/login");
   };
 
   return (
     <Container maxWidth="md">
       <Box
         sx={{
-          minHeight: 'calc(100vh - 64px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          minHeight: "calc(100vh - 64px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           py: 4,
-        }}
-      >
+        }}>
         <Paper
           elevation={6}
           sx={{
             p: 6,
-            textAlign: 'center',
+            textAlign: "center",
             borderRadius: 3,
             maxWidth: 600,
-            width: '100%',
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          }}
-        >
+            width: "100%",
+            background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+          }}>
           {/* Icon */}
           <Box
             sx={{
-              display: 'flex',
-              justifyContent: 'center',
+              display: "flex",
+              justifyContent: "center",
               mb: 3,
-            }}
-          >
+            }}>
             <Box
               sx={{
                 width: 120,
                 height: 120,
-                borderRadius: '50%',
-                backgroundColor: '#f44336',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 8px 32px rgba(244, 67, 54, 0.3)',
-              }}
-            >
+                borderRadius: "50%",
+                backgroundColor: "#f44336",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 8px 32px rgba(244, 67, 54, 0.3)",
+              }}>
               <Lock
                 sx={{
                   fontSize: 60,
-                  color: 'white',
+                  color: "white",
                 }}
               />
             </Box>
@@ -97,13 +91,12 @@ const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
           <Typography
             variant="h2"
             sx={{
-              fontSize: { xs: '3rem', sm: '4rem' },
-              fontWeight: 'bold',
-              color: '#f44336',
+              fontSize: { xs: "3rem", sm: "4rem" },
+              fontWeight: "bold",
+              color: "#f44336",
               mb: 2,
-              textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-            }}
-          >
+              textShadow: "2px 2px 4px rgba(0,0,0,0.1)",
+            }}>
             403
           </Typography>
 
@@ -111,13 +104,12 @@ const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
           <Typography
             variant="h4"
             sx={{
-              fontSize: { xs: '1.5rem', sm: '2rem' },
-              fontWeight: 'bold',
-              color: '#333',
+              fontSize: { xs: "1.5rem", sm: "2rem" },
+              fontWeight: "bold",
+              color: "#333",
               mb: 2,
-              letterSpacing: '0.5px',
-            }}
-          >
+              letterSpacing: "0.5px",
+            }}>
             {title}
           </Typography>
 
@@ -125,26 +117,24 @@ const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
           <Typography
             variant="body1"
             sx={{
-              color: '#666',
+              color: "#666",
               mb: 4,
-              fontSize: '1.1rem',
+              fontSize: "1.1rem",
               lineHeight: 1.6,
               maxWidth: 500,
-              mx: 'auto',
-            }}
-          >
+              mx: "auto",
+            }}>
             {message}
           </Typography>
 
           {/* Action Buttons */}
           <Box
             sx={{
-              display: 'flex',
+              display: "flex",
               gap: 2,
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}>
             {showBackButton && (
               <Button
                 variant="outlined"
@@ -154,16 +144,15 @@ const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
                   px: 3,
                   py: 1.5,
                   borderRadius: 2,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  borderColor: '#1976d2',
-                  color: '#1976d2',
-                  '&:hover': {
-                    borderColor: '#1565c0',
-                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  borderColor: "#1976d2",
+                  color: "#1976d2",
+                  "&:hover": {
+                    borderColor: "#1565c0",
+                    backgroundColor: "rgba(25, 118, 210, 0.04)",
                   },
-                }}
-              >
+                }}>
                 Quay lại
               </Button>
             )}
@@ -177,17 +166,38 @@ const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
                   px: 3,
                   py: 1.5,
                   borderRadius: 2,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  backgroundColor: '#1976d2',
-                  boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-                  '&:hover': {
-                    backgroundColor: '#1565c0',
-                    boxShadow: '0 6px 16px rgba(25, 118, 210, 0.4)',
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  backgroundColor: "#1976d2",
+                  boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
+                  "&:hover": {
+                    backgroundColor: "#1565c0",
+                    boxShadow: "0 6px 16px rgba(25, 118, 210, 0.4)",
                   },
-                }}
-              >
+                }}>
                 Trang chủ
+              </Button>
+            )}
+
+            {showLogoutButton && (
+              <Button
+                variant="contained"
+                startIcon={<Logout />}
+                onClick={handleLogoutClick}
+                sx={{
+                  px: 3,
+                  py: 1.5,
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  backgroundColor: "#1976d2",
+                  boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
+                  "&:hover": {
+                    backgroundColor: "#1565c0",
+                    boxShadow: "0 6px 16px rgba(25, 118, 210, 0.4)",
+                  },
+                }}>
+                Đăng xuất
               </Button>
             )}
           </Box>
@@ -197,24 +207,21 @@ const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
             sx={{
               mt: 4,
               pt: 3,
-              borderTop: '1px solid #e0e0e0',
-            }}
-          >
+              borderTop: "1px solid #e0e0e0",
+            }}>
             <Typography
               variant="body2"
               sx={{
-                color: '#999',
-                fontSize: '0.9rem',
-              }}
-            >
-              Nếu bạn cho rằng đây là lỗi, vui lòng liên hệ:{' '}
+                color: "#999",
+                fontSize: "0.9rem",
+              }}>
+              Nếu bạn cho rằng đây là lỗi, vui lòng liên hệ:{" "}
               <Typography
                 component="span"
                 sx={{
-                  color: '#1976d2',
-                  fontWeight: 'medium',
-                }}
-              >
+                  color: "#1976d2",
+                  fontWeight: "medium",
+                }}>
                 info@bvlengoctung.com
               </Typography>
             </Typography>

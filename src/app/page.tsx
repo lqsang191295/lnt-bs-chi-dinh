@@ -3,8 +3,7 @@ import { getMenuItems } from "@/actions/act_tmenu";
 import AccessDeniedPage from "@/components/AccessDeniedPage";
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth";
-import { Box, Button, CircularProgress, Typography } from "@mui/material";
-import Cookies from "js-cookie";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -75,23 +74,12 @@ export default function Page() {
   // Hiển thị trang Access Denied nếu không có quyền
   if (!hasAccess) {
     return (
-      <Box>
-        <AccessDeniedPage
-          title="BẠN KHÔNG CÓ QUYỀN TRA CỨU HỒ SƠ BỆNH ÁN"
-          message="Bạn không có quyền truy cập chức năng tra cứu hồ sơ bệnh án. Vui lòng liên hệ quản trị viên để được cấp quyền."
-        />
-        <Button
-          variant="contained"
-          size="small"
-          onClick={() => {
-            Cookies.remove("authToken");
-            router.push("/login");
-          }}>
-          Đăng xuất
-        </Button>
-      </Box>
+      <AccessDeniedPage
+        title="BẠN KHÔNG CÓ QUYỀN TRA CỨU HỒ SƠ BỆNH ÁN"
+        message="Bạn không có quyền truy cập chức năng tra cứu hồ sơ bệnh án. Vui lòng liên hệ quản trị viên để được cấp quyền."
+      />
     );
   }
 
-  return <Box>Hello</Box>;
+  return <Box>Đang chuyển trang...</Box>;
 }
