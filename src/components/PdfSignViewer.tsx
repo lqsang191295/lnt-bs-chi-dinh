@@ -149,7 +149,7 @@ export default function PdfSignViewer({
 
     setIsLoading(true);
     try {
-      let base64Data = patientSelected.FilePdfKySo.replace(/\s/g, "");
+      let base64Data;
       if (patientSelected?.FilePdfKySo) {
         base64Data = patientSelected.FilePdfKySo.replace(/\s/g, "");
       } else if (patientSelected?.TaiLieuKy) {
