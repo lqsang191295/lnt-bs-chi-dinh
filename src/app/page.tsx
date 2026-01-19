@@ -25,6 +25,9 @@ export default function Page() {
         setHasAccess(false);
         return;
       }
+
+      setIsCheckingAccess(false);
+      setHasAccess(true);
       router.push(menu[0].clink);
     } catch {
       // Handle error silently
