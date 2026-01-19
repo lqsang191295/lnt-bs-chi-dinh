@@ -1,6 +1,7 @@
 "use client";
 import { getMenuItems } from "@/actions/act_tmenu";
 import AccessDeniedPage from "@/components/AccessDeniedPage";
+import { IMenuItem } from "@/model/tmenu";
 import { useUserStore } from "@/store/user";
 import { getClaimsFromToken } from "@/utils/auth";
 import { Box, CircularProgress, Typography } from "@mui/material";
@@ -27,7 +28,16 @@ export default function Page() {
 
       setIsCheckingAccess(false);
       setHasAccess(true);
-      router.push(menu[0].clink);
+
+      const chilMenu = menu.filter((x: IMenuItem) => x.ccap !== 1);
+
+      if (!chilMenu || chilMenu.length === 0) {
+        setIsCheckingAccess(false);
+        setHasAccess(false);
+        return;
+      }
+
+      router.push(chilMenu[0].clink);
     } catch {
       // Handle error silently
     }
@@ -81,5 +91,10 @@ export default function Page() {
     );
   }
 
-  return <Box>Đang chuyển trang...</Box>;
+  return (
+    <Box>
+      Đang chuyển trang... {isCheckingAccess} - {hasAccess} -{" "}
+      {userData && JSON.stringify(userData)}
+    </Box>
+  );
 }
