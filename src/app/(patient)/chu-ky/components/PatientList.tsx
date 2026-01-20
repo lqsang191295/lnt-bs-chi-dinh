@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useState } from "react";
 import PatientTreeView from "./PatientTreeView";
@@ -40,14 +40,14 @@ export default function PatientList({
   onSelectPatient: (patient: IPatientInfoCanKyTay | null) => void;
 }) {
   const [loading, setLoading] = useState(false);
-  const [searchTuNgay, setSearchTuNgay] = useState<Date | null>(new Date());
-  const [searchDenNgay, setSearchDenNgay] = useState<Date | null>(new Date());
+  // const [searchTuNgay, setSearchTuNgay] = useState<Date | null>(new Date());
+  // const [searchDenNgay, setSearchDenNgay] = useState<Date | null>(new Date());
   const [searchText, setSearchText] = useState(""); // State cho ô search text
   const [rows, setRows] = useState<IPatientInfoCanKyTay[]>([]);
 
   const handleSearch = async () => {
     try {
-      if (!searchTuNgay || !searchDenNgay) return;
+      // if (!searchTuNgay || !searchDenNgay) return;
 
       if (!searchText.trim()) {
         ToastError("Vui lòng nhập từ khóa tìm kiếm!");
@@ -56,24 +56,24 @@ export default function PatientList({
 
       setLoading(true);
 
-      const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-      };
+      // const formatDate = (date: Date) => {
+      //   const year = date.getFullYear();
+      //   const month = String(date.getMonth() + 1).padStart(2, "0");
+      //   const day = String(date.getDate()).padStart(2, "0");
+      //   return `${year}-${month}-${day}`;
+      // };
 
       const data = await getPatientCanKyTay(
-        formatDate(searchTuNgay),
-        formatDate(searchDenNgay),
-        searchText
+        // formatDate(searchTuNgay),
+        // formatDate(searchDenNgay),
+        searchText,
       );
 
       setRows(
         (data || []).map((item: IPatientInfoCanKyTay) => ({
           id: item.Sovaovien,
           ...item,
-        }))
+        })),
       );
     } catch (error) {
       console.error("Error fetching history data:", error);
@@ -115,7 +115,7 @@ export default function PatientList({
               ),
             }}
           />
-          <Box className="flex flex-col gap-2">
+          {/* <Box className="flex flex-col gap-2">
             <DatePicker
               label="Từ ngày"
               format="dd/MM/yyyy"
@@ -130,7 +130,7 @@ export default function PatientList({
               onChange={(value) => setSearchDenNgay(value as Date)}
               slotProps={{ textField: { size: "small", fullWidth: true } }}
             />
-          </Box>
+          </Box> */}
 
           <Button
             fullWidth

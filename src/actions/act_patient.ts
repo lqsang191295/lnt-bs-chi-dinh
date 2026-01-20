@@ -7,7 +7,7 @@ import {
 
 export const getPatientInfoByMaBN = async (
   mabn: string,
-  sovaovien: string = ""
+  sovaovien: string = "",
 ): Promise<IPatientInfo | null> => {
   try {
     const response = await post(`/his/call`, {
@@ -40,7 +40,7 @@ export const getPatientInfoByMaBN = async (
 
 export const getPatientLichSuKhamByMaBN = async (
   mabn: string,
-  sovaovien: string = ""
+  sovaovien: string = "",
 ): Promise<IPatientLichSuKham[] | null> => {
   try {
     const response = await post(`/his/call`, {
@@ -66,7 +66,7 @@ export const getPatientLichSuKhamByMaBN = async (
 
 export const getPatientToaThuocByMaBN_SoVaoVien = async (
   mabn: string,
-  sovaovien: string
+  sovaovien: string,
 ) => {
   try {
     const response = await post(`/his/call`, {
@@ -92,7 +92,7 @@ export const getPatientToaThuocByMaBN_SoVaoVien = async (
 
 export const getPatientChiDinhByMaBN_SoVaoVien = async (
   mabn: string,
-  sovaovien: string
+  sovaovien: string,
 ) => {
   try {
     const response = await post(`/his/call`, {
@@ -118,7 +118,7 @@ export const getPatientChiDinhByMaBN_SoVaoVien = async (
 
 export const getPatientBangKeByMaBN_SoVaoVien = async (
   mabn: string,
-  sovaovien: string
+  sovaovien: string,
 ) => {
   try {
     const response = await post(`/his/call`, {
@@ -144,7 +144,7 @@ export const getPatientBangKeByMaBN_SoVaoVien = async (
 
 export const getPatientPkBenhByMaBN_SoVaoVien = async (
   mabn: string,
-  sovaovien: string
+  sovaovien: string,
 ) => {
   try {
     const response = await post(`/his/call`, {
@@ -169,7 +169,7 @@ export const getPatientPkBenhByMaBN_SoVaoVien = async (
 };
 
 export const getPatientBySoDienThoai = async (
-  sodienthoai: string
+  sodienthoai: string,
 ): Promise<IPatientInfo[] | null> => {
   try {
     const response = await post(`/his/call`, {
@@ -194,7 +194,7 @@ export const getPatientBySoDienThoai = async (
 };
 
 export const searchPartient = async (
-  textSearch: string
+  textSearch: string,
 ): Promise<IPatientInfo[] | null> => {
   try {
     const response = await post(`/his/call`, {
@@ -220,7 +220,7 @@ export const searchPartient = async (
 
 export const saveChuKyPartient = async (
   Ma: string,
-  ChuKy: string
+  ChuKy: string,
 ): Promise<void> => {
   try {
     const response = await post(`/his/call`, {
@@ -245,9 +245,9 @@ export const saveChuKyPartient = async (
 };
 
 export const getPatientCanKyTay = async (
-  sTuNgay: string,
-  sDenNgay: string,
-  sTextSearch: string
+  // sTuNgay: string,
+  // sDenNgay: string,
+  sTextSearch: string,
 ): Promise<IPatientInfoCanKyTay[] | null> => {
   try {
     const response = await post(`/his/call`, {
@@ -255,8 +255,8 @@ export const getPatientCanKyTay = async (
       optionId: "2",
       funcName: "dbo.emr_get_patient_can_ky_tay",
       paraData: [
-        { paraName: "TuNgay", paraValue: sTuNgay },
-        { paraName: "DenNgay", paraValue: sDenNgay },
+        // { paraName: "TuNgay", paraValue: sTuNgay },
+        // { paraName: "DenNgay", paraValue: sDenNgay },
         { paraName: "TextSearch", paraValue: sTextSearch },
       ],
     });
@@ -275,7 +275,7 @@ export const getPatientCanKyTay = async (
 
 export const updateFilePatientKyTay = async (
   id: number,
-  File: string
+  File: string,
 ): Promise<IPatientInfoCanKyTay[] | null> => {
   try {
     const response = await post(`/his/call`, {
